@@ -16,7 +16,11 @@ config = context.config
 
 config = context.config
 load_dotenv()
-config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
+
+# Construir DATABASE_URL a partir das variáveis de ambiente
+DATABASE_URL = f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
