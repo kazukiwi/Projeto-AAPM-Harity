@@ -61,36 +61,37 @@
 
             <!-- DIREITA -->
             <section class="right">
+                <form action="/auth/login" method="POST">
+                    <div class="login-card">
 
-                <div class="login-card">
-
-                    <h1>Entrar</h1>
+                        <h1>Entrar</h1>
 
 
-                    <div class="input-box">
+                        <div class="input-group">
+                            <label for="email" style="color: white; margin-bottom: 5px; display: block;">E-mail
+                                corporativo</label>
+                            <div class="input-box">
+                                <i class="fa-solid fa-user"></i> <input type="email" id="email" name="email"
+                                    placeholder="seu@email.com" required>
+                            </div>
+                        </div>
 
-                        <i class="fa-solid fa-user"></i>
+                        <div class="input-group">
+                            <label for="senha" style="color: white; margin-bottom: 5px; display: block;">Senha de
+                                acesso</label>
+                            <div class="input-box">
+                                <i class="fa-solid fa-lock"></i> <input type="password" id="senha" name="senha"
+                                    placeholder="••••••••" required>
+                            </div>
+                        </div>
 
-                        <input type="text" placeholder="Email">
+
+                        <button type="submit">
+                            Login
+                        </button>
 
                     </div>
-
-
-                    <div class="input-box">
-
-                        <i class="fa-solid fa-lock"></i>
-
-                        <input type="password" placeholder="Senha">
-
-                    </div>
-
-
-                    <button type="submit">
-                        Login
-                    </button>
-
-                </div>
-
+                </form>
             </section>
 
         </main>

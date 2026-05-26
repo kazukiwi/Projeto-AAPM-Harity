@@ -28,20 +28,16 @@ app.include_router(produto_controller.router)
 def home(
     request: Request,
     usuario = Depends(get_usuario_opcional)
-    ):
-
-    # Não logado
+):
+    # Se NÃO estiver logado, redireciona DIRETAMENTE para a rota de login
     if usuario is None:
-        return templates.TemplateResponse(
-            request,
-            "index.html",
-            {"request": request, "usuario": usuario}
-        )
+        # Altere "/login" para a rota exata definida no seu auth_controller
+        return RedirectResponse(url="/auth/login", status_code=303)
     
-    # Logado
+    # Se estiver logado, leva para a home interna do sistema
     else:
         return templates.TemplateResponse(
             request,
-            "home.html",
+            "auth/dashbord.html",
             {"request": request, "usuario": usuario}
         )
