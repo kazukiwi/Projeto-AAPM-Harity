@@ -1,0 +1,302 @@
+/* =========================
+   RESET
+========================= */
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    font-family: "Lora", serif;
+    overflow: hidden;
+}
+
+
+/* =========================
+   FUNDO
+========================= */
+/* =========================
+   NAVBAR
+========================= */
+
+.navbar{
+    width: 100%;
+    height: 90px;
+
+    background: rgba(255,255,255,0.65);
+
+    backdrop-filter: blur(10px);
+
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    padding-left: 20px;
+
+    position: relative;
+    z-index: 20;
+
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+}
+
+/* LOGO */
+
+.navbar-logo{
+    width: 180px;
+
+    object-fit: contain;
+
+    transition: 0.3s;
+}
+
+
+
+/* EFEITO */
+
+.navbar-logo:hover{
+    transform: scale(1.03);
+}
+.background{
+    width: 100%;
+    height: 100vh;
+
+    /* Adiciona a imagem JUNTO com o gradiente (a imagem fica por cima) */
+    background: url('/app/static/img/fundo.png') no-repeat center center / cover, 
+                linear-gradient(135deg, #c7c4e8, #b4b0df, #c9c7ea);
+
+    position: relative;
+
+    overflow: hidden;
+}
+
+
+
+
+/* =========================
+   CIRCULO GIRANDO
+========================= */
+.rotating-circle{
+    position: absolute;
+
+    width: 1300px; 
+
+    left: -450px;
+    top: -100px;
+
+    opacity: 0.25;
+
+    filter:
+        brightness(0)
+        saturate(100%)
+        invert(11%)
+        sepia(31%)
+        saturate(6200%)
+        hue-rotate(225deg)
+        brightness(45%)
+        contrast(115%);
+
+    /* DIMINUA ESTE VALOR: quanto menor o tempo, mais rápido ele gira */
+    animation: rotateCircle 30s linear infinite;
+
+    z-index: 1;
+}
+
+
+/* ANIMAÇÃO */
+
+@keyframes rotateCircle{
+
+    from{
+        transform: rotate(0deg);
+    }
+
+    to{
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================
+   CONTAINER
+========================= */
+
+.container{
+    width: 100%;
+    height: 100vh;
+
+    display: flex;
+
+    position: relative;
+    z-index: 5;
+}
+
+
+/* =========================
+   ESQUERDA
+========================= */
+
+.left{
+    width: 50%;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: flex-start;
+
+    padding-left: 180px;
+
+    position: relative;
+    z-index: 5;
+}
+
+.logo-text{
+    font-size: 110px;
+    color: #09145c;
+
+    margin-bottom: 25px;
+
+    font-weight: bold;
+}
+
+.left p{
+    max-width: 520px;
+
+    text-align: left;
+
+    font-size: 24px;
+    line-height: 42px;
+
+    color: #1f2937;
+}
+
+
+/* =========================
+   DIREITA
+========================= */
+
+.right{
+    width: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* =========================
+   CARD LOGIN
+========================= */
+
+.login-card{
+    width: 430px;
+
+    background: #17176d;
+
+    padding: 50px;
+
+    border-radius: 35px;
+
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+
+    animation: aparecer 1s ease;
+
+    position: relative;
+    z-index: 10;
+}
+
+
+@keyframes aparecer{
+
+    from{
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to{
+        opacity: 0.35;
+        transform: translateY(0);
+    }
+}
+
+
+.login-card h1{
+    color: white;
+
+    font-size: 60px;
+
+    margin-bottom: 35px;
+}
+
+
+/* =========================
+   INPUTS
+========================= */
+
+.input-box{
+    width: 100%;
+    height: 60px;
+
+    border: 2px solid rgba(255,255,255,0.8);
+
+    border-radius: 15px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+
+    margin-bottom: 25px;
+}
+
+.input-box i{
+    color: white;
+    font-size: 22px;
+}
+
+.input-box input{
+    width: 100%;
+
+    background: transparent;
+    border: none;
+    outline: none;
+
+    margin-left: 15px;
+
+    color: white;
+    font-size: 18px;
+}
+
+.input-box input::placeholder{
+    color: #d6d6d6;
+}
+
+
+/* =========================
+   BOTÃO
+========================= */
+
+button{
+    width: 100%;
+    height: 60px;
+
+    border: none;
+    border-radius: 15px;
+
+    background-color: white;
+
+    color: #09145c;
+
+    font-size: 24px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+button:hover{
+    transform: scale(1.03);
+}
