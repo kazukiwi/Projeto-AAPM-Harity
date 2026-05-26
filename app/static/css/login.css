@@ -1,5 +1,5 @@
 /* =========================
-    RESET
+   RESET
 ========================= */
 
 *{
@@ -15,7 +15,10 @@ body{
 
 
 /* =========================
-    NAVBAR
+   FUNDO
+========================= */
+/* =========================
+   NAVBAR
 ========================= */
 
 .navbar{
@@ -38,64 +41,42 @@ body{
     border-bottom: 1px solid rgba(255,255,255,0.3);
 }
 
-/* Estrutura interna da nova Navbar */
-.navbar-container {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-right: 40px;
-}
+/* LOGO */
 
 .navbar-logo{
     width: 180px;
+
     object-fit: contain;
+
     transition: 0.3s;
 }
+
+
+
+/* EFEITO */
 
 .navbar-logo:hover{
     transform: scale(1.03);
 }
-
-/* Links da nova Navbar */
-.navbar-links {
-    display: flex;
-    gap: 30px;
-}
-
-.nav-link {
-    color: #1f2937;
-    text-decoration: none;
-    font-size: 20px;
-    transition: 0.3s;
-}
-
-.nav-link:hover, .nav-link.active {
-    color: #09145c;
-    font-weight: bold;
-}
-
-
-/* =========================
-    FUNDO
-========================= */
-
 .background{
     width: 100%;
     height: 100vh;
 
+    /* Adiciona a imagem JUNTO com o gradiente (a imagem fica por cima) */
     background: url('/static/img/fundo.png') no-repeat center center / cover, 
                 linear-gradient(135deg, #c7c4e8, #b4b0df, #c9c7ea);
 
     position: relative;
+
     overflow: hidden;
 }
 
+    
+
 
 /* =========================
-    CIRCULO GIRANDO
+   CIRCULO GIRANDO
 ========================= */
-
 .rotating-circle{
     position: absolute;
 
@@ -116,15 +97,21 @@ body{
         brightness(45%)
         contrast(115%);
 
+    /* DIMINUA ESTE VALOR: quanto menor o tempo, mais rápido ele gira */
     animation: rotateCircle 30s linear infinite;
 
     z-index: 1;
 }
 
+
+/* ANIMAÇÃO */
+
 @keyframes rotateCircle{
+
     from{
         transform: rotate(0deg);
     }
+
     to{
         transform: rotate(360deg);
     }
@@ -132,40 +119,79 @@ body{
 
 
 /* =========================
-    CONTAINER CENTRAL
+   CONTAINER
 ========================= */
 
-.main-wrapper{
+.container{
     width: 100%;
-    height: calc(100vh - 90px); /* Desconta a altura da navbar */
+    height: 100vh;
 
     display: flex;
-    justify-content: center;
-    align-items: center;
 
     position: relative;
     z-index: 5;
 }
 
-.background{
-    width: 100%;
-    height: 100vh;
-
-    /* Adiciona a imagem JUNTO com o gradiente (a imagem fica por cima) */
-    background: url('/static/img/fundo.png') no-repeat center center / cover, 
-                linear-gradient(135deg, #c7c4e8, #b4b0df, #c9c7ea);
-
-    position: relative;
-
-    overflow: hidden;
-}
 
 /* =========================
-    CARD CENTRAL (Seu Card Original)
+   ESQUERDA
 ========================= */
 
-.glass-card{
-    width: 450px;
+.left{
+    width: 50%;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: flex-start;
+
+    padding-left: 180px;
+
+    position: relative;
+    z-index: 5;
+}
+
+.logo-text{
+    font-size: 110px;
+    color: #09145c;
+
+    margin-bottom: 25px;
+
+    font-weight: bold;
+}
+
+.left p{
+    max-width: 520px;
+
+    text-align: left;
+
+    font-size: 24px;
+    line-height: 42px;
+
+    color: #1f2937;
+}
+
+
+/* =========================
+   DIREITA
+========================= */
+
+.right{
+    width: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* =========================
+   CARD LOGIN
+========================= */
+
+.login-card{
+    width: 430px;
 
     background: #17176d;
 
@@ -175,63 +201,84 @@ body{
 
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
 
-    animation: aparecer 1s ease forwards;
+    animation: aparecer 1s ease;
 
     position: relative;
     z-index: 10;
-    text-align: center; /* Centraliza os textos novos */
 }
 
+
 @keyframes aparecer{
+
     from{
         opacity: 0;
         transform: translateY(30px);
     }
+
     to{
-        opacity: 1; /* Corrigido para o card não sumir ao fim da animação */
+        opacity: 0.35;
         transform: translateY(0);
     }
 }
 
-/* Elementos internos do novo card com seus estilos */
-.badge {
-    display: inline-block;
-    padding: 6px 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 15px;
-    font-size: 14px;
-    color: #d6d6d6;
-    margin-bottom: 20px;
-}
 
-.glass-card h1{
+.login-card h1{
     color: white;
-    font-size: 46px;
-    margin-bottom: 25px;
-}
 
-.glass-card p{
-    text-align: center;
-    font-size: 20px;
-    line-height: 34px;
-    color: #d6d6d6;
+    font-size: 60px;
+
     margin-bottom: 35px;
 }
 
 
 /* =========================
-    BOTÃO
+   INPUTS
 ========================= */
 
-.button-group {
+.input-box{
     width: 100%;
+    height: 60px;
+
+    border: 2px solid rgba(255,255,255,0.8);
+
+    border-radius: 15px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+
+    margin-bottom: 25px;
 }
 
-.btn{
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.input-box i{
+    color: white;
+    font-size: 22px;
+}
+
+.input-box input{
+    width: 100%;
+
+    background: transparent;
+    border: none;
+    outline: none;
+
+    margin-left: 15px;
+
+    color: white;
+    font-size: 18px;
+}
+
+.input-box input::placeholder{
+    color: #d6d6d6;
+}
+
+
+/* =========================
+   BOTÃO
+========================= */
+
+button{
     width: 100%;
     height: 60px;
 
@@ -244,13 +291,12 @@ body{
 
     font-size: 24px;
     font-weight: bold;
-    text-decoration: none;
 
     cursor: pointer;
 
     transition: 0.3s;
 }
 
-.btn:hover{
+button:hover{
     transform: scale(1.03);
 }
