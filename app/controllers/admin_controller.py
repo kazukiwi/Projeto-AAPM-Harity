@@ -132,3 +132,40 @@ def cadastrar_usuario_assosiado(
 
     #Redirecionar para a tela de login após cadastro
     return RedirectResponse("/usuarios/assosiados?cadastro=success", status_code=303)
+
+@router.post("/assosiados/{usuario_id}/toggle-ativo")
+def toggle_usuario_assosiado_ativo(
+    usuario_id: int,
+    db: Session = Depends(get_db),
+    admin = Depends(get_admin)
+):
+    # Impede o admin de desativar a própria conta
+    if usuario_id == admin["id"]:
+        return RedirectResponse(
+            url="/usuarios/assosiados?erro=autoproprio",
+            status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    # Busca o usuário
+    usuario_alvo = db.query(Usuario).filter(
+        Usuario.id == usuario_id,
+        Usuario.role == "associado"
+    ).first()
+
+    # Se não encontrar
+    if not usuario_alvo:
+        return RedirectResponse(
+            url="/usuarios/assosiados?erro=nao_encontrado",
+            status_code=status.HTTP_303_SEE_OTHER
+        )
+    
+    # Alterna ativo/inativo
+    usuario_alvo.ativo = not usuario_alvo.ativo
+
+    db.commit()
+    db.refresh(usuario_alvo)
+
+    return RedirectResponse(
+        url="/usuarios/assosiados?editado=ok",
+        status_code=status.HTTP_303_SEE_OTHER
+    )
