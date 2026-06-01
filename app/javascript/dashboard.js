@@ -1,22 +1,75 @@
-// Atualiza dashboard automaticamente (simulação)
+// 1. Simulação dos dados que o Admin vai inserir (ou que virão do banco de dados)
+const dadosDoAdmin = {
+    totalProdutos: 6,
+    estoqueBaixo: 2,
+    valorTotal: 26875.00,
+    totalCategorias: 3,
+    armariosOcupados: 4,
+    armariosDisponiveis: 45,
+    totalAssociados: 5,
+    
+    // Lista de produtos com estoque baixo
+    alertas: [
+        { nome: "Notebook Dell", unidades: 2 },
+        { nome: "Papel A4 Resma", unidades: 1 }
+    ],
+    
+    // Lista de produtos por categoria
+    categorias: [
+        { nome: "Móveis", quantidade: 2 },
+        { nome: "Eletrônicos", quantidade: 2 },
+        { nome: "Material de Escritório", quantidade: 2 }
+    ]
+};
 
-function atualizarDashboard() {
-    const totalProdutos = document.querySelector(".card.azul h3");
-    const estoqueBaixo = document.querySelector(".card.vermelho h3");
-    const valorTotal = document.querySelector(".card.verde h3");
-    const categorias = document.querySelector(".card.roxo h3");
+// 2. Função que injeta esses dados no HTML da página
+function atualizarDashboard(dados) {
+    // Atualizando os cards superiores (Estoque)
+    document.getElementById("total-produtos").textContent = dados.totalProdutos;
+    document.getElementById("estoque-baixo").textContent = dados.estoqueBaixo;
+    document.getElementById("total-categorias").textContent = dados.totalCategorias;
+    
+    // Formatando o valor para a moeda Real (R$)
+    document.getElementById("valor-total").textContent = dados.valorTotal.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    });
 
-    if (!totalProdutos || !estoqueBaixo || !valorTotal || !categorias) return;
+    // Atualizando os cards do meio (Armários e Associados)
+    document.getElementById("armarios-ocupados").textContent = dados.armariosOcupados;
+    document.getElementById("armarios-disponiveis").textContent = dados.armariosDisponiveis;
+    document.getElementById("total-associados").textContent = dados.totalAssociados;
 
-    totalProdutos.innerText = Math.floor(Math.random() * 20);
-    estoqueBaixo.innerText = Math.floor(Math.random() * 5);
-    categorias.innerText = Math.floor(Math.random() * 10);
+    // --- Renderizando a lista de Alertas Dinamicamente ---
+    const containerAlertas = document.getElementById("lista-alertas");
+    containerAlertas.innerHTML = ""; // Limpa o container antes de colocar novos dados
+    
+    dados.alertas.forEach(alerta => {
+        const divAlerta = document.createElement("div");
+        divAlerta.className = "alerta";
+        divAlerta.innerHTML = `
+            <strong>${alerta.nome}</strong>
+            <span>${alerta.unidades} ${alerta.unidades === 1 ? 'unidade' : 'unidades'}</span>
+        `;
+        containerAlertas.appendChild(divAlerta);
+    });
 
-    console.log("Dashboard atualizado");
+    // --- Renderizando a lista de Categorias Dinamicamente ---
+    const containerCategorias = document.getElementById("lista-categorias");
+    containerCategorias.innerHTML = ""; // Limpa o container antes de colocar novos dados
+    
+    dados.categorias.forEach(cat => {
+        const divCategoria = document.createElement("div");
+        divCategoria.className = "categoria";
+        divCategoria.innerHTML = `
+            <span>${cat.nome}</span>
+            <strong>${cat.quantidade} ${cat.quantidade === 1 ? 'produto' : 'produtos'}</strong>
+        `;
+        containerCategorias.appendChild(divCategoria);
+    });
 }
 
-// roda a cada 5 segundos
-setInterval(atualizarDashboard, 5000);
-
-// primeira execução imediata
-atualizarDashboard();
+// 3. Executa a função assim que a página carregar completamente
+document.addEventListener("DOMContentLoaded", () => {
+    atualizarDashboard(dadosDoAdmin);
+});
