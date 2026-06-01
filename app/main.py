@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from app.controllers import (
     auth_controller,
     admin_controller,
-    categoria_controller,
+    categorias_controller,
     produto_controller,
     movimentacao_controller
 )
@@ -22,7 +22,7 @@ templates = Jinja2Templates(directory="app/templates")
 # Routers
 app.include_router(auth_controller.router)
 app.include_router(admin_controller.router)
-app.include_router(categoria_controller.router)
+app.include_router(categorias_controller.router)
 app.include_router(produto_controller.router)
 app.include_router(movimentacao_controller.router)
 
@@ -35,14 +35,14 @@ def home(
 ):
     if usuario is None:
         return templates.TemplateResponse(
-            "index.html",
-            {"request": request}
+            name="login.html",
+            request=request
         )
 
     return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
+        name="dashboard.html",
+        request=request,
+        context={
             "usuario": usuario
         }
     )
