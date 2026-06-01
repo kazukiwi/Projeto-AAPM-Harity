@@ -268,7 +268,7 @@ h2 {
 
 .btn-salvar {
     width: 100%;
-    background-color: #16a34a;
+    background-color: #15095c;
     color: white;
     border: none;
     padding: 12px;
@@ -281,7 +281,7 @@ h2 {
 }
 
 .btn-salvar:hover {
-    background-color: #15803d;
+    background-color: #0b0a44;
 }
 
 /* =========================
