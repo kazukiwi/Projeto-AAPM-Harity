@@ -27,7 +27,7 @@ def listar_categorias(
 
     return templates.TemplateResponse(
         request,
-        "categorias/index.html",
+        "categoria/index.html",
         {
             "request": request,
             "categorias": categorias,
@@ -45,7 +45,7 @@ def form_nova_categoria(
 ):
     return templates.TemplateResponse(
         request,
-        "categorias/nova.html",
+        "categoria/form.html",
         {
             "request": request,
             "usuario": admin,
@@ -65,7 +65,7 @@ def criar_categoria(
     if existente:
         return templates.TemplateResponse(
             request,
-            "categorias/form.html",
+            "categoria/form.html",
             {
                 "request": request,
                 "usuario": admin,
@@ -158,14 +158,14 @@ def toggle_categoria(
         return RedirectResponse("/categorias/", status_code=302)
 
     if categoria.ativo:
-        produtos_ativos = [p for p in categoria.produtos if p.ativo]
+        produtos_ativos = [p for p in categoria.produtos if p.ativa]
 
         if produtos_ativos:
             return RedirectResponse(
-                url=f"/caegorias?erro=produtos_vinculados&categoria={categoria.nome}",
+                url=f"/categorias?erro=produtos_vinculados&categoria={categoria.nome}",
                 status_code=302
             )
-        
+
     categoria.ativo = not categoria.ativo
     db.commit()
 

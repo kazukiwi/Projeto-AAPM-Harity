@@ -1,0 +1,94 @@
+<!-- Produto index -->
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos - AAPM</title>
+
+    <link rel="stylesheet" href="/static/css/produtos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="#">
+                    <img src="/static/img/logo.png" alt="Logo AAPM">
+                </a>
+            </div>
+            <ul class="menu">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="/templates/produtos/produtos.html" class="active">Produtos</a></li>
+                <li><a href="/templates/vendas/vendas.html">Vendas</a></li>
+                <li><a href="/templates/mais_vendidos/mais_vendidos.html">Mais vendidos</a></li>
+                <li><a href="/templates/armarios/armarios.html">Armários</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="produtos-container-main">
+
+        <div class="header-produtos">
+            <h1>Produtos</h1>
+            <p id="contador-produtos">0 produtos encontrados</p>
+        </div>
+
+        <div class="filtros-container">
+            <div class="busca-wrapper">
+                <i class="fa-solid fa-magnifying-glass icone-busca"></i>
+                <input type="text" placeholder="Buscar produtos...">
+            </div>
+            
+            <div class="select-wrapper">
+                <i class="fa-solid fa-filter icone-filtro"></i>
+                <select>
+                    <option value="">Todas as categorias</option>
+                </select>
+            </div>
+
+            <label class="checkbox-wrapper">
+                <input type="checkbox">
+                <span>Apenas estoque baixo</span>
+            </label>
+        </div>
+
+        <div class="tabela-container">
+            <table class="tabela-produtos">
+                <thead>
+                    <tr>
+                        <th>PRODUTO</th>
+                        <th>SKU</th>
+                        <th>CATEGORIA</th>
+                        <th>QUANTIDADE</th>
+                        <th>PREÇO</th>
+                        <th>LOCALIZAÇÃO</th>
+                        <th style="text-align: center;">AÇÕES</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-tabela">
+                    </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 AAPM - SENAI. Todos os direitos reservados.</p>
+            <div class="footer-links">
+                <a href="#">Termos de Uso</a>
+                <a href="#">Política de Privacidade</a>
+                <a href="#">Suporte</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/produtos.js"></script>
+</body>
+
+</html>
