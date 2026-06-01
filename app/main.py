@@ -35,7 +35,7 @@ def home(
 ):
     if usuario is None:
         return templates.TemplateResponse(
-            name="login.html",
+            name="index.html",
             request=request
         )
 

@@ -1,11 +1,5 @@
 // 1. Nossa "Base de Dados" provisória em formato de Array de Objetos
 let inventario = [
-    { nome: "Cadeira de Escritório", categoria: "Móveis", quantidade: 5, preco: 350.00 },
-    { nome: "Notebook Dell", categoria: "Eletrônicos", quantidade: 2, preco: 4500.00 },
-    { nome: "Papel A4 Resma", categoria: "Material de Escritório", quantidade: 1, preco: 25.00 },
-    { nome: "Mesa de Reunião", categoria: "Móveis", quantidade: 4, preco: 1200.00 },
-    { nome: "Monitor LG 24'", categoria: "Eletrônicos", quantidade: 8, preco: 850.00 },
-    { nome: "Caneta Bic Caixa", categoria: "Material de Escritório", quantidade: 15, preco: 30.00 }
 ];
 
 // Dados estáticos que você possuía para os armários
