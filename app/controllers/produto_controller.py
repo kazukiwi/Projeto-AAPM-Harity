@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, Request, Form, UploadFile, File, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from app.models.movimentacao import Movimentacao
 
 from app.database import get_db
 from app.models.produtos import Produto
@@ -301,3 +303,28 @@ def _remover_imagem(imagem_path: str | None) -> None:
 
     if os.path.exists(caminho):
         os.remove(caminho)
+
+@router.get("/mais-vendidos")
+def mais_vendidos(db: Session = Depends(get_db)):
+    resultado = (
+        db.query(
+            Produto.id,
+            Produto.nome,
+            func.sum(Movimentacao.quantidade).label("total_vendido")
+        )
+        .join(Movimentacao, Movimentacao.produto_id == Produto.id)
+        .filter(Movimentacao.tipo == "saida")
+        .group_by(Produto.id, Produto.nome)
+        .order_by(func.sum(Movimentacao.quantidade).desc())
+        .limit(10)
+        .all()
+    )
+
+    return [
+        {
+            "id": r.id,
+            "nome": r.nome,
+            "total_vendido": int(r.total_vendido)
+        }
+        for r in resultado
+    ]
