@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Detalhes do Produto - {{ produto.nome }}</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', path='css/detalhe.css') }}">
 </head>
 <body>
     
-
-<main class="main-content">
+    <main class="main-content">
         <div class="page-header">
             <a href="/produtos" class="btn-back">
                 <i data-lucide="arrow-left" style="width: 16px;"></i> Voltar para a lista
@@ -19,7 +20,7 @@
         {% if request.query_params.get('editado') == 'ok' %}
             <div class="alert-box">
                 <i data-lucide="check-circle" style="width:18px; color:#34d399;"></i>
-                Produto atualizado com sucesso!
+                Produto updated com sucesso!
             </div>
         {% endif %}
 
@@ -72,5 +73,8 @@
 
         </div>
     </main>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>

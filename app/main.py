@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-# 1. Certifique-se de que o pdv_controller está listado aqui!
+
 from app.controllers import (
     auth_controller,
     admin_controller,
