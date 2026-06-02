@@ -1,7 +1,6 @@
-from .categoria import Categoria
-from .produtos import Produto
-from .usuario import Usuario
-from .movimentacao import Movimentacao
-
-#python -m alembic revision --autogenerate -m "Criando tabela movimentacao"
-#python -m alembic upgrade head
+from app.models import categoria
+from app.models import produtos
+from app.models import usuario
+from app.models import movimentacao
+from app.models import venda
+from app.models import cliente

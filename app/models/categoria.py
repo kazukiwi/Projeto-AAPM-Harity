@@ -9,4 +9,4 @@ class Categoria(Base):
     nome = Column(String(100), unique=True, index=True, nullable=False)
     ativo = Column(Boolean, default=True)
 
-    produtos = relationship("Produto", back_populates="categoria")
+    produtos = relationship("Produto", back_populates="categoria", lazy="select")
