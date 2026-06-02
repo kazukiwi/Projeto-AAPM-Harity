@@ -38,7 +38,7 @@ def tela_pdv(
     """
     produtos  = (
         db.query(Produto)
-        .filter(Produto.ativo == True, Produto.estoque_atual > 0)
+        .filter(Produto.ativo == True)
         .order_by(Produto.nome)
         .all()
     )
@@ -199,15 +199,29 @@ def historico_vendas(
     db: Session = Depends(get_db),
     usuario = Depends(get_usuario_logado)
 ):
-    """Histórico de todas as vendas."""
+    """Histórico de todas as vendas — Corrigido para alimentar o modal."""
     vendas = (
         db.query(Venda)
         .order_by(Venda.criado_em.desc())
         .limit(100)
         .all()
     )
+
+    # CORREÇÃO: Buscando os produtos ativos para que o modal nesta página não fique em branco
+    produtos = (
+        db.query(Produto)
+        .filter(Produto.ativo == True)
+        .order_by(Produto.nome)
+        .all()
+    )
+
     return templates.TemplateResponse(
         request,
         "pdv/historico.html",
-        {"request": request, "usuario": usuario, "vendas": vendas}
+        {
+            "request": request, 
+            "usuario": usuario, 
+            "vendas": vendas,
+            "produtos": produtos  # <-- Enviando os produtos cadastrados para o HTML
+        }
     )
