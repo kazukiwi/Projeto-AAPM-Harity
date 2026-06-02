@@ -1,68 +1,130 @@
-// 1. Em vez de deixar a lista fixa, começamos pegando o que está salvo no navegador.
-// Se não tiver nada, ele começa como um array vazio [].
-let inventario = JSON.parse(localStorage.getItem("inventario")) || [];
+// Variável global para armazenar os produtos vindos do MySQL
+let listaProdutosDoBanco = [];
 
-// Função responsável por desenhar a tabela e atualizar o contador
-function renderizarTabelaProdutos() {
+// 1. BUSCAR PRODUTOS DO MYSQL (FASTAPI)
+async function buscarProdutosDoMySQL() {
+    try {
+        // Ajuste a URL se a sua rota no FastAPI for diferente (ex: /api/produtos)
+        const resposta = await fetch("/produtos"); 
+        if (!resposta.ok) throw new Error("Erro ao buscar dados do MySQL");
+        
+        listaProdutosDoBanco = await resposta.json();
+        
+        // Renderiza a tabela e preenche as categorias do filtro
+        renderizarTabelaProdutos(listaProdutosDoBanco);
+        preencherFiltroCategorias(listaProdutosDoBanco);
+    } catch (erro) {
+        console.error("Erro ao carregar produtos:", erro);
+        document.getElementById("corpo-tabela").innerHTML = `
+            <tr><td colspan="7" style="text-align:center; color:red;">Erro ao carregar dados do banco de dados.</td></tr>
+        `;
+    }
+}
+
+// 2. RENDERIZAR AS LINHAS DA TABELA
+function renderizarTabelaProdutos(produtos) {
     const corpoTabela = document.getElementById("corpo-tabela");
-    const contadorProdutos = document.getElementById("contador-produtos");
+    const contador = document.getElementById("contador-produtos");
+    corpoTabela.innerHTML = "";
 
-    if (!corpoTabela) return;
+    // Atualiza o contador de itens encontrados
+    contador.textContent = `${produtos.length} ${produtos.length === 1 ? 'produto encontrado' : 'produtos encontrados'}`;
 
-    // Atualiza o texto do cabeçalho de forma dinâmica
-    contadorProdutos.textContent = `${inventario.length} produtos encontrados`;
-    corpoTabela.innerHTML = ""; 
-
-    // Se a lista estiver vazia, mostra uma mensagem amigável
-    if (inventario.length === 0) {
-        corpoTabela.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #9ca3af; padding: 30px;">Nenhum produto cadastrado pelo administrador ainda.</td></tr>`;
+    if (produtos.length === 0) {
+        corpoTabela.innerHTML = `<tr><td colspan="7" style="text-align:center;">Nenhum produto cadastrado ou encontrado.</td></tr>`;
         return;
     }
 
-    inventario.forEach(prod => {
-        const estaBaixo = prod.quantidade <= prod.min;
-        
-        let classeBadge = "padrao";
-        const catNormalizada = prod.categoria.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        
-        if (catNormalizada.includes("moveis")) classeBadge = "moveis";
-        else if (catNormalizada.includes("eletronico")) classeBadge = "eletronicos";
-        else if (catNormalizada.includes("escritorio")) classeBadge = "material-de-escritorio";
-
+    // Passa de produto em produto gerando as tags HTML da tabela
+    produtos.forEach(prod => {
         const tr = document.createElement("tr");
+
+        // Tratamento de segurança caso o banco retorne campos vazios
+        const sku = prod.sku || "N/A";
+        const localizacao = prod.localizacao || "Depósito";
+        const precoFormatado = parseFloat(prod.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        // Aplica uma classe de aviso visual caso o estoque esteja baixo (3 ou menos)
+        const classeEstoque = prod.quantidade <= 3 ? 'style="color: #dc2626; font-weight: bold;"' : '';
+
         tr.innerHTML = `
-            <td>
-                <div class="nome-produto-celula">
-                    ${estaBaixo ? '<i class="fa-solid fa-circle-exclamation icone-aviso-estoque" title="Estoque Crítico!"></i>' : ''}
-                    <div class="detalhes-produto">
-                        <strong>${prod.nome}</strong>
-                        <span>${prod.descricao || 'Sem descrição'}</span>
-                    </div>
-                </div>
-            </td>
-            <td><span class="sku-texto">${prod.sku}</span></td>
-            <td><span class="badge-categoria ${classeBadge}">${prod.categoria}</span></td>
-            <td>
-                <div class="qtd-container">
-                    <span class="qtd-valor ${estaBaixo ? 'critico' : ''}">${prod.quantidade}</span>
-                    <span class="qtd-minimo">Min: ${prod.min || 3}</span>
-                </div>
-            </td>
-            <td><span class="preco-texto">${parseFloat(prod.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></td>
-            <td>${prod.localizacao || 'Depósito Geral'}</td>
-            <td>
-                <div class="acoes-container">
-                    <button class="btn-acao ver" title="Visualizar"><i class="fa-regular fa-eye"></i></button>
-                    <button class="btn-acao editar" title="Editar"><i class="fa-regular fa-pen-to-square"></i></button>
-                    <button class="btn-acao excluir" title="Excluir"><i class="fa-regular fa-trash-can"></i></button>
-                </div>
+            <td><strong>${prod.nome}</strong></td>
+            <td><span class="sku-tag">${sku}</span></td>
+            <td>${prod.categoria}</td>
+            <td ${classeEstoque}>${prod.quantidade} un</td>
+            <td>${precoFormatado}</td>
+            <td>${localizacao}</td>
+            <td style="text-align: center;">
+                <button class="btn-acao-deletar" onclick="deletarProdutoDoBanco(${prod.id})" title="Excluir">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
             </td>
         `;
         corpoTabela.appendChild(tr);
     });
 }
 
-// Inicializa a tabela quando a página carregar
+// 3. PREENCHER O FILTRO SELECT DINAMICAMENTE
+function preencherFiltroCategorias(produtos) {
+    const selectCategoria = document.getElementById("select-categoria");
+    if (!selectCategoria) return;
+
+    // Remove duplicadas usando Set
+    const categorias = [...new Set(produtos.map(p => p.categoria))];
+
+    // Mantém apenas a primeira opção e limpa o resto anterior
+    selectCategoria.innerHTML = '<option value="">Todas as categorias</option>';
+
+    categorias.forEach(cat => {
+        const option = document.createElement("option");
+        option.value = cat;
+        option.textContent = cat;
+        selectCategoria.appendChild(option);
+    });
+}
+
+// 4. SISTEMA DE FILTRAGEM (BUSCA, CATEGORIA E ESTOQUE BAIXO)
+function aplicarFiltros() {
+    const textoBusca = document.getElementById("input-busca").value.toLowerCase();
+    const categoriaSelecionada = document.getElementById("select-categoria").value;
+    const apenasEstoqueBaixo = document.getElementById("check-estoque-baixo").checked;
+
+    const produtosFiltrados = listaProdutosDoBanco.filter(prod => {
+        const bateTexto = prod.nome.toLowerCase().includes(textoBusca) || (prod.sku && prod.sku.toLowerCase().includes(textoBusca));
+        const bateCategoria = categoriaSelecionada === "" || prod.categoria === categoriaSelecionada;
+        const bateEstoque = !apenasEstoqueBaixo || prod.quantidade <= 3;
+
+        return bateTexto && bateCategoria && bateEstoque;
+    });
+
+    renderizarTabelaProdutos(produtosFiltrados);
+}
+
+// 5. FUNÇÃO PARA DELETAR PRODUTO DO BANCO DE DADOS (OPCIONAL)
+async function deletarProdutoDoBanco(id) {
+    if (!id) return alert("Este produto provisório não possui ID no MySQL.");
+    
+    if (confirm("Tem certeza que deseja excluir este produto do MySQL?")) {
+        try {
+            const resposta = await fetch(`/api/produtos/${id}`, { method: "DELETE" });
+            if (!resposta.ok) throw new Error("Erro ao deletar");
+            
+            // Recarrega a lista direto do banco atualizada
+            buscarProdutosDoMySQL();
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro ao excluir produto.");
+        }
+    }
+}
+
+// 6. INICIALIZADOR DE EVENTOS DE DIGITAÇÃO E SELEÇÃO
 document.addEventListener("DOMContentLoaded", () => {
-    renderizarTabelaProdutos();
+    // Inicializa a tabela buscando do MySQL
+    buscarProdutosDoMySQL();
+
+    // Adiciona os ouvintes de eventos para filtrar conforme o usuário interage
+    document.getElementById("input-busca").addEventListener("input", aplicarFiltros);
+    document.getElementById("select-categoria").addEventListener("change", aplicarFiltros);
+    document.getElementById("check-estoque-baixo").addEventListener("change", aplicarFiltros);
 });

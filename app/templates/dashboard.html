@@ -36,9 +36,6 @@
                 <h1>Dashboard</h1>
                 <p>Visão geral do estoque AAPM</p>
             </div>
-            <button id="btn-abrir-modal" class="btn-adicionar">
-                <i class="fa-solid fa-plus"></i> Adicionar Produto
-            </button>
         </div>
 
         <h2>Estoque</h2>
@@ -119,36 +116,6 @@
             </div>
         </div>
 
-    </div>
-
-    <div id="modal-produto" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Novo Produto</h2>
-                <button id="btn-fechar-modal" class="btn-fechar">&times;</button>
-            </div>
-            <form id="form-produto">
-                <div class="form-group">
-                    <label for="nome">Nome do Produto</label>
-                    <input type="text" id="nome" required placeholder="Ex: Cadeira Ergonômica">
-                </div>
-                <div class="form-group">
-                    <label for="categoria">Categoria</label>
-                    <input type="text" id="categoria" required placeholder="Ex: Móveis">
-                </div>
-                <div class="form-group flex-group">
-                    <div>
-                        <label for="quantidade">Qtd. em Estoque</label>
-                        <input type="number" id="quantidade" min="0" required placeholder="0">
-                    </div>
-                    <div>
-                        <label for="preco">Preço Unitário (R$)</label>
-                        <input type="number" id="preco" min="0" step="0.01" required placeholder="0.00">
-                    </div>
-                </div>
-                <button type="submit" class="btn-salvar">Salvar Produto</button>
-            </form>
-        </div>
     </div>
 
     <footer class="main-footer">
