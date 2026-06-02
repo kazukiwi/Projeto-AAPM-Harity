@@ -24,7 +24,6 @@ def upgrade() -> None:
     op.create_table('categorias',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('nome', sa.String(), nullable=True),
-    sa.Column('ativo', sa.Boolean(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_categorias_id'), 'categorias', ['id'], unique=False)
