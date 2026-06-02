@@ -1,122 +1,92 @@
-// Variável global para armazenar os produtos vindos do MySQL
-let listaProdutosDoBanco = [];
+document.addEventListener("DOMContentLoaded", () => {
+    carregarProdutos();
+});
 
-// 1. BUSCAR PRODUTOS DO MYSQL (FASTAPI)
-async function buscarProdutosDoMySQL() {
+async function carregarProdutos() {
     try {
-        const resposta = await fetch("/produtos"); 
-        if (!resposta.ok) throw new Error("Erro ao buscar dados do MySQL");
+        // Altere para a rota correta da sua API que retorna o JSON dos produtos
+        const response = await fetch('/produtos'); 
+        const produtos = await response.json();
         
-        listaProdutosDoBanco = await resposta.json();
+        const corpoTabela = document.getElementById('corpo-tabela');
+        const contador = document.getElementById('contador-produtos');
         
-        // Renderiza a tabela baseada nos campos reais do banco
-        renderizarTabelaProdutos(listaProdutosDoBanco);
-    } catch (erro) {
-        console.error("Erro ao carregar produtos:", erro);
-        document.getElementById("corpo-tabela").innerHTML = `
-            <tr><td colspan="7" style="text-align:center; color:red;">Erro ao carregar dados do banco de dados.</td></tr>
-        `;
+        corpoTabela.innerHTML = '';
+        contador.textContent = `${produtos.length} produtos encontrados`;
+
+        if (produtos.length === 0) {
+            corpoTabela.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px;">Nenhum produto encontrado.</td></tr>`;
+            return;
+        }
+
+        produtos.forEach(produto => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><img src="${produto.imagem_url || '/static/img/default.png'}" width="50" style="border-radius:4px;"></td>
+                <td><strong>${produto.nome}</strong></td>
+                <td>${produto.categoria_nome || 'Sem categoria'}</td>
+                <td>${produto.estoque_atual}</td>
+                <td>R$ ${parseFloat(produto.preco).toFixed(2)}</td>
+                <td>${produto.estoque_atual <= 5 ? '<span style="color:red; font-weight:bold;">Estoque Baixo</span>' : '<span style="color:green;">Ativo</span>'}</td>
+                <td style="text-align: center;">
+                    <button style="background:none; border:none; color:#1e1b4b; cursor:pointer; margin-right:10px;"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button style="background:none; border:none; color:red; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            `;
+            corpoTabela.appendChild(tr);
+        });
+    } catch (error) {
+        console.error("Erro ao carregar produtos:", error);
     }
 }
 
-// 2. RENDERIZAR AS LINHAS DA TABELA (Sem SKU, com Imagem e Status)
-function renderizarTabelaProdutos(produtos) {
-    const corpoTabela = document.getElementById("corpo-tabela");
-    const contador = document.getElementById("contador-produtos");
-    corpoTabela.innerHTML = "";
+document.addEventListener("DOMContentLoaded", function () {
+    // Captura os elementos dos filtros
+    const inputBusca = document.getElementById("input-busca");
+    const selectCategoria = document.getElementById("select-categoria");
+    const checkEstoqueBaixo = document.getElementById("check-estoque-baixo");
+    const tabelaLinhas = document.querySelectorAll("#corpo-tabela tr");
+    const contadorProdutos = document.getElementById("contador-produtos");
 
-    contador.textContent = `${produtos.length} ${produtos.length === 1 ? 'produto encontrado' : 'produtos encontrados'}`;
+    function filtrarProdutos() {
+        let textoBusca = inputBusca.value.toLowerCase();
+        let categoriaSelecionada = selectCategoria.value; // Pega o ID da categoria
+        let apenasEstoqueBaixo = checkEstoqueBaixo.checked;
+        let produtosVisiveis = 0;
 
-    if (produtos.length === 0) {
-        corpoTabela.innerHTML = `<tr><td colspan="7" style="text-align:center;">Nenhum produto cadastrado ou encontrado.</td></tr>`;
-        return;
-    }
+        tabelaLinhas.forEach(linha => {
+            // Captura os dados de cada linha da tabela
+            // Nota: Ajuste os índices [0, 1, 2...] se a ordem das suas colunas for diferente
+            const nomeProduto = linha.cells[1]?.textContent.toLowerCase() || "";
+            const categoriaTexto = linha.cells[2]?.textContent || "";
+            const estoqueAtual = parseInt(linha.cells[3]?.textContent || "0", 10);
 
-    produtos.forEach(prod => {
-        const tr = document.createElement("tr");
+            // Se você colocou o ID da categoria em algum atributo na linha (ex: <tr data-categoria-id="...">), 
+            // use ele. Se não, podemos comparar pelo nome do texto que está no <select>
+            const textoOpcaoCategoria = selectCategoria.options[selectCategoria.selectedIndex]?.text;
 
-        // Definição dos campos para casar com a estrutura do seu banco
-        const precoFormatado = parseFloat(prod.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const urlImagem = prod.imagem_url || "/static/img/placeholder.png"; // Imagem padrão caso nula
-        
-        // Categoria via relacionamento ID ou fallback textual
-        const categoriaNome = prod.categoria ? prod.categoria.nome : "Sem Categoria";
+            // Condições do Filtro
+            const bateNome = nomeProduto.includes(textoBusca);
+            const bateCategoria = categoriaSelecionada === "" || categoriaTexto.trim() === textoOpcaoCategoria.trim();
+            const bateEstoque = !apenasEstoqueBaixo || estoqueAtual <= 5; // Defina "5" como o seu limite de estoque baixo
 
-        // Aplica uma classe de aviso visual caso o estoque esteja baixo (3 ou menos)
-        const classeEstoque = prod.estoque_atual <= 3 ? 'style="color: #dc2626; font-weight: bold;"' : '';
-        
-        // Badge de Status Ativo / Inativo
-        const statusBadge = prod.ativo 
-            ? `<span class="badge-status ativo">Ativo</span>` 
-            : `<span class="badge-status inativo">Inativo</span>`;
+            // Decide se mostra ou esconde a linha
+            if (bateNome && bateCategoria && bateEstoque) {
+                linha.style.display = "";
+                produtosVisiveis++;
+            } else {
+                linha.style.display = "none";
+            }
+        });
 
-        tr.innerHTML = `
-            <td>
-                <img src="${urlImagem}" alt="${prod.nome}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb;">
-            </td>
-            <td><strong>${prod.nome}</strong></td>
-            <td><span class="badge-categoria padrao">${categoriaNome}</span></td>
-            <td ${classeEstoque}>${prod.estoque_atual} un</td>
-            <td><span class="preco-texto">${precoFormatado}</span></td>
-            <td>${statusBadge}</td>
-            <td style="text-align: center;">
-                <div style="display: flex; gap: 12px; justify-content: center;">
-                    <a href="/produtos/${prod.id}/editar" class="btn-acao ver" title="Editar">
-                        <i class="fa-solid fa-pen"></i>
-                    </a>
-                    <button class="btn-acao excluir" onclick="deletarProdutoDoBanco(${prod.id})" title="Excluir" style="background:none; border:none; padding:0;">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        corpoTabela.appendChild(tr);
-    });
-}
-
-// 3. SISTEMA DE FILTRAGEM (Ajustado para os novos campos)
-function aplicarFiltros() {
-    const textoBusca = document.getElementById("input-busca").value.toLowerCase();
-    const categoriaSelecionada = document.getElementById("select-categoria").value;
-    const apenasEstoqueBaixo = document.getElementById("check-estoque-baixo").checked;
-
-    const produtosFiltrados = listaProdutosDoBanco.filter(prod => {
-        const bateTexto = prod.nome.toLowerCase().includes(textoBusca);
-        
-        // Compara por ID da categoria se o filtro contiver valores numéricos
-        const prodCatId = prod.categoria_id ? prod.categoria_id.toString() : "";
-        const bateCategoria = categoriaSelecionada === "" || prodCatId === categoriaSelecionada;
-        
-        const bateEstoque = !apenasEstoqueBaixo || prod.estoque_atual <= 3;
-
-        return bateTexto && bateCategoria && bateEstoque;
-    });
-
-    renderizarTabelaProdutos(produtosFiltrados);
-}
-
-// 4. FUNÇÃO DELETAR PRODUTO DO BANCO DE DADOS
-async function deletarProdutoDoBanco(id) {
-    if (!id) return;
-    
-    if (confirm("Tem certeza que deseja desativar/excluir este produto?")) {
-        try {
-            const resposta = await fetch(`/produtos/${id}/desativar`, { method: "POST" });
-            if (!resposta.ok) throw new Error("Erro ao alterar estado do produto");
-            
-            buscarProdutosDoMySQL();
-        } catch (erro) {
-            console.error(erro);
-            alert("Erro ao remover produto.");
+        // Atualiza o contador de produtos na tela dinamicamente
+        if (contadorProdutos) {
+            contadorProdutos.textContent = `${produtosVisiveis} produto(s) encontrado(s)`;
         }
     }
-}
 
-// 5. INICIALIZADOR
-document.addEventListener("DOMContentLoaded", () => {
-    buscarProdutosDoMySQL();
-
-    document.getElementById("input-busca").addEventListener("input", aplicarFiltros);
-    document.getElementById("select-categoria").addEventListener("change", aplicarFiltros);
-    document.getElementById("check-estoque-baixo").addEventListener("change", aplicarFiltros);
+    // Escuta os eventos de digitação, mudança no select e clique no checkbox
+    inputBusca.addEventListener("input", filtrarProdutos);
+    selectCategoria.addEventListener("change", filtrarProdutos);
+    checkEstoqueBaixo.addEventListener("change", filtrarProdutos);
 });
