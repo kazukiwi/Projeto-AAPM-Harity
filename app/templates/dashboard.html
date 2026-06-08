@@ -22,7 +22,7 @@
             <ul class="menu">
                 <li><a href="#" class="active">Dashboard</a></li>
                 <li><a href="/produtos">Produtos</a></li>
-                <a href="/pdv/historico">Vendas</a>
+                <li><a href="/pdv/historico">Vendas</a></li>
                 <li><a href="/mais_vendidos">Mais vendidos</a></li>
                 <li><a href="/armarios">Armários</a></li>
                 <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
@@ -35,7 +35,7 @@
         <div class="header">
             <div>
                 <h1>Dashboard</h1>
-                <p>Visão geral do estoque AAPM</p>
+                <p>Visão geral do estoque e armários AAPM</p>
             </div>
         </div>
 
@@ -44,7 +44,7 @@
             <div class="card azul">
                 <div>
                     <span>Total de Produtos</span>
-                    <h3 id="total-produtos">0</h3>
+                    <h3 id="total-produtos">{{ total_produtos | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-box"></i>
             </div>
@@ -52,7 +52,7 @@
             <div class="card vermelho">
                 <div>
                     <span>Estoque Baixo</span>
-                    <h3 id="estoque-baixo">0</h3>
+                    <h3 id="estoque-baixo">{{ estoque_baixo | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-chart-line"></i>
             </div>
@@ -60,7 +60,7 @@
             <div class="card verde">
                 <div>
                     <span>Valor Total</span>
-                    <h3 id="valor-total">R$ 0,00</h3>
+                    <h3 id="valor-total">R$ {{ "%.2f"|format(valor_total | default(0.0)) }}</h3>
                 </div>
                 <i class="fa-solid fa-dollar-sign"></i>
             </div>
@@ -68,7 +68,7 @@
             <div class="card roxo">
                 <div>
                     <span>Categorias</span>
-                    <h3 id="total-categorias">0</h3>
+                    <h3 id="total-categorias">{{ total_categorias | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-table-cells"></i>
             </div>
@@ -79,7 +79,7 @@
             <div class="card azul">
                 <div>
                     <span>Armários Ocupados</span>
-                    <h3 id="armarios-ocupados">0</h3>
+                    <h3 id="armarios-ocupados">{{ armarios_ocupados | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-lock"></i>
             </div>
@@ -87,7 +87,7 @@
             <div class="card verde">
                 <div>
                     <span>Armários Disponíveis</span>
-                    <h3 id="armarios-disponiveis">0</h3>
+                    <h3 id="armarios-disponiveis">{{ armarios_disponiveis | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-lock-open"></i>
             </div>
@@ -95,7 +95,7 @@
             <div class="card roxo">
                 <div>
                     <span>Total de Associados</span>
-                    <h3 id="total-associados">0</h3>
+                    <h3 id="total-associados">{{ total_associados | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-users"></i>
             </div>
@@ -106,14 +106,40 @@
                 <div class="panel-header">
                     <h2>Alertas de Estoque Baixo</h2>
                 </div>
-                <div id="lista-alertas"></div>
+                <div id="lista-alertas">
+                    {% if produtos_alerta %}
+                        <div class="lista-customizada">
+                            {% for prod in produtos_alerta %}
+                                <div class="item-lista" style="display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f3f4f6; align-items: center;">
+                                    <span><strong>{{ prod.nome }}</strong></span>
+                                    <span style="background-color: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold;">{{ prod.estoque_atual }} un.</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="color: #6b7280; padding: 15px;">Nenhum alerta de estoque baixo.</div>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="panel">
                 <div class="panel-header">
                     <h2>Produtos por Categoria</h2>
                 </div>
-                <div id="lista-categorias"></div>
+                <div id="lista-categorias">
+                    {% if contagem_por_categoria %}
+                        <div class="lista-customizada">
+                            {% for cat, qtd in contagem_por_categoria.items() %}
+                                <div class="item-lista" style="display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f3f4f6; align-items: center;">
+                                    <span style="font-weight: 500; color: #374151;">{{ cat.nome }}</span>
+                                    <span style="background-color: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold;">{{ qtd }} {{ 'produto' if qtd == 1 else 'produtos' }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="color: #6b7280; padding: 15px;">Nenhuma categoria cadastrada.</div>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
