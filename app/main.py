@@ -19,6 +19,8 @@ from app.controllers import (
 
 from app.auth import get_usuario_opcional, get_usuario_logado
 
+
+
 # 1º: CRIAR A INSTÂNCIA DO APP
 app = FastAPI(title="Sistema Estoque")
 

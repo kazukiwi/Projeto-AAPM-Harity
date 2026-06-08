@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function carregarDadosDaAPI() {
     try {
         // Faz a requisição HTTP GET para a rota do seu backend
-        const resposta = await fetch('/api/v1/produtos/mais-vendidos');
+        const resposta = await fetch('/api/v1/produtos/mais_vendidos');
         
         if (!resposta.ok) {
             throw new Error(`Erro na requisição: ${resposta.status}`);
