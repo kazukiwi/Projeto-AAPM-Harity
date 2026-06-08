@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.produto import Produto
+from app.models.produtos import Produto
 from app.models.categoria import Categoria
 from app.auth import get_usuario_logado, get_admin
 
