@@ -25,6 +25,14 @@
                 <a href="/pdv/historico">Vendas</a>
                 <li><a href="/mais_vendidos">Mais vendidos</a></li>
                 <li><a href="/armarios">Armários</a></li>
+                {% if usuario.role == 'admin' %}
+                <li><a href="/usuarios" class="nav-link">
+                    <i data-lucide="users"></i> Usuários
+                </a></li>
+                <li><a href="/categorias" class="nav-link">
+                    <i data-lucide="tag"></i> Categorias
+                </a></li>
+                {% endif %}
                 <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
             </ul>
         </nav>

@@ -46,6 +46,6 @@ def home(
         name="dashboard.html",
         request=request,
         context={
-            "usuario": usuario
+            "usuario": usuario,
         }
     )

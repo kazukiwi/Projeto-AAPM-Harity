@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Usuários</title>
+
+    <link rel="stylesheet" href="/static/css/categoria.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="#">
+                    <img src="/static/img/logo.png" alt="Logo AAPM">
+                </a>
+            </div>
+            <ul class="menu">
+                <li><a href="/">Dashboard</a></li>
+                <li><a href="/produtos">Produtos</a></li>
+                <li><a href="/pdv/historico">Vendas</a></li>
+                <li><a href="/mais_vendidos">Mais vendidos</a></li>
+                <li><a href="/armarios">Armários</a></li>
+                {% if usuario.role == 'admin' %}
+                <li><a href="/usuarios" class="nav-link">Usuários</a></li>
+                <li><a href="/categorias" class="active">Categorias</a></li>
+                {% endif %}
+                <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Gerenciamento de Categorias</h1>
+            <a href="/usuarios/novo" class="btn-create">
+                <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
+                Novo usuário
+            </a>
+        </div>
+
+        {% if request.query_params.get('criado') == 'ok' %}
+        <div class="alert-box alert-success">
+            <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>
+            Usuário criado com sucesso!
+        </div>
+        {% endif %}
+
+        {% if request.query_params.get('editado') == 'ok' %}
+        <div class="alert-box alert-success">
+            <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>
+            Usuário atualizado com sucesso!
+        </div>
+        {% endif %}
+
+        {% if request.query_params.get('erro') == 'autoproprio' %}
+        <div class="alert-box alert-error">
+            <i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i>
+            Você não pode desativar sua própria conta.
+        </div>
+        {% endif %}
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome da Categoria</th>
+                        <th>Descrição</th>
+                        <th>Qtd. de Produtos</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in categorias %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ c.nome }}</td>
+                        <td style="color: #94a3b8;">{{ c.descricao or 'Sem descrição' }}</td>
+                        <td>
+                            <span class="badge badge-count">{{ c.total_produtos }}</span>
+                        </td>
+                        <td>
+                            {% if c.ativo %}
+                            <span class="badge badge-active">Ativa</span>
+                            {% else %}
+                            <span class="badge badge-inactive">Inativa</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <a href="/categorias/{{ c.id }}/editar" class="btn-edit">
+                                    <i data-lucide="edit" style="width: 14px; height: 14px;"></i>
+                                    Editar
+                                </a>
+
+                                <form action="/categorias/{{ c.id }}/toggle-ativa" method="post" style="display:inline">
+                                    {% if c.ativo %}
+                                    <button type="submit" class="btn-toggle deactivate">
+                                        <i data-lucide="eye-off" style="width: 14px; height: 14px;"></i>
+                                        Desativar
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn-toggle activate">
+                                        <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
+                                        Ativar
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

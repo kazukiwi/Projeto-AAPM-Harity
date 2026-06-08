@@ -23,18 +23,18 @@ def listar_categorias(
     db: Session = Depends(get_db),
     admin = Depends(get_admin)
 ):
-    categorias = db.query(Categoria).order_by('nome').all()
+    # CORREÇÃO: Passar a coluna da classe Categoria em vez de uma string
+    categorias_db = db.query(Categoria).order_by(Categoria.nome).all()
 
     return templates.TemplateResponse(
         request,
         "categoria/index.html",
         {
             "request": request,
-            "categorias": categorias,
+            "categorias": categorias_db,
             "usuario": admin
-        }
-
-    )
+    }
+)
 
 #CADASTRO DE CATEGORIAS
 
@@ -98,7 +98,7 @@ def form_editar_categoria(
 
     return templates.TemplateResponse(
         request,
-        "categorias/form.html",
+        "categoria/form.html",
         {
             "request": request,
             "usuario": admin,
