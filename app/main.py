@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-=======
+
 from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -92,4 +91,4 @@ def home(
             "total_associados": 0
         }
     )
->>>>>>> edf0baa568d6271fcec26fd502945d6c7b615e6d
+
