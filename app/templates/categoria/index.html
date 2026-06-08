@@ -37,30 +37,30 @@
     <main class="main-content">
         <div class="page-header">
             <h1>Gerenciamento de Categorias</h1>
-            <a href="/usuarios/novo" class="btn-create">
+            <a href="/categorias/nova" class="btn-create">
                 <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
-                Novo usuário
+                Nova categoria
             </a>
         </div>
 
         {% if request.query_params.get('criado') == 'ok' %}
         <div class="alert-box alert-success">
             <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>
-            Usuário criado com sucesso!
+            Categoria criada com sucesso!
         </div>
         {% endif %}
 
         {% if request.query_params.get('editado') == 'ok' %}
         <div class="alert-box alert-success">
             <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>
-            Usuário atualizado com sucesso!
+            Categoria atualizada com sucesso!
         </div>
         {% endif %}
 
-        {% if request.query_params.get('erro') == 'autoproprio' %}
+        {% if request.query_params.get('erro') == 'ja_existe' %}
         <div class="alert-box alert-error">
             <i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i>
-            Você não pode desativar sua própria conta.
+            Você não pode cadastrar uma categoria já existente.
         </div>
         {% endif %}
 
@@ -81,7 +81,13 @@
                         <td style="font-weight: 600;">{{ c.nome }}</td>
                         <td style="color: #94a3b8;">{{ c.descricao or 'Sem descrição' }}</td>
                         <td>
-                            <span class="badge badge-count">{{ c.total_produtos }}</span>
+                            {# Verificamos se a lista de produtos daquela categoria não está vazia #}
+                            {% if c.produtos|length > 0 %}
+                            <span class="badge badge-count">{{ c.produtos|length }}</span>
+                            {% else %}
+                            <span class="text-muted">Nenhum 
+                                produto</span>
+                            {% endif %}
                         </td>
                         <td>
                             {% if c.ativo %}
