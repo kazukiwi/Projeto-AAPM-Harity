@@ -283,7 +283,7 @@ body {
     width: 100%; 
     height: 100%; 
     background: rgba(0, 0, 0, 0.5); 
-    display: none; /* Mantém oculto até ativação do JS */
+    display: none; 
     justify-content: center; 
     align-items: center; 
     z-index: 9999; 
@@ -313,7 +313,6 @@ body {
     color: #0f172a; 
 }
 
-/* Área de toque e física estendida do X */
 .btn-fechar-modal { 
     background: none; 
     border: none; 
@@ -334,7 +333,6 @@ body {
     transform: scale(1.1);
 }
 
-/* GRID DIVIDIDO EM DUAS COLUNAS NO MODAL */
 .pdv-layout-split { 
     display: grid; 
     grid-template-columns: 1fr 1.2fr; 
@@ -386,7 +384,6 @@ body {
     border-color: #4f46e5; 
 }
 
-/* CAMPOS DE APENAS LEITURA (ESTOQUE E PREÇO) */
 .modal-content-pdv .input-readonly { 
     background-color: #f3f4f6; 
     color: #4b5563; 
@@ -417,7 +414,6 @@ body {
     background-color: #1e293b; 
 }
 
-/* LISTA DO CARRINHO INTERNO */
 .pdv-box-carrinho h4 { 
     font-size: 14px; 
     color: #4b5563; 
@@ -455,7 +451,6 @@ body {
     color: #374151; 
 }
 
-/* TOTALIZADOR E BOTÃO FINALIZAR VENDA */
 .pdv-totalizador-rodape { 
     background: #f8fafc; 
     padding: 16px; 
@@ -522,4 +517,65 @@ body {
     .pdv-layout-split { 
         grid-template-columns: 1fr; 
     }
+}
+
+/* ==========================================================================
+   INTERCEPTADOR DE IMPRESSÃO - CORREÇÃO DO RECIBO
+   ========================================================================== */
+@media print {
+    header, 
+    .navbar, 
+    .main-footer, 
+    footer, 
+    .btn-acoes-recibo,
+    a[href*="historico"],
+    button[onclick*="window.print"] {
+        display: none !important;
+    }
+
+    body {
+        background: white !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    .comprovante-wrapper {
+        box-shadow: none !important;
+        margin: 0 auto !important;
+        border: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+}
+
+/* ESTILOS DOS BOTÕES DO COMPROVANTE (FORA DA IMPRESSÃO) */
+.btn-acoes-recibo {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px auto;
+    max-width: 600px;
+}
+
+.btn-acao {
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-voltar {
+    background-color: #4b5563;
+    color: white;
+}
+
+.btn-imprimir {
+    background-color: #4f46e5;
+    color: white;
 }

@@ -130,8 +130,27 @@
                             <label for="select-prod">Selecionar Produto</label>
                             <select id="select-prod" required>
                                 <option value="" disabled selected>Escolha um produto...</option>
+                                {% for produto in produtos %}
+                                    {% if produto.ativo and produto.estoque_atual > 0 %}
+                                    <option value="{{ produto.id }}" data-nome="{{ produto.nome }}" data-preco="{{ produto.preco }}" data-estoque="{{ produto.estoque_atual }}">
+                                        {{ produto.nome }}
+                                    </option>
+                                    {% endif %}
+                                {% endfor %}
                             </select>
                         </div>
+
+                        <div class="form-group" id="grupo-tamanho" style="display: none; margin-bottom: 15px;">
+                            <label for="pdv-tamanho" style="display:block; font-weight:bold; margin-bottom:5px; color: #4f46e5;">Tamanho da Camiseta</label>
+                            <select id="pdv-tamanho" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; background-color: white;">
+                                <option value="" disabled selected>Selecione o tamanho...</option>
+                                <option value="P">P</option>
+                                <option value="M">M</option>
+                                <option value="G">G</option>
+                                <option value="GG">GG</option>
+                            </select>
+                        </div>
+
                         <div class="form-row-split">
                             <div class="form-group flex-1">
                                 <label for="pdv-qtd">Qtd</label>
