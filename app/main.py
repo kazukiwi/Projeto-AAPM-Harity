@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -12,7 +13,8 @@ from app.controllers import (
     categorias_controller,
     produto_controller,
     movimentacao_controller,
-    pdv_controller
+    pdv_controller,
+    mais_vendidos_controller
 )
 
 from app.auth import get_usuario_opcional, get_usuario_logado
@@ -31,6 +33,7 @@ app.include_router(categorias_controller.router)
 app.include_router(produto_controller.router)
 app.include_router(movimentacao_controller.router)
 app.include_router(pdv_controller.router)
+app.include_router(mais_vendidos_controller.router)
 
 
 # 4º: PÁGINA INICIAL / DASHBOARD
@@ -90,3 +93,4 @@ def home(
             "total_associados": 0
         }
     )
+
