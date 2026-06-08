@@ -5,8 +5,8 @@ from app.auth import hash_senha
 Usuarios = [
     {
     "nome": "Admin",
-    "email": "admin@example.com",
-    "senha": "123456",
+    "email": "admin2@example.com",
+    "senha": "admin@123456",
     "role": "admin"
     }
 ]

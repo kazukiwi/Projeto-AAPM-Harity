@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos Mais Vendidos - AAPM</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', path='css/vendas.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/mais_vendidos.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <img src="{{ url_for('static', path='img/logo.png') }}" alt="Logo AAPM">
+            </div>
+            <ul class="menu">
+                <li><a href="/">Dashboard</a></li>
+                <li><a href="/produtos">Produtos</a></li>
+                <li><a href="/pdv/historico">Vendas</a></li>
+                <li><a href="/mais_vendidos" class="active">Mais vendidos</a></li>
+                <li><a href="/armarios">Armários</a></li>
+                <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="vendas-container-main">
+        <div class="header-vendas">
+            <div>
+                <h1>Produtos Mais Vendidos</h1>
+                <p>Análise de vendas e receita</p>
+            </div>
+            <button class="btn-exportar-csv" onclick="exportarProdutosCSV()">
+                <i class="fa-solid fa-download"></i> Exportar CSV
+            </button>
+        </div>
+
+        <div class="indicadores-grid-3">
+            <div class="card-indicador ind-unidades">
+                <div class="card-header-ind">Total de Vendas</div>
+                <div class="card-corpo-ind">
+                    <h2>364 <span class="txt-sub">unidades vendidas</span></h2>
+                    <i class="fa-solid fa-chart-line icone-ind"></i>
+                </div>
+            </div>
+            <div class="card-indicador ind-receita">
+                <div class="card-header-ind">Receita Total</div>
+                <div class="card-corpo-ind">
+                    <h2>R$ 196.565,00 <span class="txt-sub">em vendas</span></h2>
+                    <i class="fa-solid fa-chart-bar icone-ind"></i>
+                </div>
+            </div>
+            <div class="card-indicador ind-ticket">
+                <div class="card-header-ind">Ticket Médio</div>
+                <div class="card-corpo-ind">
+                    <h2>R$ 540,01 <span class="txt-sub">por unidade</span></h2>
+                    <i class="fa-solid fa-award icone-ind"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="filtros-vendas-container">
+            <div class="filtros-alinhados">
+                <i class="fa-solid fa-filter style-filter-icon"></i>
+                <span class="txt-filtro-label">Filtros:</span>
+                <select id="filtro-categoria" class="select-categoria-filtro" onchange="alterarFiltroCategoria()">
+                    <option value="todas">Todas as categorias</option>
+                    <option value="Escritório">Material de Escritório</option>
+                    <option value="Móveis">Móveis</option>
+                    <option value="Eletrônicos">Eletrônicos</option>
+                </select>
+            </div>
+            <div class="periodos-botoes">
+                <button id="btn-ordem-qtd" class="btn-periodo active" onclick="mudarOrdenacao('quantidade')">Por Quantidade</button>
+                <button id="btn-ordem-receita" class="btn-periodo" onclick="mudarOrdenacao('receita')">Por Receita</button>
+            </div>
+        </div>
+
+        <div class="layout-graficos-grid">
+            <div class="card-grafico-box">
+                <h3>Top 8 Produtos</h3>
+                <div class="canvas-wrapper">
+                    <canvas id="graficoBarrasProdutos"></canvas>
+                </div>
+            </div>
+            <div class="card-grafico-box">
+                <h3>Vendas por Categoria</h3>
+                <div class="canvas-wrapper-pizza">
+                    <canvas id="graficoPizzaCategorias"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-historico" style="margin-top: 25px;">
+            <h3>Ranking de Produtos</h3>
+            <div class="tabela-container">
+                <table class="tabela-vendas">
+                    <thead>
+                        <tr>
+                            <th>RANKING</th>
+                            <th>PRODUTO</th>
+                            <th>CATEGORIA</th>
+                            <th>VENDAS</th>
+                            <th>RECEITA</th>
+                            <th>PREÇO MÉDIO</th>
+                            <th>% TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela-ranking">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <p>&copy; 2026 AAPM - SENAI. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', path='javascript/mais_vendidos.js') }}"></script>
+</body>
+</html>

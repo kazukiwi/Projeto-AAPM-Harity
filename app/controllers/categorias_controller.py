@@ -23,18 +23,18 @@ def listar_categorias(
     db: Session = Depends(get_db),
     admin = Depends(get_admin)
 ):
-    categorias = db.query(Categoria).order_by('nome').all()
+    # CORREÇÃO: Passar a coluna da classe Categoria em vez de uma string
+    categorias_db = db.query(Categoria).order_by(Categoria.nome).all()
 
     return templates.TemplateResponse(
         request,
-        "categorias/index.html",
+        "categoria/index.html",
         {
             "request": request,
-            "categorias": categorias,
+            "categorias": categorias_db,
             "usuario": admin
-        }
-
-    )
+    }
+)
 
 #CADASTRO DE CATEGORIAS
 
@@ -45,7 +45,7 @@ def form_nova_categoria(
 ):
     return templates.TemplateResponse(
         request,
-        "categorias/nova.html",
+        "categoria/form.html",
         {
             "request": request,
             "usuario": admin,
@@ -65,7 +65,7 @@ def criar_categoria(
     if existente:
         return templates.TemplateResponse(
             request,
-            "categorias/form.html",
+            "categoria/form.html",
             {
                 "request": request,
                 "usuario": admin,
@@ -98,7 +98,7 @@ def form_editar_categoria(
 
     return templates.TemplateResponse(
         request,
-        "categorias/form.html",
+        "categoria/form.html",
         {
             "request": request,
             "usuario": admin,
@@ -158,14 +158,14 @@ def toggle_categoria(
         return RedirectResponse("/categorias/", status_code=302)
 
     if categoria.ativo:
-        produtos_ativos = [p for p in categoria.produtos if p.ativo]
+        produtos_ativos = [p for p in categoria.produtos if p.ativa]
 
         if produtos_ativos:
             return RedirectResponse(
-                url=f"/caegorias?erro=produtos_vinculados&categoria={categoria.nome}",
+                url=f"/categorias?erro=produtos_vinculados&categoria={categoria.nome}",
                 status_code=302
             )
-        
+
     categoria.ativo = not categoria.ativo
     db.commit()
 

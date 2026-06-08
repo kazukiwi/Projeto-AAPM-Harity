@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ "Editar Produto" if editando else "Novo Produto" }} - AAPM</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', path='css/form_produtos.css') }}">
+</head>
+<body>
+    
+    <main class="main-content">
+        <div class="page-header">
+            <h1>{{ "Editar Produto" if editando else "Novo Produto" }}</h1>
+        </div>
+
+        {% if erro %}
+            <div class="alert-box">
+                <i data-lucide="alert-circle" style="width:18px"></i>
+                {{ erro }}
+            </div>
+        {% endif %}
+
+        <div class="form-container">
+            <form action="{{ '/produtos/' + editando.id|string + '/editar' if editando else '/produtos/novo' }}"
+                  method="post"
+                  enctype="multipart/form-data">
+                
+                <div class="form-grid">
+                    
+                    <div class="form-group full-width">
+                        <label for="nome">Nome do Produto</label>
+                        <input type="text"
+                               id="nome"
+                               name="nome"
+                               value="{{ editando.nome if editando else (valores.nome if valores else '') }}"
+                               placeholder="Ex: Teclado Mecânico RGB"
+                               required
+                               autofocus>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="preco">Preço (R$)</label>
+                        <input type="number"
+                               id="preco"
+                               name="preco"
+                               step="0.01"
+                               min="0"
+                               value="{{ editando.preco if editando else (valores.preco if valores else '0.00') }}"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="estoque_atual">Estoque Inicial / Atual</label>
+                        <input type="number"
+                               id="estoque_atual"
+                               name="estoque_atual"
+                               min="0"
+                               value="{{ editando.estoque_atual if editando else (valores.estoque_atual if valores else '0') }}"
+                               required>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="categoria_id">Categoria</label>
+                        <select id="categoria_id" name="categoria_id">
+                            <option value="0">Sem categoria</option>
+                            {% for c in categorias %}
+                                <option value="{{ c.id }}"
+                                    {{ 'selected' if (editando and editando.categoria_id == c.id) or (valores and valores.categoria_id == c.id) else '' }}>
+                                    {{ c.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width" style="margin-top: 8px;">
+                        
+                        {% if editando and editando.imagem_path %}
+                            <label style="margin-bottom: 8px; display: block;">Imagem Atual</label>
+                            <div class="current-image-container">
+                                <img src="{{ editando.imagem_url }}" alt="{{ editando.nome }}" class="current-image-preview">
+                                <span style="font-size: 0.85rem; color: #64748b;">Se você escolher um novo arquivo, a imagem anterior será substituída.</span>
+                            </div>
+                        {% endif %}
+
+                        <label for="imagem">{{ "Substituir Imagem:" if editando else "Imagem do Produto:" }}</label>
+                        <input type="file"
+                               id="imagem"
+                               name="imagem"
+                               accept=".jpg,.jpeg,.png,.webp"
+                               style="margin-top: 8px;">
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">
+                        <i data-lucide="check" style="width: 16px;"></i>
+                        {{ "Salvar alterações" if editando else "Criar produto" }}
+                    </button>
+                    <a href="/produtos" class="btn-cancel">Cancelar</a>
+                </div>
+
+            </form>
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
