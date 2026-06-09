@@ -1,142 +1,144 @@
-/* ============================================================
-   GRID DE ARMÁRIOS E BOTÕES DOS FILTROS
-   ============================================================ */
+/* ==========================================================================
+   CONTAINER DE CARDS SUPERIORES DE RESUMO
+   ========================================================================== */
+.cards-resumo-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.card-resumo {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f3f4f6;
+}
+
+.card-resumo .titulo {
+    font-size: 14px;
+    color: #6b7280;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.card-resumo h3 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: bold;
+    color: #111827;
+}
+
+.card-resumo i {
+    font-size: 24px;
+    color: #9ca3af;
+}
+
+/* Bordas coloridas nos cards superiores (Verde escuro, Azul e Laranja) */
+.status-disponivel-borda { border-left: 4px solid #15803d; }
+.status-ocupado-borda    { border-left: 4px solid #3b82f6; }
+.status-manutencao-borda { border-left: 4px solid #f97316; }
+
+/* ==========================================================================
+   BOTÕES DE FILTRO RÁPIDOS E LEGENDAS
+   ========================================================================== */
+.btn-filtro-armario {
+    padding: 6px 16px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    color: #4b5563;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-filtro-armario:hover {
+    background: #f9fafb;
+}
+
+.btn-filtro-armario.active {
+    background: #1e1b4b;
+    color: white;
+    border-color: #1e1b4b;
+}
+
+.dot-legenda {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+/* ==========================================================================
+   GRID E ITENS DOS ARMÁRIOS (10 COLUNAS)
+   ========================================================================== */
 .grid-armarios {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     gap: 12px;
-    margin-top: 20px;
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    border: 1px solid #e5e7eb;
 }
 
-.card-armario {
-    background: #fff;
+.item-armario {
+    aspect-ratio: 1 / 1; 
     border-radius: 8px;
-    padding: 16px 8px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: bold;
-    color: white;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: none;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 6px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    position: relative;
+    gap: 4px;
 }
 
-.card-armario:hover {
+.item-armario:hover {
     transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.item-armario .icone-lock {
+    font-size: 18px;
+}
+
+.item-armario .numero-armario {
+    font-size: 14px;
 }
 
 /* Cores de Status dos Armários */
-.armario-disponivel { background-color: #10b981 !important; }
-.armario-ocupado { background-color: #3b82f6 !important; }
-.armario-manutencao { background-color: #f97316 !important; }
+.status-disponivel { background-color: #15803d; }
+.status-ocupado    { background-color: #3b82f6; }
+.status-manutencao { background-color: #f97316; }
 
-/* Indicadores de Borda Lateral */
-.card-ind-disponivel { border-left: 4px solid #10b981; }
-.card-ind-ocupado { border-left: 4px solid #3b82f6; }
-.card-ind-manutencao { border-left: 4px solid #f97316; }
+/* Estados de Hover dos Armários */
+.status-disponivel:hover { background-color: #166534; }
+.status-ocupado:hover    { background-color: #2563eb; }
+.status-manutencao:hover { background-color: #ea580c; }
 
-.txt-disponivel { color: #10b981; }
-.txt-ocupado { color: #3b82f6; }
-.txt-manutencao { color: #f97316; }
-
-/* Legendas e Bolinhas de Cores */
-.legendas-container {
-    font-size: 13px;
-    color: #64748b;
-}
-.dot-disponivel { color: #10b981; }
-.dot-ocupado { color: #3b82f6; }
-.dot-manutencao { color: #f97316; }
-
-/* Botão do Excel */
-.btn-exportar {
-    padding: 10px 18px;
-    background-color: #16a34a;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
+/* ==========================================================================
+   RODAPÉ DO SISTEMA (ALINHAMENTO CENTRAL)
+   ========================================================================== */
+footer, 
+.footer-sistema {
+    width: 100%;
+    margin-top: 40px;
+    padding: 20px 0;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    color: #6b7280;
     font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: background-color 0.2s;
-}
-.btn-exportar:hover {
-    background-color: #15803d;
-}
-
-/* ============================================================
-   ESTILIZAÇÃO DO MODAL DE ARMÁRIO
-   ============================================================ */
-.modal-armario-layout {
-    width: 500px !important;
-}
-
-.modal-botoes-row {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
-}
-
-.btn-atribuir {
-    background-color: #2563eb;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: background-color 0.2s;
-}
-.btn-atribuir:hover { background-color: #1d4ed8; }
-
-.btn-manutencao {
-    background-color: #ea580c;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: background-color 0.2s;
-}
-.btn-manutencao:hover { background-color: #c2410c; }
-
-.badge-status {
-    display: inline-block;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-top: 10px;
-}
-.badge-disponivel {
-    background-color: #d1fae5;
-    color: #065f46;
-}
-
-/* Responsividade do Grid */
-@media(max-width: 1024px) {
-    .grid-armarios {
-        grid-template-columns: repeat(5, 1fr);
-    }
-}
-@media(max-width: 600px) {
-    .grid-armarios {
-        grid-template-columns: repeat(3, 1fr);
-    }
+    border-top: 1px solid #e5e7eb;
 }
