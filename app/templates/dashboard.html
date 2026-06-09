@@ -20,11 +20,12 @@
                 </a>
             </div>
             <ul class="menu">
-                <li><a href="/"class="active">Dashboard</a></li>
-                <li><a href="/produtos" >Produtos</a></li>
-                <a href="/pdv/historico">Vendas</a>
+                <li><a href="/" class="active">Dashboard</a></li>
+                <li><a href="/produtos">Produtos</a></li>
+                <li><a href="/pdv/historico">Vendas</a></li>
                 <li><a href="/mais_vendidos">Mais vendidos</a></li>
                 <li><a href="/armarios">Armários</a></li>
+                
                 {% if usuario.role == 'admin' %}
                 <li><a href="/usuarios" class="nav-link">
                     <i data-lucide="users"></i> Usuários
@@ -33,11 +34,11 @@
                     <i data-lucide="tag"></i> Categorias
                 </a></li>
                 {% endif %}
+                
                 <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
             </ul>
         </nav>
     </header>
-
 
     <div class="dashboard">
 
@@ -140,7 +141,7 @@
                         <div class="lista-customizada">
                             {% for cat, qtd in contagem_por_categoria.items() %}
                                 <div class="item-lista" style="display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f3f4f6; align-items: center;">
-                                    <span style="font-weight: 500; color: #374151;">{{ cat.nome }}</span>
+                                    <span style="font-weight: 500; color: #374151;">{{ cat }}</span>
                                     <span style="background-color: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold;">{{ qtd }} {{ 'produto' if qtd == 1 else 'produtos' }}</span>
                                 </div>
                             {% endfor %}

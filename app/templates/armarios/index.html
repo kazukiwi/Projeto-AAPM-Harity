@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for(request, 'static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body class="bg-light">
 
@@ -15,7 +15,7 @@
     <nav class="navbar">
         <div class="logo">
             <a href="#">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo AAPM">
+                <img src="{{ url_for(request, 'static', filename='img/logo.png') }}" alt="Logo AAPM">
             </a>
         </div>
         <ul class="menu">
@@ -24,7 +24,14 @@
             <li><a href="/pdv/historico">Vendas</a></li>
             <li><a href="/mais_vendidos">Mais vendidos</a></li>
             <li><a href="/armarios" class="active">Armários</a></li>
-            {% if usuario.role == 'admin' %}
+            {% if usuario and hasattr(usuario, 'role') and usuario.role == 'admin' %}
+            <li><a href="/usuarios" class="nav-link">
+                <i class="fas fa-users"></i> Usuários
+            </a></li>
+            <li><a href="/categorias" class="nav-link">
+                <i class="fas fa-tag"></i> Categorias
+            </a></li>
+            {% elif usuario and usuario is mapping and usuario.get('role') == 'admin' %}
             <li><a href="/usuarios" class="nav-link">
                 <i class="fas fa-users"></i> Usuários
             </a></li>
@@ -76,7 +83,7 @@
     </div>
 
     <div class="grid-armarios">
-        {% for armario in armarios %}
+        {% for... armario in armarios %}
         <div class="item-armario status-{{ armario.status }}" 
              data-bs-toggle="modal" 
              data-bs-target="#modalArmario"
@@ -152,7 +159,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ url_for('static', filename='js/armarios.js') }}"></script>
+<script src="{{ url_for(request, 'static', filename='js/armarios.js') }}"></script>
 
 </body>
 </html>
