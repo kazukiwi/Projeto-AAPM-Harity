@@ -1,47 +1,49 @@
-from fastapi import APIRouter, Depends, Request
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database import get_db
 from app.models.venda import ItemVenda
-from app.auth import get_usuario_logado
 
-router = APIRouter(
-    prefix="/mais_vendidos",
-    tags=["Mais Vendidos"]
-)
-
-templates = Jinja2Templates(
-    directory="app/templates"
-)
+router = APIRouter(prefix="/api/v1/produtos", tags=["Mais Vendidos API"])
 
 
-@router.get("/")
-def mais_vendidos(
-    request: Request,
-    db: Session = Depends(get_db),
-    usuario = Depends(get_usuario_logado)
-):
+@router.get("/mais-vendidos")
+def mais_vendidos(db: Session = Depends(get_db)):
 
-    produtos = (
+    # 🔥 Agrupamento base
+    resultados = (
         db.query(
-            ItemVenda.produto_nome,
-            func.sum(ItemVenda.quantidade).label("total_vendido")
+            ItemVenda.produto_id,
+            ItemVenda.produto_nome.label("nome"),
+            func.sum(ItemVenda.quantidade).label("vendas"),
+            func.sum(ItemVenda.quantidade * ItemVenda.preco_unitario).label("receita"),
         )
-        .group_by(ItemVenda.produto_nome)
-        .order_by(
-            func.sum(ItemVenda.quantidade).desc()
-        )
+        .group_by(ItemVenda.produto_id, ItemVenda.produto_nome)
         .all()
     )
 
-    return templates.TemplateResponse(
-        request,
-        "mais_vendidos/index.html",
-        {
-            "request": request,
-            "usuario": usuario,
-            "produtos": produtos
-        }
-    )
+    # total geral para percentual
+    total_geral = sum(r.vendas for r in resultados) if resultados else 0
+
+    produtos = []
+
+    for r in resultados:
+        vendas = r.vendas or 0
+        receita = r.receita or 0
+
+        produtos.append({
+            "id": r.produto_id,
+            "nome": r.nome,
+            "codigo": f"PROD-{r.produto_id}",
+            "categoria": "Geral",  # se quiser, depois liga com tabela categoria
+            "vendas": vendas,
+            "receita": float(receita),
+            "precoMedio": (receita / vendas) if vendas else 0,
+            "percentual": round((vendas / total_geral) * 100, 2) if total_geral else 0
+        })
+
+    # ordena por vendas (igual seu JS espera)
+    produtos.sort(key=lambda x: x["vendas"], reverse=True)
+
+    return produtos

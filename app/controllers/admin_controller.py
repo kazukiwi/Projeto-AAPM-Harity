@@ -24,7 +24,21 @@ def listar_usuarios(
         {
             "request": request, 
             "usuarios": usuarios,
-            "admin": admin
+            "usuario": admin
+        }
+    )
+
+@router.get("/novo", response_class=HTMLResponse)
+def form_novo_usuario(
+    request: Request,
+    admin = Depends(get_admin)
+):
+    return templates.TemplateResponse(
+        request,
+        "criar_usuarios.html",
+        {
+            "request": request,
+            "usuario": admin
         }
     )
 
@@ -52,7 +66,7 @@ def cadastrar_usuario(
     db.commit()
 
     #Redirecionar para a tela de login após cadastro
-    return RedirectResponse("/auth/login?cadastro=success", status_code=303)
+    return RedirectResponse("/usuarios?cadastro=success", status_code=303)
 
 @router.post("/{usuario_id}/toggle-ativo")
 def toggle_usuario_ativo(
@@ -103,7 +117,7 @@ def listar_usuarios_assosiados(
         {
             "request": request, 
             "usuarios": usuarios,
-            "admin": admin
+            "usuario": admin
         }
     )
 
