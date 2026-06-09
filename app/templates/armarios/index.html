@@ -1,165 +1,211 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Armários</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <link href="{{ url_for(request, 'static', filename='css/style.css') }}" rel="stylesheet">
+    <title>Gerenciamento de Armários</title>
+    <link rel="stylesheet" href="/static/css/produtos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-light">
+<body>
 
-<header>
-    <nav class="navbar">
-        <div class="logo">
-            <a href="#">
-                <img src="{{ url_for(request, 'static', filename='img/logo.png') }}" alt="Logo AAPM">
-            </a>
-        </div>
-        <ul class="menu">
-            <li><a href="/">Dashboard</a></li>
-            <li><a href="/produtos">Produtos</a></li>
-            <li><a href="/pdv/historico">Vendas</a></li>
-            <li><a href="/mais_vendidos">Mais vendidos</a></li>
-            <li><a href="/armarios" class="active">Armários</a></li>
-            {% if usuario and hasattr(usuario, 'role') and usuario.role == 'admin' %}
-            <li><a href="/usuarios" class="nav-link">
-                <i class="fas fa-users"></i> Usuários
-            </a></li>
-            <li><a href="/categorias" class="nav-link">
-                <i class="fas fa-tag"></i> Categorias
-            </a></li>
-            {% elif usuario and usuario is mapping and usuario.get('role') == 'admin' %}
-            <li><a href="/usuarios" class="nav-link">
-                <i class="fas fa-users"></i> Usuários
-            </a></li>
-            <li><a href="/categorias" class="nav-link">
-                <i class="fas fa-tag"></i> Categorias
-            </a></li>
-            {% endif %}
-            <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
-        </ul>
-    </nav>
-</header>
-
-<div class="container py-4">
-
-    <div class="mb-4">
-        <h2 class="fw-bold text-dark m-0">Controle de Armários</h2>
-        <p class="text-muted m-0">Gestão de armários para associados AAPM</p>
-    </div>
-
-    <div class="cards-resumo-container">
-        <div class="card-resumo status-disponivel-borda">
-            <div>
-                <span class="titulo">Total de Armários</span>
-                <h3>{{ total_armarios }}</h3>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="#">
+                    <img src="/static/img/logo.png" alt="Logo AAPM">
+                </a>
             </div>
-            <i class="fas fa-box text-secondary"></i>
-        </div>
-        <div class="card-resumo status-disponivel-borda">
-            <div>
-                <span class="titulo" style="color: #15803d; font-weight: 600;">Disponíveis</span>
-                <h3 style="color: #15803d;">{{ armarios_disponiveis }}</h3>
-            </div>
-            <i class="fas fa-lock-open" style="color: #15803d;"></i>
-        </div>
-        <div class="card-resumo status-ocupado-borda">
-            <div>
-                <span class="titulo" style="color: #3b82f6; font-weight: 600;">Ocupados</span>
-                <h3 style="color: #3b82f6;">{{ armarios_ocupados }}</h3>
-            </div>
-            <i class="fas fa-user" style="color: #3b82f6;"></i>
-        </div>
-        <div class="card-resumo status-manutencao-borda">
-            <div>
-                <span class="titulo" style="color: #f97316; font-weight: 600;">Manutenção</span>
-                <h3 style="color: #f97316;">{{ armarios_manutencao }}</h3>
-            </div>
-            <i class="fas fa-wrench" style="color: #f97316;"></i>
-        </div>
-    </div>
-
-    <div class="grid-armarios">
-        {% for... armario in armarios %}
-        <div class="item-armario status-{{ armario.status }}" 
-             data-bs-toggle="modal" 
-             data-bs-target="#modalArmario"
-             onclick="preencherModalArmario('{{ armario.id }}', '{{ armario.numero }}', '{{ armario.status }}', '{{ armario.associado_nome }}', '{{ armario.observacoes }}', '{{ armario.associado_email }}', '{{ armario.associado_telefone }}', '{{ armario.associado_matricula }}', '{{ armario.atribuido_em }}')">
-            
-            <div class="icone-lock">
-                {% if armario.status == 'disponivel' %}
-                    <i class="fas fa-lock-open"></i>
-                {% else %}
-                    <i class="fas fa-lock"></i>
+            <ul class="menu">
+                <li><a href="/">Dashboard</a></li>
+                <li><a href="/produtos">Produtos</a></li>
+                <li><a href="/pdv/historico">Vendas</a></li>
+                <li><a href="/mais_vendidos">Mais vendidos</a></li>
+                <li><a href="/armarios" class="active">Armários</a></li>
+                
+                {# Validação de segurança do Jinja2 para evitar UndefinedError #}
+                {% if usuario is defined and usuario and usuario.role == 'admin' %}
+                <li><a href="/usuarios">Usuários</a></li>
+                <li><a href="/categorias">Categorias</a></li>
                 {% endif %}
-            </div>
-            <div class="numero-armario">{{ armario.numero }}</div>
-        </div>
-        {% endfor %}
-    </div>
+                
+                <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
+            </ul>
+        </nav>
+    </header>
 
-    <footer class="footer-sistema">
-        <span>&copy; 2026 Sistema de Estoque e Armários - Todos os direitos reservados.</span>
+    <main class="produtos-container-main">
+        <div class="page-header">
+            <h1>Gerenciamento de Armários</h1>
+        </div>
+
+        <div class="filtros-container" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: none; border: none; padding: 0; margin-bottom: 30px;">
+            <div class="tabela-container" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px;">
+                <div style="background: #f1f5f9; padding: 10px; border-radius: 8px; color: #475569; display: flex;"><i data-lucide="archive"></i></div>
+                <div>
+                    <span style="font-size: 13px; color: #64748b; font-weight: 600; display: block;">Total Geral</span>
+                    <strong style="font-size: 22px; color: #0f172a;">{{ total_armarios }}</strong>
+                </div>
+            </div>
+            <div class="tabela-container" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px;">
+                <div style="background: #dcfce7; padding: 10px; border-radius: 8px; color: #16a34a; display: flex;"><i data-lucide="check-circle"></i></div>
+                <div>
+                    <span style="font-size: 13px; color: #64748b; font-weight: 600; display: block;">Disponíveis</span>
+                    <strong style="font-size: 22px; color: #16a34a;">{{ armarios_disponiveis }}</strong>
+                </div>
+            </div>
+            <div class="tabela-container" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px;">
+                <div style="background: #eff6ff; padding: 10px; border-radius: 8px; color: #2563eb; display: flex;"><i data-lucide="user-check"></i></div>
+                <div>
+                    <span style="font-size: 13px; color: #64748b; font-weight: 600; display: block;">Ocupados</span>
+                    <strong style="font-size: 22px; color: #2563eb;">{{ armarios_ocupados }}</strong>
+                </div>
+            </div>
+            <div class="tabela-container" style="padding: 15px 20px; display: flex; align-items: center; gap: 15px;">
+                <div style="background: #fee2e2; padding: 10px; border-radius: 8px; color: #dc2626; display: flex;"><i data-lucide="wrench"></i></div>
+                <div>
+                    <span style="font-size: 13px; color: #64748b; font-weight: 600; display: block;">Em Manutenção</span>
+                    <strong style="font-size: 22px; color: #dc2626;">{{ armarios_manutencao }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="filtros-container">
+            <div class="busca-wrapper">
+                <i data-lucide="search" class="icone-busca"></i>
+                <input type="text" id="inputBusca" placeholder="Buscar por número, associado ou matrícula...">
+            </div>
+
+            <div class="select-wrapper">
+                <i data-lucide="filter" class="icone-filtro"></i>
+                <select id="selectStatus">
+                    <option value="">Todos os status</option>
+                    <option value="disponivel">Disponível</option>
+                    <option value="ocupado">Ocupado</option>
+                    <option value="manutencao">Manutenção</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="tabela-container">
+            <table class="tabela-produtos">
+                <thead>
+                    <tr>
+                        <th>Armário</th>
+                        <th>Status</th>
+                        <th>Associado Atual / Motivo</th>
+                        <th>Atribuído em</th>
+                        <th style="text-align: right;">Ações rápidos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in armarios %}
+                    <tr>
+                        <td class="user-name-cell" style="font-size: 16px;">
+                            <i data-lucide="box" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; color: #64748b;"></i>
+                            {{ a.numero }}
+                        </td>
+                        <td>
+                            {% if a.status == 'disponivel' %}
+                                <span class="badge-status ativo">Disponível</span>
+                            {% elif a.status == 'ocupado' %}
+                                <span class="badge-status" style="background-color: #e0f2fe; color: #0369a1;">Ocupado</span>
+                            {% else %}
+                                <span class="badge-status inativo">Manutenção</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if a.status == 'ocupado' %}
+                                <div class="user-name-cell">{{ a.associado_nome }}</div>
+                                <div class="user-email-cell" style="font-size: 12px;">Matrícula: {{ a.associado_matricula }}</div>
+                            {% elif a.status == 'manutencao' %}
+                                <span style="color: #94a3b8; font-style: italic; font-size: 14px;">{{ a.observacoes }}</span>
+                            {% else %}
+                                <span style="color: #94a3b8; font-size: 14px;">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="user-email-cell">
+                            {{ a.atribuido_em if a.atribuido_em else '—' }}
+                        </td>
+                        <td>
+                            <form action="/armarios/alterar-status" method="post" style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+                                <input type="hidden" name="armario_id" value="{{ a.id }}">
+                                
+                                {% if a.status != 'disponivel' %}
+                                    <button type="submit" name="novo_status" value="disponivel" class="btn-acao btn-ativar" title="Liberar Armário">
+                                        Libertar
+                                    </button>
+                                {% endif %}
+
+                                {% if a.status != 'ocupado' %}
+                                    <button type="submit" name="novo_status" value="ocupado" class="btn-acao ver" title="Alocar para Maria Santos">
+                                        Alocar
+                                    </button>
+                                {% endif %}
+
+                                {% if a.status != 'manutencao' %}
+                                    <button type="submit" name="novo_status" value="manutencao" class="btn-acao excluir" title="Colocar em Manutenção">
+                                        Reparo
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 AAPM. Todos os direitos reservados.</p>
+            <div class="footer-links">
+                <a href="#">Suporte</a>
+                <a href="#">Privacidade</a>
+            </div>
+        </div>
     </footer>
-</div>
 
-<div class="modal fade" id="modalArmario" tabindex="-1" aria-labelledby="modalArmarioTitulo" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="modalArmarioTitulo">Armário #00</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            
-            <form action="/armarios/alterar-status" method="POST">
-                <div class="modal-body">
-                    <input type="hidden" name="armario_id" id="modal_armario_id">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const inputBusca = document.getElementById("inputBusca");
+            const selectStatus = document.getElementById("selectStatus");
+            const linhasTabela = document.querySelectorAll(".tabela-produtos tbody tr");
 
-                    <div id="secao-associado" class="d-none p-3 bg-light rounded border mb-3">
-                        <div class="d-flex align-items-center gap-2 mb-2 text-primary">
-                            <i class="fas fa-user-circle fs-5"></i>
-                            <strong class="text-secondary">Associado Atual</strong>
-                        </div>
-                        <h6 class="fw-bold m-0 text-dark" id="nome-associado-texto">Maria Santos</h6>
-                        <small class="text-muted d-block" id="txt-email">maria.santos@email.com</small>
-                        <small class="text-muted d-block" id="txt-tel">(11) 97654-3210</small>
-                        <span class="badge bg-primary mt-2" id="txt-mat">AAPM-002</span>
-                        <div class="mt-2 text-muted" style="font-size: 12px;">
-                            <i class="far fa-calendar-alt"></i> <span id="txt-data">Atribuído em: 04/03/2026</span>
-                        </div>
-                    </div>
+            function filtrarArmarios() {
+                const termo = inputBusca.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                const statusFiltro = selectStatus.value.toLowerCase();
 
-                    <div id="secao-manutencao" class="d-none p-3 rounded border mb-3" style="background-color: #fffde7; border-color: #fff59d !important;">
-                        <div class="d-flex align-items-center gap-2 text-warning mb-1">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <strong style="color: #856404;">Observações de Manutenção</strong>
-                        </div>
-                        <p class="m-0" style="color: #856404;" id="observacao-manutencao-texto">Fechadura com defeito</p>
-                    </div>
+                linhasTabela.forEach(linha => {
+                    const numeroArmario = linha.cells[0].textContent.toLowerCase().trim();
+                    const statusTxt = linha.querySelector(".badge-status").textContent.toLowerCase().trim();
+                    const associadoInfo = linha.cells[2].textContent.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary">Alterar Status do Armário</label>
-                        <select class="form-select" name="novo_status" id="modal_select_status">
-                            <option value="disponivel">Disponível (Liberar Armário)</option>
-                            <option value="ocupado">Ocupado (Atribuir Associado)</option>
-                            <option value="manutencao">Em Manutenção</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Alteração</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+                    // Mapeador lógico para bater o valor do select com o texto das badges
+                    let statusChave = "";
+                    if(statusTxt.includes("disponivel") || statusTxt.includes("disponível")) statusChave = "disponivel";
+                    else if(statusTxt.includes("ocupado")) statusChave = "ocupado";
+                    else if(statusTxt.includes("manutencao") || statusTxt.includes("manutenção")) statusChave = "manutencao";
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ url_for(request, 'static', filename='js/armarios.js') }}"></script>
+                    const bateBusca = termo === "" || numeroArmario.includes(termo) || associadoInfo.includes(termo);
+                    const bateStatus = statusFiltro === "" || statusChave === statusFiltro;
 
+                    if (bateBusca && bateStatus) {
+                        linha.style.display = "";
+                    } else {
+                        linha.style.display = "none";
+                    }
+                });
+            }
+
+            inputBusca.addEventListener("input", filtrarArmarios);
+            selectStatus.addEventListener("change", filtrarArmarios);
+
+            // Inicializa ícones do Lucide
+            lucide.createIcons();
+        });
+    </script>
 </body>
 </html>
