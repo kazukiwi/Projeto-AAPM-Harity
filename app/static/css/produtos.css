@@ -194,41 +194,17 @@ body {
 .btn-acao.excluir { color: #dc2626; }
 .btn-acao:hover { transform: scale(1.15); }
 
-/* =========================
-   RODAPÉ
-========================= */
-.main-footer {
-    width: 100%;
-    background-color: #09145c;
-    padding: 25px 60px;
+/* ============================================================
+   RODAPÉ (FOOTER)
+   ============================================================ */
+.main-footer { 
+    width: 100%; 
+    background-color: #09145c; 
+    padding: 20px; 
+    text-align: center; 
+    color: rgb(255, 255, 255); 
+    font-size: 13px; 
     margin-top: auto; 
-}
-
-.footer-content {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center;
-}
-
-.footer-content p {
-    font-size: 15px;
-    color: #ffffff;
-}
-
-.footer-links {
-    display: flex;
-    gap: 25px;
-}
-
-.footer-links a {
-    color: rgba(255, 255, 255, 0.8);
-    text-decoration: none;
-    font-size: 15px;
-}
-
-.footer-links a:hover {
-    color: #ffffff;
-    text-decoration: underline;
 }
 
 /* Botão Sair na Navbar */

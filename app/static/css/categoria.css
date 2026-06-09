@@ -286,3 +286,16 @@ tbody tr:hover {
 button:active, a:active {
     transform: translateY(0) !important;
 }
+
+/* ==========================================================================
+   8. RODAPÉ (FOOTER)
+   ========================================================================== */
+.main-footer { 
+    width: 100%; 
+    background-color: #09145c; 
+    padding: 20px; 
+    text-align: center; 
+    color: rgb(255, 255, 255); 
+    font-size: 13px; 
+    margin-top: auto; 
+}
