@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes - AAPM</title>
+    <link rel="stylesheet" href="/static/css/clientes.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="/"><img src="/static/img/logo.png" alt="Logo AAPM"></a>
+            </div>
+            <ul class="menu">
+                <li><a href="/">Dashboard</a></li>
+                <li><a href="/produtos">Produtos</a></li>
+                <li><a href="/clientes" class="active">Clientes</a></li>
+                <li><a href="/pdv/historico">Vendas</a></li>
+                <li><a href="/mais_vendidos">Mais vendidos</a></li>
+                <li><a href="/armarios">Armarios</a></li>
+                {% if usuario.role == 'admin' %}
+                <li><a href="/usuarios">Usuarios</a></li>
+                <li><a href="/categorias">Categorias</a></li>
+                {% endif %}
+                <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="clientes-container">
+        <div class="page-header">
+            <div>
+                <h1>Clientes</h1>
+                <p>{{ clientes|length }} clientes encontrados - {{ total_associados }} associados ativos</p>
+            </div>
+            <a href="/clientes/novo" class="btn-primary">
+                <i class="fa-solid fa-plus"></i> Novo Cliente
+            </a>
+        </div>
+
+        <section class="summary-grid">
+            <div class="summary-card">
+                <span>Total</span>
+                <strong>{{ clientes|length }}</strong>
+            </div>
+            <div class="summary-card success">
+                <span>Associados ativos</span>
+                <strong>{{ total_associados }}</strong>
+            </div>
+            <div class="summary-card discount">
+                <span>Desconto aplicado no PDV</span>
+                <strong>10%</strong>
+            </div>
+        </section>
+
+        <form method="get" action="/clientes/" class="filters">
+            <div class="search-field">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou matricula">
+            </div>
+            <label class="checkbox-field">
+                <input type="checkbox" name="apenas_associados" value="true" {% if apenas_associados %}checked{% endif %}>
+                <span>Apenas associados</span>
+            </label>
+            <button type="submit" class="btn-secondary">
+                <i class="fa-solid fa-filter"></i> Filtrar
+            </button>
+        </form>
+
+        <div class="table-shell">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Matricula</th>
+                        <th>Telefone</th>
+                        <th>Associado</th>
+                        <th>Status</th>
+                        <th>Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                    <tr>
+                        <td><strong>{{ cliente.nome }}</strong></td>
+                        <td>{{ cliente.matricula or '-' }}</td>
+                        <td>{{ cliente.telefone or '-' }}</td>
+                        <td>
+                            {% if cliente.is_associado %}
+                            <span class="badge badge-success">10% de desconto</span>
+                            {% else %}
+                            <span class="badge">Sem desconto</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if cliente.ativo %}
+                            <span class="status active">Ativo</span>
+                            {% else %}
+                            <span class="status inactive">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="actions">
+                            <a href="/clientes/{{ cliente.id }}/editar" title="Editar cliente">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            <form action="/clientes/{{ cliente.id }}/toggle-ativo" method="post">
+                                <button type="submit" title="Alterar status">
+                                    {% if cliente.ativo %}
+                                    <i class="fa-solid fa-ban"></i>
+                                    {% else %}
+                                    <i class="fa-solid fa-check"></i>
+                                    {% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="empty">Nenhum cliente cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <p>2026 AAPM - SENAI. Todos os direitos reservados.</p>
+    </footer>
+</body>
+
+</html>

@@ -19,6 +19,7 @@
             <ul class="menu">
                 <li><a href="/">Dashboard</a></li>
                 <li><a href="/produtos">Produtos</a></li>
+                <li><a href="/clientes">Clientes</a></li>
                 <li><a href="/pdv/historico" class="active">Vendas</a></li>
                 <li><a href="/mais_vendidos">Mais vendidos</a></li>
                 <li><a href="/armarios">Armários</a></li>
@@ -130,7 +131,15 @@
 
                     <div class="pdv-totalizador-rodape" style="background:#f3f4f6; padding:15px; border-radius:6px;">
                         <div class="linha-total" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; font-size:18px;">
-                            <span>Total Geral:</span>
+                            <span>Total Bruto:</span>
+                            <strong id="pdv-total-bruto" style="font-size:20px; color:#1e1b4b;">R$ 0,00</strong>
+                        </div>
+                        <div class="linha-total" id="pdv-linha-desconto" style="display:none; justify-content:space-between; align-items:center; margin-bottom:15px; font-size:16px; color:#16a34a;">
+                            <span>Desconto associado ({{ desconto_associado }}%):</span>
+                            <strong id="pdv-desconto">- R$ 0,00</strong>
+                        </div>
+                        <div class="linha-total" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; font-size:18px;">
+                            <span>Total Final:</span>
                             <strong id="pdv-total-geral" style="font-size:24px; color:#1e1b4b;">R$ 0,00</strong>
                         </div>
                         <button type="submit" id="btn-salvar-venda-banco" class="btn-salvar-venda-final" disabled style="width:100%; padding:14px; background:#10b981; color:white; border:none; border-radius:6px; font-size:16px; font-weight:bold; cursor:pointer; opacity:0.6;">
@@ -221,9 +230,13 @@
         // Atualiza o HTML e o campo oculto do carrinho
         function atualizarTabelaCarrinho() {
             const corpo = document.getElementById('corpo-carrinho-pdv');
+            const totalBrutoTxt = document.getElementById('pdv-total-bruto');
             const totalTxt = document.getElementById('pdv-total-geral');
+            const descontoTxt = document.getElementById('pdv-desconto');
+            const linhaDesconto = document.getElementById('pdv-linha-desconto');
             const btnFinalizar = document.getElementById('btn-salvar-venda-banco');
             const hiddenInput = document.getElementById('carrinho_json_input');
+            const selectCliente = document.getElementById('select-cliente');
 
             if (!corpo) return;
             corpo.innerHTML = "";
@@ -247,7 +260,16 @@
                 `;
             });
 
-            if (totalTxt) totalTxt.textContent = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+            const clienteSelecionado = selectCliente ? selectCliente.options[selectCliente.selectedIndex] : null;
+            const associado = clienteSelecionado && clienteSelecionado.getAttribute('data-associado') === 'true';
+            const descontoPercentual = associado ? {{ desconto_associado }} : 0;
+            const descontoValor = totalGeral * (descontoPercentual / 100);
+            const totalFinal = totalGeral - descontoValor;
+
+            if (totalBrutoTxt) totalBrutoTxt.textContent = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+            if (descontoTxt) descontoTxt.textContent = `- R$ ${descontoValor.toFixed(2).replace('.', ',')}`;
+            if (linhaDesconto) linhaDesconto.style.display = associado && totalGeral > 0 ? "flex" : "none";
+            if (totalTxt) totalTxt.textContent = `R$ ${totalFinal.toFixed(2).replace('.', ',')}`;
             if (hiddenInput) hiddenInput.value = JSON.stringify(carrinho);
             
             if (btnFinalizar) {
@@ -265,6 +287,7 @@
         // Vincula a alteração do cliente
         document.getElementById('select-cliente').addEventListener('change', function () {
             document.getElementById('cliente_id_hidden').value = this.value;
+            atualizarTabelaCarrinho();
         });
     </script>
 </body>
