@@ -215,13 +215,11 @@ body {
 }
 
 .produto-thumb {
-    width: 48px;
-    height: 48px;
-    object-fit: cover;
-    border-radius: 6px;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    display: block;
+    width: 50px;         /* Define uma largura máxima padrão */
+    height: 50px;        /* Define uma altura máxima padrão */
+    object-fit: cover;   /* Faz a imagem cortar proporcionalmente sem distorcer o produto */
+    border-radius: 6px;  /* Deixa os cantos arredondados bonitinhos */
+    background-color: #f3f4f6; /* Fundo cinza claro caso a imagem seja transparente */
 }
 
 /* ============================================================
