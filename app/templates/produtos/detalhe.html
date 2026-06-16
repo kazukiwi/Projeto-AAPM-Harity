@@ -28,7 +28,8 @@
             
             <div class="image-wrapper">
                 {% if produto.imagem_url %}
-                    <img src="{{ produto.imagem_url }}" alt="{{ produto.nome }}" class="product-img">
+                    <img src="{{ produto.imagem_url }}" alt="{{ produto.nome }}" class="product-img"
+                         onerror="this.onerror=null; this.src='/static/img/produto_padrao.png';">
                 {% else %}
                     <div class="no-image">
                         <i data-lucide="image-off" style="width: 40px; height: 40px;"></i>

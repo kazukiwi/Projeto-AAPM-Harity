@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Produtos - AAPM</title>
 
-    <link rel="stylesheet" href="/static/css/produtos.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link class="cdn" rel="stylesheet" href="/static/css/produtos.css">
+    <link class="cdn" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
 <body>
@@ -23,7 +23,7 @@
                 <li><a href="/">Dashboard</a></li>
                 <li><a href="/produtos" class="active">Produtos</a></li>
                 <li><a href="/clientes">Clientes</a></li>
-                <a href="/pdv/historico">Vendas</a>
+                <li><a href="/pdv/historico">Vendas</a></li>
                 <li><a href="/mais_vendidos">Mais vendidos</a></li>
                 <li><a href="/armarios">Armários</a></li>
                 {% if usuario.role == 'admin' %}
@@ -95,16 +95,15 @@
                     {% for produto in produtos %}
                     <tr>
                         <td>
-                            <img src="{{ produto.imagem_url or '/static/img/default.png' }}" alt="{{ produto.nome }}"
-                                style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                            <img src="{{ produto.imagem_url }}" alt="{{ produto.nome }}" class="produto-thumb"
+                                loading="lazy" onerror="this.onerror=null; this.src='/static/img/produto_padrao.png';">
                         </td>
                         <td>
-                            <a href="/produtos/{{ produto.id }}"
-                                style="color: #1e1b4b; text-decoration: none; font-weight: bold; hover: underline;">
+                            <a href="/produtos/{{ produto.id }}" style="color: #1e1b4b; text-decoration: none; font-weight: bold;">
                                 {{ produto.nome }}
                             </a>
                         </td>
-                        <td>{{ produto.categoria.nome }}</td>
+                        <td>{{ produto.categoria.nome if produto.categoria else 'Sem categoria' }}</td>
                         <td>{{ produto.estoque_atual }}</td>
                         <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
                         <td>

@@ -98,7 +98,6 @@ async def criar_produto(
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
 
     # Verifica duplicidade de nome
-    # ilike() para comparação case-insensitive, evitando produtos "Camiseta" e "camiseta".
     if db.query(Produto).filter(Produto.nome.ilike(nome)).first():
         return templates.TemplateResponse(
             request,
@@ -119,9 +118,12 @@ async def criar_produto(
     # Processa o upload da imagem
     imagem_path = await _salvar_imagem(imagem)
 
+    # Convertendo o preço de float (ex: 15.50) para inteiro em centavos (ex: 1550)
+    preco_em_centavos = int(round(preco * 100))
+
     produto = Produto(
         nome          = nome,
-        preco         = preco,
+        preco         = preco_em_centavos,
         estoque_atual = estoque_atual,
         categoria_id  = categoria_id or None,  # 0 vira NULL no banco
         imagem_path   = imagem_path,
@@ -154,7 +156,6 @@ def detalhe_produto(
         "produtos/detalhe.html",
         {"request": request, "usuario": usuario, "produto": produto}
     )
-
 
 
 # EDIÇÃO
@@ -228,8 +229,11 @@ async def editar_produto(
         _remover_imagem(editando.imagem_path)
         editando.imagem_path = nova_imagem_path
 
+    # Convertendo o preço de float para inteiro em centavos para o Banco de Dados
+    preco_em_centavos = int(round(preco * 100))
+
     editando.nome          = nome
-    editando.preco         = preco
+    editando.preco         = preco_em_centavos
     editando.estoque_atual = estoque_atual
     editando.categoria_id  = categoria_id or None
 
@@ -263,13 +267,9 @@ def desativar_produto(
 
 async def _salvar_imagem(imagem: UploadFile | None):
     """
-    Salva o arquivo enviado em /static/uploads/ e retorna
+    Salva o arquivo enviado em /app/static/uploads/ e retorna
     o path relativo para guardar no banco.
-
-    Retorna None se nenhum arquivo foi enviado ou se o
-    arquivo enviado estiver vazio (campo deixado em branco).
     """
-    # UploadFile com filename vazio = campo não preenchido
     if not imagem or not imagem.filename:
         return None
 
@@ -278,11 +278,9 @@ async def _salvar_imagem(imagem: UploadFile | None):
     _, ext = os.path.splitext(imagem.filename.lower())
 
     if ext not in extensoes_permitidas:
-        return None  # ignora silenciosamente — pode virar erro em produção
+        return None
 
-    # Garante nome de arquivo único usando o nome original
-    # Em produção: use uuid4() para evitar colisões e exposição de nomes
-    # nome_arquivo = f"{imagem.filename}"
+    # Garante nome de arquivo único usando UUID para evitar colisões
     nome_arquivo = f"{uuid.uuid4()}{ext}"
     caminho_completo = os.path.join(UPLOAD_DIR, nome_arquivo)
 
@@ -290,7 +288,7 @@ async def _salvar_imagem(imagem: UploadFile | None):
     with open(caminho_completo, "wb") as buffer:
         shutil.copyfileobj(imagem.file, buffer)
 
-    # Retorna o path relativo ao /static (para montar a URL)
+    # Retorna o path relativo que a propriedade do modelo espera encontrar
     return f"uploads/{nome_arquivo}"
 
 
@@ -299,10 +297,18 @@ def _remover_imagem(imagem_path: str | None) -> None:
     if not imagem_path:
         return
 
-    caminho = os.path.join("app/static", imagem_path)
+    # Remove referências de barras iniciais repetidas
+    imagem_path_limpo = imagem_path.lstrip('/')
+    
+    # Se o path salvo já continha 'static/', removemos para não duplicar com o join abaixo
+    if imagem_path_limpo.startswith("static/"):
+        imagem_path_limpo = imagem_path_limpo.replace("static/", "", 1)
+
+    caminho = os.path.join("app/static", imagem_path_limpo)
 
     if os.path.exists(caminho):
         os.remove(caminho)
+
 
 @router.get("/mais-vendidos")
 def mais_vendidos(db: Session = Depends(get_db)):
@@ -312,19 +318,4 @@ def mais_vendidos(db: Session = Depends(get_db)):
             Produto.nome,
             func.sum(Movimentacao.quantidade).label("total_vendido")
         )
-        .join(Movimentacao, Movimentacao.produto_id == Produto.id)
-        .filter(Movimentacao.tipo == "saida")
-        .group_by(Produto.id, Produto.nome)
-        .order_by(func.sum(Movimentacao.quantidade).desc())
-        .limit(10)
-        .all()
     )
-
-    return [
-        {
-            "id": r.id,
-            "nome": r.nome,
-            "total_vendido": int(r.total_vendido)
-        }
-        for r in resultado
-    ]
