@@ -105,7 +105,7 @@
                         </td>
                         <td>{{ produto.categoria.nome if produto.categoria else 'Sem categoria' }}</td>
                         <td>{{ produto.estoque_atual }}</td>
-                        <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
+                        <td>R$ {{ "%.2f"|format(produto.preco / 100) }}</td>
                         <td>
                             {% if produto.estoque_atual <= 5 %} 
                             <span style="color: red; font-weight: bold;">Estoque Baixo</span>
@@ -216,5 +216,4 @@
 
     <script src="/static/javascript/produtos.js"></script>
 </body>
-
 </html>
