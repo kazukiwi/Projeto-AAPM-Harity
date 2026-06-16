@@ -20,7 +20,7 @@
         {% if request.query_params.get('editado') == 'ok' %}
             <div class="alert-box">
                 <i data-lucide="check-circle" style="width:18px; color:#34d399;"></i>
-                Produto updated com sucesso!
+                Produto atualizado com sucesso!
             </div>
         {% endif %}
 
@@ -45,15 +45,14 @@
                         <span class="info-value">
                             {% if produto.categoria %}
                                 <span class="category-badge">{{ produto.categoria.nome }}</span>
-                            {% else %}
-                                <span style="color: #64748b;">—</span>
+                            {% else %}\n                                <span style="color: #64748b;">—</span>
                             {% endif %}
                         </span>
                     </div>
 
                     <div class="info-row">
                         <span class="info-label">Preço Unitário</span>
-                        <span class="info-value price-highlight">R$ {{ "%.2f"|format(produto.preco) }}</span>
+                        <span class="info-value price-highlight">R$ {{ "%.2f"|format(produto.preco / 100) }}</span>
                     </div>
 
                     <div class="info-row">
