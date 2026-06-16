@@ -103,6 +103,14 @@
                 <i class="fa-solid fa-lock-open"></i>
             </div>
 
+            <div class="card vermelho">
+                <div>
+                    <span>Armários em Manutenção</span>
+                    <h3 id="armarios-manutencao">{{ armarios_manutencao | default(0) }}</h3>
+                </div>
+                <i class="fa-solid fa-wrench"></i>
+            </div>
+
             <div class="card roxo">
                 <div>
                     <span>Total de Associados</span>
@@ -162,7 +170,6 @@
         </div>
     </footer>
 
-    <script src="/static/javascript/dashboard.js"></script>
 </body>
 
 </html>

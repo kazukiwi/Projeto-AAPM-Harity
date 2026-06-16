@@ -126,6 +126,18 @@
 
             <div class="pdv-layout-split">
                 <div class="pdv-box-cadastro">
+                    <div class="form-group">
+                        <label for="select-cliente">Cliente</label>
+                        <select id="select-cliente" name="cliente_id" form="form-finalizar-real" data-desconto-associado="{{ desconto_associado }}">
+                            <option value="0" data-associado="false">Venda Balcao (Sem identificacao)</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}" data-associado="{{ 'true' if cliente.is_associado else 'false' }}">
+                                {{ cliente.nome }}{% if cliente.is_associado %} (Associado - {{ desconto_associado }}%){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
                     <form id="form-add-item-pdv">
                         <div class="form-group">
                             <label for="select-prod">Selecionar Produto</label>
@@ -191,12 +203,19 @@
                     
                     <form id="form-finalizar-real" action="/pdv/finalizar" method="POST">
                         <input type="hidden" name="carrinho_json" id="carrinho_json_input">
-                        <input type="hidden" name="cliente_id" value="0">
                         <input type="hidden" name="observacao" value="Venda Balcão">
                         
                         <div class="pdv-totalizador-rodape">
                             <div class="linha-total">
-                                <span>Total:</span>
+                                <span>Total Bruto:</span>
+                                <strong id="pdv-total-bruto">R$ 0,00</strong>
+                            </div>
+                            <div class="linha-total" id="pdv-linha-desconto" style="display: none;">
+                                <span>Desconto associado:</span>
+                                <strong id="pdv-desconto">- R$ 0,00</strong>
+                            </div>
+                            <div class="linha-total">
+                                <span>Total Final:</span>
                                 <strong id="pdv-total-geral">R$ 0,00</strong>
                             </div>
                             <button type="submit" id="btn-salvar-venda-banco" class="btn-salvar-venda-final" disabled>

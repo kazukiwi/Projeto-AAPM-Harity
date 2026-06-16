@@ -1,70 +1,114 @@
-/**
- * Controla o fluxo de telas dos armários (Disponível, Ocupado e Manutenção)
- * com base nos cliques do usuário para a apresentação do projeto.
- */
-function preencherModalArmario(id, numero, status, nome, obs, email, tel, mat, data) {
-    // Define o ID do armário no input escondido do formulário
-    document.getElementById('modal_armario_id').value = id;
-    
-    // Atualiza o título do cabeçalho do modal
-    document.getElementById('modalArmarioTitulo').innerText = 'Armário #' + numero;
+document.addEventListener("DOMContentLoaded", function () {
+    const cards = Array.from(document.querySelectorAll("[data-armario-card]"));
+    const botoesFiltro = Array.from(document.querySelectorAll("[data-filtro]"));
+    const modal = document.getElementById("modal-armario");
+    const form = document.getElementById("form-armario");
+    const modalTitulo = document.getElementById("modal-titulo");
+    const modalSubtitulo = document.getElementById("modal-subtitulo");
+    const modalInfo = document.getElementById("modal-info");
+    const inputArmarioId = document.getElementById("modal-armario-id");
+    const selectStatus = document.getElementById("modal-status");
+    const selectUsuario = document.getElementById("modal-usuario");
+    const inputObservacoes = document.getElementById("modal-observacoes");
+    const campoUsuario = document.querySelector(".campo-usuario");
+    const campoObservacao = document.querySelector(".campo-observacao");
+    const btnFechar = document.getElementById("btn-fechar-modal");
+    const btnCancelar = document.getElementById("btn-cancelar");
 
-    // Atualiza o valor do Select padrão para o status atual
-    const selectStatus = document.getElementById('modal_select_status');
+    function aplicarFiltro(status) {
+        cards.forEach(function (card) {
+            const statusCard = card.getAttribute("data-status");
+            card.style.display = !status || statusCard === status ? "" : "none";
+        });
+    }
+
+    function atualizarCamposModal() {
+        const status = selectStatus ? selectStatus.value : "";
+
+        if (campoUsuario) {
+            campoUsuario.style.display = status === "ocupado" ? "" : "none";
+        }
+
+        if (selectUsuario) {
+            selectUsuario.required = status === "ocupado";
+        }
+
+        if (campoObservacao) {
+            campoObservacao.style.display = status === "manutencao" ? "" : "none";
+        }
+
+        if (inputObservacoes) {
+            inputObservacoes.required = status === "manutencao";
+        }
+    }
+
+    function abrirModal(card) {
+        const numero = card.getAttribute("data-numero") || "";
+        const status = card.getAttribute("data-status") || "disponivel";
+        const associadoId = card.getAttribute("data-associado-id") || "0";
+        const observacoes = card.getAttribute("data-observacoes") || "";
+        const nome = card.getAttribute("data-nome") || "";
+        const matricula = card.getAttribute("data-matricula") || "";
+
+        if (modalTitulo) modalTitulo.textContent = "Armario #" + numero;
+        if (modalSubtitulo) modalSubtitulo.textContent = "Status atual: " + status;
+        if (modalInfo) {
+            modalInfo.textContent = nome ? (nome + (matricula ? " - " + matricula : "")) : "Sem associado vinculado.";
+        }
+        if (inputArmarioId) inputArmarioId.value = card.getAttribute("data-id") || "";
+        if (selectStatus) selectStatus.value = status;
+        if (selectUsuario) selectUsuario.value = associadoId;
+        if (inputObservacoes) inputObservacoes.value = observacoes;
+
+        atualizarCamposModal();
+
+        if (modal) {
+            modal.classList.add("open");
+            modal.setAttribute("aria-hidden", "false");
+        }
+    }
+
+    function fecharModal() {
+        if (modal) {
+            modal.classList.remove("open");
+            modal.setAttribute("aria-hidden", "true");
+        }
+    }
+
+    botoesFiltro.forEach(function (botao) {
+        botao.addEventListener("click", function () {
+            botoesFiltro.forEach(function (item) {
+                item.classList.remove("active");
+            });
+            botao.classList.add("active");
+            aplicarFiltro(botao.getAttribute("data-filtro") || "");
+        });
+    });
+
+    cards.forEach(function (card) {
+        card.addEventListener("click", function () {
+            abrirModal(card);
+        });
+    });
+
     if (selectStatus) {
-        selectStatus.value = status;
+        selectStatus.addEventListener("change", atualizarCamposModal);
     }
 
-    // Captura as seções condicionais da modal
-    const secaoAssociado = document.getElementById('secao-associado');
-    const secaoManutencao = document.getElementById('secao-manutencao');
-
-    // Renderiza a interface exata com base no status atual do armário clicado
-    if (status === 'ocupado') {
-        // Exibe a seção do associado e esconde a de manutenção
-        if (secaoAssociado) secaoAssociado.classList.remove('d-none');
-        if (secaoManutencao) secaoManutencao.classList.add('d-none');
-
-        // Preenche os dados dinâmicos do Associado com fallbacks seguros
-        const txtNome = document.getElementById('nome-associado-texto');
-        if (txtNome) {
-            txtNome.innerText = (nome && nome !== "None" && nome.trim() !== "") ? nome : 'Maria Santos';
-        }
-        
-        const txtEmail = document.getElementById('txt-email');
-        if (txtEmail) {
-            txtEmail.innerText = (email && email !== "None" && email.trim() !== "") ? email : 'maria.santos@email.com';
-        }
-        
-        const txtTel = document.getElementById('txt-tel');
-        if (txtTel) {
-            txtTel.innerText = (tel && tel !== "None" && tel.trim() !== "") ? tel : '(11) 97654-3210';
-        }
-        
-        const txtMat = document.getElementById('txt-mat');
-        if (txtMat) {
-            txtMat.innerText = (mat && mat !== "None" && mat.trim() !== "") ? mat : 'AAPM-002';
-        }
-        
-        const txtData = document.getElementById('txt-data');
-        if (txtData) {
-            txtData.innerText = (data && data !== "None" && data.trim() !== "") ? data : '04/03/2026';
-        }
-    } 
-    else if (status === 'manutencao') {
-        // Exibe a seção de manutenção e oculta a do associado
-        if (secaoAssociado) secaoAssociado.classList.add('d-none');
-        if (secaoManutencao) secaoManutencao.classList.remove('d-none');
-
-        // Preenche os dados reais da Manutenção
-        const txtObs = document.getElementById('observacao-manutencao-texto');
-        if (txtObs) {
-            txtObs.innerText = (obs && obs !== "None" && obs.trim() !== "") ? obs : 'Fechadura com defeito';
-        }
-    } 
-    else {
-        // Status 'disponivel': Esconde ambos os painéis informativos
-        if (secaoAssociado) secaoAssociado.classList.add('d-none');
-        if (secaoManutencao) secaoManutencao.classList.add('d-none');
+    if (form) {
+        form.addEventListener("submit", function (event) {
+            if (selectStatus && selectStatus.value === "ocupado" && selectUsuario && selectUsuario.value === "0") {
+                event.preventDefault();
+                alert("Selecione um associado cadastrado para ocupar o armario.");
+            }
+        });
     }
-}
+
+    if (btnFechar) btnFechar.addEventListener("click", fecharModal);
+    if (btnCancelar) btnCancelar.addEventListener("click", fecharModal);
+    if (modal) {
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) fecharModal();
+        });
+    }
+});

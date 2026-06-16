@@ -2,6 +2,7 @@ let carrinho = [];
 
 document.addEventListener('DOMContentLoaded', function () {
     const selectProd = document.getElementById('select-prod');
+    const selectCliente = document.getElementById('select-cliente');
     const grupoTamanho = document.getElementById('grupo-tamanho');
     const selectTamanho = document.getElementById('pdv-tamanho');
     const formAddItem = document.getElementById('form-add-item-pdv');
@@ -24,10 +25,10 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('pdv-qtd').value = 1;
 
             // Verifica se o termo 'camiseta' existe no nome do produto
-            if (nomeProduto.toLowerCase().includes('camiseta')) {
+            if (grupoTamanho && selectTamanho && nomeProduto.toLowerCase().includes('camiseta')) {
                 grupoTamanho.style.display = 'block';
                 selectTamanho.required = true;
-            } else {
+            } else if (grupoTamanho && selectTamanho) {
                 grupoTamanho.style.display = 'none';
                 selectTamanho.required = false;
                 selectTamanho.value = '';
@@ -40,6 +41,8 @@ document.addEventListener('DOMContentLoaded', function () {
         formAddItem.addEventListener('submit', function (e) {
             e.preventDefault();
 
+            if (!selectProd || !selectProd.value) return;
+
             const option = selectProd.options[selectProd.selectedIndex];
             if (!selectProd.value) return;
 
@@ -50,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const qtd = parseInt(document.getElementById('pdv-qtd').value);
 
             // Injeta o tamanho na string do nome se o campo estiver ativo e preenchido
-            if (grupoTamanho.style.display === 'block' && selectTamanho.value) {
+            if (grupoTamanho && selectTamanho && grupoTamanho.style.display === 'block' && selectTamanho.value) {
                 nome = `${nome} (Tam: ${selectTamanho.value})`;
             }
 
@@ -83,9 +86,17 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('pdv-estoque').value = "--";
             document.getElementById('pdv-preco').value = "R$ 0,00";
             document.getElementById('pdv-qtd').value = 1;
-            grupoTamanho.style.display = 'none';
-            selectTamanho.required = false;
-            selectTamanho.value = '';
+            if (grupoTamanho && selectTamanho) {
+                grupoTamanho.style.display = 'none';
+                selectTamanho.required = false;
+                selectTamanho.value = '';
+            }
+        });
+    }
+
+    if (selectCliente) {
+        selectCliente.addEventListener('change', function () {
+            atualizarTabelaCarrinho();
         });
     }
 });
@@ -93,9 +104,13 @@ document.addEventListener('DOMContentLoaded', function () {
 // 3. Atualiza a exibição da tabela do carrinho e do input serializado
 function atualizarTabelaCarrinho() {
     const corpo = document.getElementById('corpo-carrinho-pdv');
+    const totalBrutoTxt = document.getElementById('pdv-total-bruto');
     const totalTxt = document.getElementById('pdv-total-geral');
+    const descontoTxt = document.getElementById('pdv-desconto');
+    const linhaDesconto = document.getElementById('pdv-linha-desconto');
     const btnFinalizar = document.getElementById('btn-salvar-venda-banco');
     const hiddenInput = document.getElementById('carrinho_json_input');
+    const selectCliente = document.getElementById('select-cliente');
 
     if (!corpo) return;
     corpo.innerHTML = "";
@@ -119,7 +134,17 @@ function atualizarTabelaCarrinho() {
         `;
     });
 
-    if (totalTxt) totalTxt.textContent = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+    const clienteSelecionado = selectCliente ? selectCliente.options[selectCliente.selectedIndex] : null;
+    const associado = clienteSelecionado && clienteSelecionado.getAttribute('data-associado') === 'true';
+    const descontoPadrao = selectCliente ? parseFloat(selectCliente.getAttribute('data-desconto-associado') || '10') : 10;
+    const descontoPercentual = associado ? descontoPadrao : 0;
+    const descontoValor = totalGeral * (descontoPercentual / 100);
+    const totalFinal = totalGeral - descontoValor;
+
+    if (totalBrutoTxt) totalBrutoTxt.textContent = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+    if (descontoTxt) descontoTxt.textContent = `- R$ ${descontoValor.toFixed(2).replace('.', ',')}`;
+    if (linhaDesconto) linhaDesconto.style.display = associado && totalGeral > 0 ? "flex" : "none";
+    if (totalTxt) totalTxt.textContent = `R$ ${totalFinal.toFixed(2).replace('.', ',')}`;
     if (hiddenInput) hiddenInput.value = JSON.stringify(carrinho);
 
     if (btnFinalizar) {

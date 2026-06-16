@@ -1,144 +1,420 @@
-/* ==========================================================================
-   CONTAINER DE CARDS SUPERIORES DE RESUMO
-   ========================================================================== */
-.cards-resumo-container {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 25px;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.card-resumo {
-    flex: 1;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+    background: #f8fafc;
+    color: #020617;
+}
+
+.navbar {
+    width: 100%;
+    min-height: 80px;
+    height: auto;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f3f4f6;
+    padding: 0 60px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.card-resumo .titulo {
-    font-size: 14px;
-    color: #6b7280;
+.logo img {
+    height: 65px;
+    width: auto;
     display: block;
-    margin-bottom: 5px;
 }
 
-.card-resumo h3 {
-    font-size: 24px;
-    margin: 0;
-    font-weight: bold;
-    color: #111827;
+.menu {
+    display: flex;
+    gap: 28px;
+    list-style: none;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.menu a {
+    text-decoration: none;
+    color: #6b7280;
+    font-size: 17px;
+    transition: 0.3s;
+}
+
+.menu a:hover,
+.menu a.active {
+    color: #09145c;
+    font-weight: 700;
+}
+
+.menu a.btn-sair {
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.armarios-page {
+    flex: 1;
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 40px 0;
+}
+
+.page-title {
+    margin-bottom: 24px;
+}
+
+.page-title h1 {
+    font-size: 32px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    color: #020617;
+}
+
+.page-title p {
+    font-size: 16px;
+    color: #64748b;
+}
+
+.cards-resumo-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.card-resumo {
+    min-height: 104px;
+    background: #fff;
+    border: 1px solid #d9dee7;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-resumo span {
+    display: block;
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.card-resumo strong {
+    display: block;
+    font-size: 28px;
 }
 
 .card-resumo i {
-    font-size: 24px;
-    color: #9ca3af;
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
 }
 
-/* Bordas coloridas nos cards superiores (Verde escuro, Azul e Laranja) */
-.status-disponivel-borda { border-left: 4px solid #15803d; }
-.status-ocupado-borda    { border-left: 4px solid #3b82f6; }
-.status-manutencao-borda { border-left: 4px solid #f97316; }
+.card-total i { background: #f1f5f9; color: #475569; }
+.card-disponivel { border-color: #86efac; }
+.card-disponivel strong { color: #00a84f; }
+.card-disponivel i { background: #dcfce7; color: #00a84f; }
+.card-ocupado { border-color: #93c5fd; }
+.card-ocupado strong { color: #2563eb; }
+.card-ocupado i { background: #eff6ff; color: #2563eb; }
+.card-manutencao { border-color: #fdba74; }
+.card-manutencao strong { color: #f97316; }
+.card-manutencao i { background: #fff7ed; color: #f97316; }
 
-/* ==========================================================================
-   BOTÕES DE FILTRO RÁPIDOS E LEGENDAS
-   ========================================================================== */
-.btn-filtro-armario {
-    padding: 6px 16px;
-    border: 1px solid #e5e7eb;
-    background: white;
-    color: #4b5563;
-    border-radius: 20px;
+.filtro-bar,
+.legenda-bar,
+.grid-shell {
+    background: #fff;
+    border: 1px solid #d9dee7;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.filtro-bar {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.filtro-bar span,
+.legenda-bar span {
+    font-size: 14px;
+    color: #0f172a;
+}
+
+.btn-filtro {
+    border: 0;
+    border-radius: 6px;
+    padding: 9px 14px;
+    background: #f3f4f6;
+    color: #020617;
+    font-size: 14px;
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease-in-out;
+    font-weight: 700;
 }
 
-.btn-filtro-armario:hover {
-    background: #f9fafb;
+.btn-filtro.active {
+    background: #020617;
+    color: #fff;
 }
 
-.btn-filtro-armario.active {
-    background: #1e1b4b;
-    color: white;
-    border-color: #1e1b4b;
+.legenda-bar {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
 }
 
-.dot-legenda {
-    width: 12px;
-    height: 12px;
+.legenda-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dot {
+    width: 11px;
+    height: 11px;
     border-radius: 3px;
     display: inline-block;
 }
 
-/* ==========================================================================
-   GRID E ITENS DOS ARMÁRIOS (10 COLUNAS)
-   ========================================================================== */
+.dot-disponivel { background: #00c853; }
+.dot-ocupado { background: #3b73f6; }
+.dot-manutencao { background: #ff6d00; }
+
+.grid-shell {
+    padding: 20px;
+}
+
 .grid-armarios {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     gap: 12px;
-    background: white;
-    padding: 24px;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-    border: 1px solid #e5e7eb;
 }
 
 .item-armario {
-    aspect-ratio: 1 / 1; 
-    border-radius: 8px;
+    aspect-ratio: 1 / 1;
+    min-height: 72px;
+    border: 0;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    color: white;
-    cursor: pointer;
-    font-weight: bold;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-    position: relative;
+    justify-content: center;
     gap: 4px;
+    font-weight: 700;
+    transition: transform 0.15s, filter 0.15s;
 }
 
 .item-armario:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    filter: brightness(0.96);
 }
 
-.item-armario .icone-lock {
+.item-armario i {
+    font-size: 20px;
+}
+
+.item-armario span {
+    font-size: 16px;
+}
+
+.alerta-erro {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+}
+
+.status-disponivel { background: #00c853; }
+.status-ocupado { background: #3b73f6; }
+.status-manutencao { background: #ff6d00; }
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.45);
+    padding: 20px;
+    z-index: 20;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-card {
+    width: min(460px, 100%);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+    padding: 20px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 16px;
+}
+
+.modal-header h2 {
     font-size: 18px;
 }
 
-.item-armario .numero-armario {
-    font-size: 14px;
+.modal-header p,
+.modal-info,
+.modal-form small {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 12px;
 }
 
-/* Cores de Status dos Armários */
-.status-disponivel { background-color: #15803d; }
-.status-ocupado    { background-color: #3b82f6; }
-.status-manutencao { background-color: #f97316; }
+.btn-fechar {
+    border: 0;
+    background: #f1f5f9;
+    color: #334155;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+}
 
-/* Estados de Hover dos Armários */
-.status-disponivel:hover { background-color: #166534; }
-.status-ocupado:hover    { background-color: #2563eb; }
-.status-manutencao:hover { background-color: #ea580c; }
+.modal-form {
+    display: grid;
+    gap: 14px;
+}
 
-/* ==========================================================================
-   RODAPÉ DO SISTEMA (ALINHAMENTO CENTRAL)
-   ========================================================================== */
-footer, 
-.footer-sistema {
+.modal-form label span {
+    display: block;
+    margin-bottom: 6px;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.modal-form select,
+.modal-form input {
     width: 100%;
-    margin-top: 40px;
-    padding: 20px 0;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    text-align: center !important;
-    color: #6b7280;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 10px;
     font-size: 14px;
-    border-top: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.btn-secundario,
+.btn-primario {
+    border: 0;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-secundario {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.btn-primario {
+    background: #020617;
+    color: #fff;
+}
+
+.main-footer {
+    margin-top: auto;
+    width: 100%;
+    background: #09145c;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+    font-size: 13px;
+}
+
+@media (max-width: 1100px) {
+    .navbar {
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .menu {
+        justify-content: center;
+        gap: 14px;
+    }
+}
+
+@media (max-width: 760px) {
+    .cards-resumo-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-armarios {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .armarios-page {
+        padding: 28px 0;
+    }
+
+    .page-title h1 {
+        font-size: 26px;
+    }
+}
+
+@media (max-width: 460px) {
+    .cards-resumo-container {
+        grid-template-columns: 1fr;
+    }
+
+    .grid-armarios {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .item-armario {
+        min-height: 58px;
+    }
 }

@@ -2,11 +2,15 @@ from fastapi import FastAPI, Request, Depends, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
+from fastapi.exception_handlers import http_exception_handler as default_http_exception_handler
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.database import get_db
 from app.models.produtos import Produto
+from app.models.cliente import Cliente
+from app.models.armario import Armario
 
 from app.controllers import (
     auth_controller,
@@ -28,6 +32,18 @@ app = FastAPI(title="Sistema Estoque")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404:
+        return templates.TemplateResponse(
+            name="404.html",
+            request=request,
+            status_code=404,
+            context={"request": request}
+        )
+    return await default_http_exception_handler(request, exc)
+
 # 3º: INCLUIR OS ROUTERS dos controllers
 app.include_router(auth_controller.router)
 app.include_router(admin_controller.router)
@@ -39,8 +55,10 @@ app.include_router(clientes_controller.router)
 
 
 # --- BANCO DE DADOS TEMPORÁRIO PARA OS ARMÁRIOS (ESTRUTURA INDESTRUTÍVEL) ---
-BANCO_ARMARIOS = []
-if not BANCO_ARMARIOS:
+def garantir_armarios_iniciais(db: Session):
+    if db.query(Armario).count() > 0:
+        return
+
     for i in range(1, 51):
         if i in [1, 5, 12, 25]:
             status_inicial = "ocupado"
@@ -55,17 +73,19 @@ if not BANCO_ARMARIOS:
             nome_mock = ""
             obs_mock = ""
         
-        BANCO_ARMARIOS.append({
-            "id": i,
-            "numero": str(i).zfill(2),
-            "status": status_inicial,
-            "associado_nome": nome_mock,
-            "associado_email": "maria.santos@email.com" if status_inicial == "ocupado" else "",
-            "associado_telefone": "(11) 97654-3210" if status_inicial == "ocupado" else "",
-            "associado_matricula": "AAPM-002" if status_inicial == "ocupado" else "",
-            "atribuido_em": "04/03/2026" if status_inicial == "ocupado" else "",
-            "observacoes": obs_mock
-        })
+        db.add(Armario(
+            numero=str(i).zfill(2),
+            status=status_inicial,
+            associado_nome=nome_mock,
+            associado_id=None,
+            associado_email="maria.santos@email.com" if status_inicial == "ocupado" else "",
+            associado_telefone="(11) 97654-3210" if status_inicial == "ocupado" else "",
+            associado_matricula="AAPM-002" if status_inicial == "ocupado" else "",
+            atribuido_em="04/03/2026" if status_inicial == "ocupado" else "",
+            observacoes=obs_mock
+        ))
+
+    db.commit()
 
 
 # 4º: PÁGINA INICIAL / DASHBOARD
@@ -98,8 +118,18 @@ def home(
     total_categorias = len(contagem_cat)
 
     # Contagem dinâmica para os cards superiores da Home
-    ocupados = len([a for a in BANCO_ARMARIOS if a["status"] == "ocupado"])
-    disponiveis = len([a for a in BANCO_ARMARIOS if a["status"] == "disponivel"])
+    garantir_armarios_iniciais(db)
+    ocupados = db.query(Armario).filter(Armario.status == "ocupado").count()
+    disponiveis = db.query(Armario).filter(Armario.status == "disponivel").count()
+    manutencao = db.query(Armario).filter(Armario.status == "manutencao").count()
+    total_associados = (
+        db.query(Cliente)
+        .filter(
+            Cliente.ativo == True,
+            Cliente.is_associado == True
+        )
+        .count()
+    )
 
     return templates.TemplateResponse(
         name="dashboard.html",
@@ -113,10 +143,11 @@ def home(
             "total_categorias": total_categorias,
             "produtos_alerta": produtos_alerta,
             "contagem_por_categoria": contagem_cat,
-            "lista_armarios": BANCO_ARMARIOS, 
+            "lista_armarios": db.query(Armario).order_by(Armario.id).all(),
             "armarios_ocupados": ocupados,
             "armarios_disponiveis": disponiveis,
-            "total_associados": ocupados  
+            "armarios_manutencao": manutencao,
+            "total_associados": total_associados
         }
     )
 
@@ -215,7 +246,8 @@ def mais_vendidos(
 @app.get("/armarios")
 def listar_armarios(
     request: Request,
-    usuario=Depends(get_usuario_opcional) # Trocado para opcional para evitar travas de banco
+    usuario=Depends(get_usuario_opcional), # Trocado para opcional para evitar travas de banco
+    db: Session = Depends(get_db)
 ):
     # Fallback caso a sessão falhe por causa do banco de dados travado no Git
     if not usuario:
@@ -224,10 +256,22 @@ def listar_armarios(
             nome = "Usuário Local"
         usuario = UsuarioMock()
 
-    total = len(BANCO_ARMARIOS)
-    disponiveis = len([a for a in BANCO_ARMARIOS if a["status"] == "disponivel"])
-    ocupados = len([a for a in BANCO_ARMARIOS if a["status"] == "ocupado"])
-    manutencao = len([a for a in BANCO_ARMARIOS if a["status"] == "manutencao"])
+    garantir_armarios_iniciais(db)
+
+    total = db.query(Armario).count()
+    disponiveis = db.query(Armario).filter(Armario.status == "disponivel").count()
+    ocupados = db.query(Armario).filter(Armario.status == "ocupado").count()
+    manutencao = db.query(Armario).filter(Armario.status == "manutencao").count()
+    armarios = db.query(Armario).order_by(Armario.id).all()
+    associados = (
+        db.query(Cliente)
+        .filter(
+            Cliente.ativo == True,
+            Cliente.is_associado == True
+        )
+        .order_by(Cliente.nome)
+        .all()
+    )
 
     return templates.TemplateResponse(
         request=request, 
@@ -235,11 +279,12 @@ def listar_armarios(
         context={
             "request": request, # Garantindo envio explícito do objeto request para o contexto
             "usuario": usuario,
-            "armarios": BANCO_ARMARIOS,
+            "armarios": armarios,
             "total_armarios": total,
             "armarios_disponiveis": disponiveis,
             "armarios_ocupados": ocupados,
-            "armarios_manutencao": manutencao
+            "armarios_manutencao": manutencao,
+            "associados": associados,
         }
     )
 
@@ -249,35 +294,54 @@ def listar_armarios(
 def alterar_status_armario(
     armario_id: int = Form(...),
     novo_status: str = Form(...),
-    nome: str = Form(None),
+    associado_id: int = Form(0),
     observacoes: str = Form(None),
-    usuario=Depends(get_usuario_opcional)
+    usuario=Depends(get_usuario_opcional),
+    db: Session = Depends(get_db)
 ):
-    for armario in BANCO_ARMARIOS:
-        if armario["id"] == armario_id:
-            armario["status"] = novo_status
-            
-            if novo_status == "ocupado":
-                armario["associado_nome"] = nome if (nome and nome.strip()) else "Maria Santos"
-                armario["associado_email"] = "maria.santos@email.com"
-                armario["associado_telefone"] = "(11) 97654-3210"
-                armario["associado_matricula"] = "AAPM-002"
-                armario["atribuido_em"] = "04/03/2026"
-                armario["observacoes"] = ""
-            elif novo_status == "manutencao":
-                armario["associado_nome"] = ""
-                armario["associado_email"] = ""
-                armario["associado_telefone"] = ""
-                armario["associado_matricula"] = ""
-                armario["atribuido_em"] = ""
-                armario["observacoes"] = observacoes if (observacoes and observacoes.strip()) else "Fechadura com defeito"
-            else:
-                armario["associado_nome"] = ""
-                armario["associado_email"] = ""
-                armario["associado_telefone"] = ""
-                armario["associado_matricula"] = ""
-                armario["atribuido_em"] = ""
-                armario["observacoes"] = ""
-            break
+    armario = db.query(Armario).filter(Armario.id == armario_id).first()
+    if not armario:
+        return RedirectResponse(url="/armarios?erro=armario", status_code=303)
+
+    if novo_status == "ocupado":
+        associado = None
+        if associado_id:
+            associado = db.query(Cliente).filter(
+                Cliente.id == associado_id,
+                Cliente.ativo == True,
+                Cliente.is_associado == True
+            ).first()
+
+        if not associado:
+            return RedirectResponse(url="/armarios?erro=associado", status_code=303)
+
+        armario.status = novo_status
+        armario.associado_id = associado.id
+        armario.associado_nome = associado.nome
+        armario.associado_email = ""
+        armario.associado_telefone = associado.telefone or ""
+        armario.associado_matricula = associado.matricula or ""
+        armario.atribuido_em = "04/03/2026"
+        armario.observacoes = ""
+    elif novo_status == "manutencao":
+        armario.status = novo_status
+        armario.associado_id = None
+        armario.associado_nome = ""
+        armario.associado_email = ""
+        armario.associado_telefone = ""
+        armario.associado_matricula = ""
+        armario.atribuido_em = ""
+        armario.observacoes = observacoes if (observacoes and observacoes.strip()) else "Fechadura com defeito"
+    else:
+        armario.status = "disponivel"
+        armario.associado_id = None
+        armario.associado_nome = ""
+        armario.associado_email = ""
+        armario.associado_telefone = ""
+        armario.associado_matricula = ""
+        armario.atribuido_em = ""
+        armario.observacoes = ""
+
+    db.commit()
             
     return RedirectResponse(url="/armarios", status_code=303)

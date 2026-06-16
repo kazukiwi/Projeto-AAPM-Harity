@@ -52,7 +52,7 @@
 
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label for="select-cliente" style="display:block; font-weight:bold; margin-bottom:5px;">Cliente</label>
-                    <select id="select-cliente" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; background-color: white;">
+                    <select id="select-cliente" name="cliente_id" form="form-finalizar-real" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; background-color: white;">
                         <option value="0">Venda Balcão (Sem identificação)</option>
                         {% for cliente in clientes %}
                         <option value="{{ cliente.id }}" data-associado="{{ 'true' if cliente.is_associado else 'false' }}">
@@ -122,7 +122,6 @@
 
                 <form id="form-finalizar-real" action="/pdv/finalizar" method="POST">
                     <input type="hidden" name="carrinho_json" id="carrinho_json_input">
-                    <input type="hidden" name="cliente_id" id="cliente_id_hidden" value="0">
 
                     <div class="form-group" style="margin-bottom:15px;">
                         <label for="observacao" style="display:block; font-weight:bold; margin-bottom:5px;">Observações da Venda</label>
@@ -286,7 +285,6 @@
 
         // Vincula a alteração do cliente
         document.getElementById('select-cliente').addEventListener('change', function () {
-            document.getElementById('cliente_id_hidden').value = this.value;
             atualizarTabelaCarrinho();
         });
     </script>

@@ -1,0 +1,149 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background: #fff;
+    color: #0f172a;
+}
+
+.erro-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: #fff;
+}
+
+.erro-card {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    min-height: 100vh;
+    background: #fff;
+    border: 0;
+    box-shadow: none;
+    padding: 64px 8vw;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.robo-wrap {
+    width: min(470px, 48%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 24px;
+    z-index: 1;
+}
+
+.robo-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: left center;
+    opacity: 1;
+    transform: none;
+    z-index: 0;
+}
+
+.balao-fala {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border: 3px solid #09145c;
+    border-radius: 8px;
+    color: #09145c;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.2;
+    padding: 24px 26px;
+    text-align: left;
+    box-shadow: 0 8px 0 rgba(9, 20, 92, 0.12);
+}
+
+.balao-fala::before {
+    content: "";
+    position: absolute;
+    left: -18px;
+    top: 52px;
+    width: 30px;
+    height: 30px;
+    background: #fff;
+    border-left: 3px solid #09145c;
+    border-bottom: 3px solid #09145c;
+    transform: rotate(45deg);
+}
+
+.btn-voltar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 6px;
+    background: #09145c;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    align-self: flex-start;
+}
+
+.btn-voltar:hover {
+    background: #111f7a;
+}
+
+@media (max-width: 520px) {
+    .erro-page {
+        padding: 0;
+    }
+
+    .erro-card {
+        min-height: 100vh;
+        padding: 300px 22px 34px;
+        align-items: flex-end;
+        justify-content: center;
+    }
+
+    .robo-wrap {
+        width: 100%;
+        gap: 18px;
+    }
+
+    .robo-img {
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 18% center;
+        opacity: 1;
+        transform: none;
+    }
+
+    .balao-fala {
+        font-size: 22px;
+        text-align: center;
+    }
+
+    .balao-fala::before {
+        left: 50%;
+        top: -17px;
+        transform: translateX(-50%) rotate(135deg);
+    }
+
+    .btn-voltar {
+        align-self: center;
+    }
+}

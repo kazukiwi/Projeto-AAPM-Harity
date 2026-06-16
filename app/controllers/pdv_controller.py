@@ -214,6 +214,12 @@ def historico_vendas(
         .order_by(Produto.nome)
         .all()
     )
+    clientes = (
+        db.query(Cliente)
+        .filter(Cliente.ativo == True)
+        .order_by(Cliente.nome)
+        .all()
+    )
 
     return templates.TemplateResponse(
         request,
@@ -222,6 +228,8 @@ def historico_vendas(
             "request": request, 
             "usuario": usuario, 
             "vendas": vendas,
-            "produtos": produtos  # <-- Enviando os produtos cadastrados para o HTML
+            "produtos": produtos,
+            "clientes": clientes,
+            "desconto_associado": DESCONTO_ASSOCIADO,
         }
     )
