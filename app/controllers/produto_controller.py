@@ -118,12 +118,10 @@ async def criar_produto(
     # Processa o upload da imagem
     imagem_path = await _salvar_imagem(imagem)
 
-    # Convertendo o preço de float (ex: 15.50) para inteiro em centavos (ex: 1550)
-    preco_em_centavos = int(round(preco * 100))
-
+    # O preço é armazenado em reais, na mesma unidade usada pelo PDV e pelas vendas.
     produto = Produto(
         nome          = nome,
-        preco         = preco_em_centavos,
+        preco         = preco,
         estoque_atual = estoque_atual,
         categoria_id  = categoria_id or None,  # 0 vira NULL no banco
         imagem_path   = imagem_path,
@@ -229,11 +227,9 @@ async def editar_produto(
         _remover_imagem(editando.imagem_path)
         editando.imagem_path = nova_imagem_path
 
-    # Convertendo o preço de float para inteiro em centavos para o Banco de Dados
-    preco_em_centavos = int(round(preco * 100))
-
+    # Mantém o preço em reais ao atualizar o cadastro.
     editando.nome          = nome
-    editando.preco         = preco_em_centavos
+    editando.preco         = preco
     editando.estoque_atual = estoque_atual
     editando.categoria_id  = categoria_id or None
 
