@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import FastAPI, Request, Depends, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -29,8 +31,9 @@ from app.auth import get_usuario_opcional, get_usuario_logado
 app = FastAPI(title="Sistema Estoque")
 
 # 2º: CONFIGURAR ARQUIVOS ESTÁTICOS E TEMPLATES
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
+APP_DIR = Path(__file__).resolve().parent
+app.mount("/static", StaticFiles(directory=APP_DIR / "static"), name="static")
+templates = Jinja2Templates(directory=APP_DIR / "templates")
 
 
 @app.exception_handler(StarletteHTTPException)

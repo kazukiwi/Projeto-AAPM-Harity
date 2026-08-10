@@ -2,6 +2,7 @@
 import os
 import shutil
 import uuid
+from pathlib import Path
 from fastapi import APIRouter, Depends, Request, Form, UploadFile, File, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -16,11 +17,14 @@ from app.auth import get_usuario_logado, get_admin
 
 router = APIRouter(prefix="/produtos", tags=["Produtos"])
 
-templates = Jinja2Templates(directory="app/templates")
+APP_DIR = Path(__file__).resolve().parents[1]
+STATIC_DIR = APP_DIR / "static"
+UPLOAD_DIR = STATIC_DIR / "uploads"
+
+templates = Jinja2Templates(directory=APP_DIR / "templates")
 
 # Pasta onde as imagens serão salvas dentro de /static
-UPLOAD_DIR = "app/static/uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)  # cria a pasta se não existir
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ============================================================
@@ -278,7 +282,7 @@ async def _salvar_imagem(imagem: UploadFile | None):
 
     # Garante nome de arquivo único usando UUID para evitar colisões
     nome_arquivo = f"{uuid.uuid4()}{ext}"
-    caminho_completo = os.path.join(UPLOAD_DIR, nome_arquivo)
+    caminho_completo = UPLOAD_DIR / nome_arquivo
 
     # Salva o arquivo no disco
     with open(caminho_completo, "wb") as buffer:
@@ -294,16 +298,22 @@ def _remover_imagem(imagem_path: str | None) -> None:
         return
 
     # Remove referências de barras iniciais repetidas
-    imagem_path_limpo = imagem_path.lstrip('/')
+    imagem_path_limpo = imagem_path.strip().lstrip('/').replace("\\", "/")
     
     # Se o path salvo já continha 'static/', removemos para não duplicar com o join abaixo
     if imagem_path_limpo.startswith("static/"):
         imagem_path_limpo = imagem_path_limpo.replace("static/", "", 1)
 
-    caminho = os.path.join("app/static", imagem_path_limpo)
+    caminho = (STATIC_DIR / imagem_path_limpo).resolve()
 
-    if os.path.exists(caminho):
-        os.remove(caminho)
+    # Nunca remove arquivos fora da pasta estática, mesmo se o banco tiver um caminho inválido.
+    try:
+        caminho.relative_to(STATIC_DIR.resolve())
+    except ValueError:
+        return
+
+    if caminho.is_file():
+        caminho.unlink()
 
 
 @router.get("/mais-vendidos")

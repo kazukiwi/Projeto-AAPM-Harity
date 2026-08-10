@@ -1,6 +1,11 @@
+from pathlib import Path
+
 from sqlalchemy import Column, Integer, Float, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
+
+STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
+IMAGEM_PADRAO_URL = "/static/img/produto_padrao.png"
 
 class Produto(Base):
     __tablename__ = "produtos"
@@ -20,7 +25,7 @@ class Produto(Base):
     def imagem_url(self):
         # 1. Se não houver imagem guardada no banco de dados, retorna a imagem padrão do sistema
         if not self.imagem_path:
-            return "/static/img/produto_padrao.png"
+            return IMAGEM_PADRAO_URL
 
         # Remove espaços em branco extras que possam existir no início ou fim
         imagem_path = self.imagem_path.strip()
@@ -30,16 +35,21 @@ class Produto(Base):
             return imagem_path
 
         # 3. Limpa barras iniciais para evitar caminhos duplicados como '//static'
-        path_limpo = imagem_path.lstrip('/')
+        path_limpo = imagem_path.lstrip('/').replace("\\", "/")
 
         # 4. Se o banco já gravou o caminho começando com "static/uploads/"
         if path_limpo.startswith("static/"):
-            return f"/{path_limpo}"
+            path_limpo = path_limpo.removeprefix("static/")
 
-        # 5. Se o banco guardou apenas "uploads/nome.webp", como a pasta está dentro de static,
-        # nós injetamos o prefixo correto automaticamente
-        if path_limpo.startswith("uploads/"):
-            return f"/static/{path_limpo}"
+        # Confirma que o arquivo existe dentro de static antes de gerar uma URL.
+        # Assim, registros antigos que apontam para uploads removidos usam o fallback.
+        arquivo = (STATIC_DIR / path_limpo).resolve()
+        try:
+            arquivo.relative_to(STATIC_DIR.resolve())
+        except ValueError:
+            return IMAGEM_PADRAO_URL
 
-        # 6. Caso genérico de segurança para outros ficheiros relativos dentro da pasta static
+        if not arquivo.is_file():
+            return IMAGEM_PADRAO_URL
+
         return f"/static/{path_limpo}"
