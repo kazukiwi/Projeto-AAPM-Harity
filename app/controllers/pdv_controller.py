@@ -9,6 +9,7 @@
 # ============================================================
 
 import json
+import re
 from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -24,6 +25,28 @@ router = APIRouter(prefix="/pdv", tags=["PDV"])
 templates = Jinja2Templates(directory="app/templates")
 
 DESCONTO_ASSOCIADO = 10.0  # percentual fixo
+TAMANHOS_CAMISETA = {"P", "M", "G", "GG"}
+
+
+def obter_tamanho_item(item: dict) -> str | None:
+    """Lê o tamanho do carrinho atual e do formato legado do carrinho."""
+    tamanho = item.get("tamanho")
+
+    # Versões anteriores do JavaScript gravavam o tamanho somente no nome exibido.
+    # Aceitamos esse formato durante a transição para não registrar novas vendas como NULL.
+    if tamanho is None:
+        encontrado = re.search(r"\(\s*Tam\s*:\s*([A-Za-z]+)\s*\)", str(item.get("nome", "")), re.IGNORECASE)
+        tamanho = encontrado.group(1) if encontrado else None
+
+    if tamanho is None:
+        return None
+
+    tamanho = str(tamanho).strip().upper()
+    if not tamanho:
+        return None
+    if tamanho not in TAMANHOS_CAMISETA:
+        raise ValueError("tamanho inválido")
+    return tamanho
 
 
 @router.get("/")
@@ -117,7 +140,10 @@ def finalizar_venda(
                 status_code=302
             )
 
-        qtd = int(item["quantidade"])
+        try:
+            qtd = int(item["quantidade"])
+        except (KeyError, TypeError, ValueError):
+            return RedirectResponse(url="/pdv?erro=quantidade", status_code=302)
 
         if qtd <= 0:
             return RedirectResponse(url="/pdv?erro=quantidade", status_code=302)
@@ -131,11 +157,17 @@ def finalizar_venda(
         subtotal    = produto.preco * qtd
         total_bruto += subtotal
 
+        try:
+            tamanho = obter_tamanho_item(item)
+        except ValueError:
+            return RedirectResponse(url="/pdv?erro=tamanho", status_code=302)
+
         itens_validados.append({
             "produto":       produto,
             "quantidade":    qtd,
             "preco":         produto.preco,
             "produto_nome":  produto.nome,
+            "tamanho":       tamanho,
         })
 
     # ── Calcula desconto e total final
@@ -159,6 +191,7 @@ def finalizar_venda(
             venda_id       = venda.id,
             produto_id     = item["produto"].id,
             produto_nome   = item["produto_nome"],
+            tamanho        = item["tamanho"],
             quantidade     = item["quantidade"],
             preco_unitario = item["preco"],
         ))

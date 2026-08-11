@@ -47,18 +47,21 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!selectProd.value) return;
 
             const pId = parseInt(selectProd.value);
-            let nome = option.getAttribute('data-nome');
+            const nome = option.getAttribute('data-nome');
             const preco = parseFloat(option.getAttribute('data-preco'));
             const estoqueMax = parseInt(option.getAttribute('data-estoque'));
             const qtd = parseInt(document.getElementById('pdv-qtd').value);
+            const tamanho = grupoTamanho && grupoTamanho.style.display === 'block'
+                ? selectTamanho.value
+                : null;
 
-            // Injeta o tamanho na string do nome se o campo estiver ativo e preenchido
-            if (grupoTamanho && selectTamanho && grupoTamanho.style.display === 'block' && selectTamanho.value) {
-                nome = `${nome} (Tam: ${selectTamanho.value})`;
+            if (grupoTamanho && grupoTamanho.style.display === 'block' && !tamanho) {
+                selectTamanho.reportValidity();
+                return;
             }
 
             // Evita duplicados idênticos (mesmo ID e mesmo Tamanho)
-            const itemExistente = carrinho.find(item => item.produto_id === pId && item.nome === nome);
+            const itemExistente = carrinho.find(item => item.produto_id === pId && item.tamanho === tamanho);
 
             if (itemExistente) {
                 if (itemExistente.quantidade + qtd > estoqueMax) {
@@ -75,7 +78,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     produto_id: pId,
                     nome: nome,
                     preco: preco,
-                    quantidade: qtd
+                    quantidade: qtd,
+                    tamanho: tamanho
                 });
             }
 
@@ -122,7 +126,7 @@ function atualizarTabelaCarrinho() {
 
         corpo.innerHTML += `
             <tr>
-                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>${item.nome}</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>${item.nome}${item.tamanho ? ` (Tam: ${item.tamanho})` : ''}</strong></td>
                 <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${item.quantidade}x</td>
                 <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
                 <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: center;">
