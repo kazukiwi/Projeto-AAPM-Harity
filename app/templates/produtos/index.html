@@ -109,8 +109,8 @@
                         <td>{{ produto.categoria.nome if produto.categoria else 'Sem categoria' }}</td>
                         <td>
                             {% if produto.eh_camiseta %}
-                                <strong>Total: {{ produto.estoque_atual }}</strong><br>
-                                <small>P: {{ produto.estoque_do_tamanho('P') }} · M: {{ produto.estoque_do_tamanho('M') }} · G: {{ produto.estoque_do_tamanho('G') }} · GG: {{ produto.estoque_do_tamanho('GG') }}</small>
+                                {{ produto.estoque_atual }}<br>
+                        
                             {% else %}
                                 {{ produto.estoque_atual }}
                             {% endif %}
