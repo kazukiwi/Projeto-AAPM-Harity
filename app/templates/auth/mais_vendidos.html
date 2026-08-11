@@ -6,7 +6,7 @@
     <title>Produtos Mais Vendidos - AAPM</title>
     <link rel="stylesheet" href="{{ url_for('static', path='css/mais_vendidos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', path='javascript/chart.umd.min.js') }}"></script>
 </head>
 <body>
 
@@ -52,7 +52,7 @@
             <div class="card-indicador">
                 <div class="card-header-ind"><span>Total de Vendas</span></div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h2>{{ total_unidades }} <span style="font-size:13px; color:#64748b; font-weight:normal;">unidades</span></h2>
+                    <h2 id="indicador-total-vendas">{{ total_unidades }} <span style="font-size:13px; color:#64748b; font-weight:normal;">unidades</span></h2>
                     <i class="fa-solid fa-chart-line" style="color:#2563eb; font-size:20px; background:#eff6ff; padding:10px; border-radius:8px;"></i>
                 </div>
             </div>
@@ -60,7 +60,7 @@
             <div class="card-indicador">
                 <div class="card-header-ind"><span>Receita Total</span></div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h2>R$ {{ "{:,.2f}".format(receita_total).replace(",", "X").replace(".", ",").replace("X", ".") }}</h2>
+                    <h2 id="indicador-receita-total">R$ {{ "{:,.2f}".format(receita_total).replace(",", "X").replace(".", ",").replace("X", ".") }}</h2>
                     <i class="fa-solid fa-wallet" style="color:#16a34a; font-size:20px; background:#f0fdf4; padding:10px; border-radius:8px;"></i>
                 </div>
             </div>
@@ -68,7 +68,7 @@
             <div class="card-indicador">
                 <div class="card-header-ind"><span>Ticket Médio</span></div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h2>R$ {{ "{:,.2f}".format(ticket_medio).replace(",", "X").replace(".", ",").replace("X", ".") }}</h2>
+                    <h2 id="indicador-ticket-medio">R$ {{ "{:,.2f}".format(ticket_medio).replace(",", "X").replace(".", ",").replace("X", ".") }}</h2>
                     <i class="fa-solid fa-award" style="color:#9333ea; font-size:20px; background:#faf5ff; padding:10px; border-radius:8px;"></i>
                 </div>
             </div>
@@ -85,8 +85,8 @@
                 </select>
             </div>
             <div class="periodos-botoes">
-                <button id="btn-ordem-qtd" class="btn-periodo active" onclick="mudarOrdenacao('quantidade')">Por Quantidade</button>
-                <button id="btn-ordem-receita" class="btn-periodo" onclick="mudarOrdenacao('receita')">Por Receita</button>
+                <button id="btn-ordem-qtd" class="btn-periodo active" type="button">Por Quantidade</button>
+                <button id="btn-ordem-receita" class="btn-periodo" type="button">Por Receita</button>
             </div>
         </div>
 
@@ -96,7 +96,7 @@
                 <div class="canvas-chart-container"><canvas id="chartTopProdutos"></canvas></div>
             </div>
             <div class="card-grafico-item">
-                <h3>Vendas por Categoria</h3>
+                <h3 id="titulo-grafico-categorias">Vendas por Categoria</h3>
                 <div class="canvas-chart-container"><canvas id="chartCategorias"></canvas></div>
             </div>
         </div>
@@ -116,7 +116,7 @@
                             <th>% TOTAL</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="ranking-produtos-corpo">
                         {% for produto in ranking %}
                         <tr>
                             <td><strong>#{{ loop.index }}</strong></td>
@@ -141,15 +141,10 @@
         </div>
     </div>
 
-    <div id="dados-jinja" style="display: none;"
-         data-produtos-labels='[{% for p in ranking %}"{{ p.nome }}"{% if not loop.last %},{% endif %}{% endfor %}]'
-         data-produtos-valores='[{% for p in ranking %}{{ p.vendas }}{% if not loop.last %},{% endif %}{% endfor %}]'
-         data-categorias-labels='[{% for cat, total in categories.items() %}"{{ cat }}"{% if not loop.last %},{% endif %}{% endfor %}]'
-         data-categorias-valores='[{% for cat, total in categories.items() %}{{ total }}{% if not loop.last %},{% endif %}{% endfor %}]'>
-    </div>
+    <script id="dados-jinja" type="application/json">{{ ranking | tojson }}</script>
 
     <footer class="main-footer"><p>&copy; 2026 AAPM - SENAI. Todos os direitos reservados.</p></footer>
 
-    <script src="{{ url_for('static', path='javascript/mais_vendidos.js') }}"></script>
+    <script src="{{ url_for('static', path='javascript/mais_vendidos.js') }}?v=2"></script>
 </body>
 </html>
