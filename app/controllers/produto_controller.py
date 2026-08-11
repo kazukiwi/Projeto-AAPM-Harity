@@ -11,7 +11,7 @@ from sqlalchemy import func
 from app.models.movimentacao import Movimentacao
 
 from app.database import get_db
-from app.models.produtos import Produto
+from app.models.produtos import Produto, EstoqueTamanho
 from app.models.categoria import Categoria
 from app.auth import get_usuario_logado, get_admin
 
@@ -25,6 +25,26 @@ templates = Jinja2Templates(directory=APP_DIR / "templates")
 
 # Pasta onde as imagens serão salvas dentro de /static
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+TAMANHOS_CAMISETA = ("P", "M", "G", "GG")
+
+
+def _eh_camiseta(nome: str) -> bool:
+    return "camiseta" in nome.lower()
+
+
+def _salvar_estoques_tamanho(produto: Produto, nome: str, estoques: dict[str, int]) -> None:
+    if not _eh_camiseta(nome):
+        produto.estoques_tamanho.clear()
+        return
+
+    existentes = {registro.tamanho: registro for registro in produto.estoques_tamanho}
+    for tamanho, quantidade in estoques.items():
+        registro = existentes.get(tamanho)
+        if registro:
+            registro.estoque_atual = quantidade
+        else:
+            produto.estoques_tamanho.append(EstoqueTamanho(tamanho=tamanho, estoque_atual=quantidade))
+    produto.estoque_atual = sum(estoques.values())
 
 
 # ============================================================
@@ -94,6 +114,10 @@ async def criar_produto(
     nome: str          = Form(...),
     preco: float       = Form(...),
     estoque_atual: int = Form(...),
+    estoque_p: int = Form(0),
+    estoque_m: int = Form(0),
+    estoque_g: int = Form(0),
+    estoque_gg: int = Form(0),
     categoria_id: int  = Form(0),   # 0 = sem categoria
     imagem: UploadFile = File(None), # None = campo opcional
     db: Session        = Depends(get_db),
@@ -123,13 +147,19 @@ async def criar_produto(
     imagem_path = await _salvar_imagem(imagem)
 
     # O preço é armazenado em reais, na mesma unidade usada pelo PDV e pelas vendas.
+    estoques_tamanho = {"P": estoque_p, "M": estoque_m, "G": estoque_g, "GG": estoque_gg}
+    if any(qtd < 0 for qtd in estoques_tamanho.values()):
+        return RedirectResponse(url="/produtos/novo?erro=estoque", status_code=302)
+
     produto = Produto(
         nome          = nome,
         preco         = preco,
-        estoque_atual = estoque_atual,
+        estoque_atual = sum(estoques_tamanho.values()) if _eh_camiseta(nome) else estoque_atual,
         categoria_id  = categoria_id or None,  # 0 vira NULL no banco
         imagem_path   = imagem_path,
     )
+    if _eh_camiseta(nome):
+        _salvar_estoques_tamanho(produto, nome, estoques_tamanho)
 
     db.add(produto)
     db.commit()
@@ -193,6 +223,10 @@ async def editar_produto(
     nome: str          = Form(...),
     preco: float       = Form(...),
     estoque_atual: int = Form(...),
+    estoque_p: int = Form(0),
+    estoque_m: int = Form(0),
+    estoque_g: int = Form(0),
+    estoque_gg: int = Form(0),
     categoria_id: int  = Form(0),
     imagem: UploadFile = File(None),
     db: Session        = Depends(get_db),
@@ -232,10 +266,15 @@ async def editar_produto(
         editando.imagem_path = nova_imagem_path
 
     # Mantém o preço em reais ao atualizar o cadastro.
+    estoques_tamanho = {"P": estoque_p, "M": estoque_m, "G": estoque_g, "GG": estoque_gg}
+    if any(qtd < 0 for qtd in estoques_tamanho.values()):
+        return RedirectResponse(url=f"/produtos/{produto_id}/editar?erro=estoque", status_code=302)
+
     editando.nome          = nome
     editando.preco         = preco
     editando.estoque_atual = estoque_atual
     editando.categoria_id  = categoria_id or None
+    _salvar_estoques_tamanho(editando, nome, estoques_tamanho)
 
     db.commit()
 

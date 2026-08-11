@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sqlalchemy import Column, Integer, Float, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, Float, String, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -20,6 +20,17 @@ class Produto(Base):
 
     categoria_id = Column(Integer, ForeignKey("categorias.id", ondelete="SET NULL"), nullable=True)
     categoria = relationship("Categoria", back_populates="produtos")
+    estoques_tamanho = relationship(
+        "EstoqueTamanho", back_populates="produto", cascade="all, delete-orphan"
+    )
+
+    @property
+    def eh_camiseta(self):
+        return "camiseta" in (self.nome or "").lower()
+
+    def estoque_do_tamanho(self, tamanho):
+        registro = next((e for e in self.estoques_tamanho if e.tamanho == tamanho), None)
+        return registro.estoque_atual if registro else 0
 
     @property
     def imagem_url(self):
@@ -53,3 +64,15 @@ class Produto(Base):
             return IMAGEM_PADRAO_URL
 
         return f"/static/{path_limpo}"
+
+
+class EstoqueTamanho(Base):
+    __tablename__ = "estoques_tamanho"
+    __table_args__ = (UniqueConstraint("produto_id", "tamanho", name="uq_estoque_tamanho_produto"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    produto_id = Column(Integer, ForeignKey("produtos.id", ondelete="CASCADE"), nullable=False)
+    tamanho = Column(String(10), nullable=False)
+    estoque_atual = Column(Integer, nullable=False, default=0)
+
+    produto = relationship("Produto", back_populates="estoques_tamanho")

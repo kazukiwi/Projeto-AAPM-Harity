@@ -9,6 +9,7 @@
 # ============================================================
 
 import json
+import re
 from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -16,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.venda import Venda, ItemVenda
-from app.models.produtos import Produto
+from app.models.produtos import Produto, EstoqueTamanho
 from app.models.cliente import Cliente
 from app.auth import get_usuario_logado
 
@@ -24,6 +25,28 @@ router = APIRouter(prefix="/pdv", tags=["PDV"])
 templates = Jinja2Templates(directory="app/templates")
 
 DESCONTO_ASSOCIADO = 10.0  # percentual fixo
+TAMANHOS_CAMISETA = {"P", "M", "G", "GG"}
+
+
+def obter_tamanho_item(item: dict) -> str | None:
+    """Lê o tamanho do carrinho atual e do formato legado do carrinho."""
+    tamanho = item.get("tamanho")
+
+    # Versões anteriores do JavaScript gravavam o tamanho somente no nome exibido.
+    # Aceitamos esse formato durante a transição para não registrar novas vendas como NULL.
+    if tamanho is None:
+        encontrado = re.search(r"\(\s*Tam\s*:\s*([A-Za-z]+)\s*\)", str(item.get("nome", "")), re.IGNORECASE)
+        tamanho = encontrado.group(1) if encontrado else None
+
+    if tamanho is None:
+        return None
+
+    tamanho = str(tamanho).strip().upper()
+    if not tamanho:
+        return None
+    if tamanho not in TAMANHOS_CAMISETA:
+        raise ValueError("tamanho inválido")
+    return tamanho
 
 
 @router.get("/")
@@ -117,10 +140,30 @@ def finalizar_venda(
                 status_code=302
             )
 
-        qtd = int(item["quantidade"])
+        try:
+            qtd = int(item["quantidade"])
+        except (KeyError, TypeError, ValueError):
+            return RedirectResponse(url="/pdv?erro=quantidade", status_code=302)
 
         if qtd <= 0:
             return RedirectResponse(url="/pdv?erro=quantidade", status_code=302)
+
+        try:
+            tamanho = obter_tamanho_item(item)
+        except ValueError:
+            return RedirectResponse(url="/pdv?erro=tamanho", status_code=302)
+
+        if produto.eh_camiseta and not tamanho:
+            return RedirectResponse(url="/pdv?erro=tamanho", status_code=302)
+
+        estoque_tamanho = None
+        if produto.eh_camiseta:
+            estoque_tamanho = db.query(EstoqueTamanho).filter(
+                EstoqueTamanho.produto_id == produto.id,
+                EstoqueTamanho.tamanho == tamanho,
+            ).with_for_update().first()
+            if not estoque_tamanho or estoque_tamanho.estoque_atual < qtd:
+                return RedirectResponse(url=f"/pdv?erro=estoque_tamanho&produto={produto.nome}&tamanho={tamanho}", status_code=302)
 
         if produto.estoque_atual < qtd:
             return RedirectResponse(
@@ -136,6 +179,8 @@ def finalizar_venda(
             "quantidade":    qtd,
             "preco":         produto.preco,
             "produto_nome":  produto.nome,
+            "tamanho":       tamanho,
+            "estoque_tamanho": estoque_tamanho,
         })
 
     # ── Calcula desconto e total final
@@ -159,11 +204,14 @@ def finalizar_venda(
             venda_id       = venda.id,
             produto_id     = item["produto"].id,
             produto_nome   = item["produto_nome"],
+            tamanho        = item["tamanho"],
             quantidade     = item["quantidade"],
             preco_unitario = item["preco"],
         ))
         # Baixa o estoque do produto
         item["produto"].estoque_atual -= item["quantidade"]
+        if item["estoque_tamanho"]:
+            item["estoque_tamanho"].estoque_atual -= item["quantidade"]
 
     db.commit()
 
