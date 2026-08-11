@@ -36,6 +36,33 @@ app.mount("/static", StaticFiles(directory=APP_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=APP_DIR / "templates")
 
 
+@app.get("/termos-de-uso")
+def termos_de_uso(request: Request):
+    return templates.TemplateResponse(
+        name="informacoes.html",
+        request=request,
+        context={"request": request, "pagina": "termos"},
+    )
+
+
+@app.get("/politica-de-privacidade")
+def politica_de_privacidade(request: Request):
+    return templates.TemplateResponse(
+        name="informacoes.html",
+        request=request,
+        context={"request": request, "pagina": "privacidade"},
+    )
+
+
+@app.get("/suporte")
+def suporte(request: Request):
+    return templates.TemplateResponse(
+        name="informacoes.html",
+        request=request,
+        context={"request": request, "pagina": "suporte"},
+    )
+
+
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 404:
