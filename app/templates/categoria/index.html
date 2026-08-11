@@ -103,20 +103,6 @@
                                     <i data-lucide="edit" style="width: 14px; height: 14px;"></i>
                                     Editar
                                 </a>
-
-                                <form action="/categorias/{{ c.id }}/toggle-ativa" method="post" style="display:inline">
-                                    {% if c.ativo %}
-                                    <button type="submit" class="btn-toggle deactivate">
-                                        <i data-lucide="eye-off" style="width: 14px; height: 14px;"></i>
-                                        Desativar
-                                    </button>
-                                    {% else %}
-                                    <button type="submit" class="btn-toggle activate">
-                                        <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
-                                        Ativar
-                                    </button>
-                                    {% endif %}
-                                </form>
                             </div>
                         </td>
                     </tr>
