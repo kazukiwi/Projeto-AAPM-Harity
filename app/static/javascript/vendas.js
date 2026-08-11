@@ -7,6 +7,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const selectTamanho = document.getElementById('pdv-tamanho');
     const formAddItem = document.getElementById('form-add-item-pdv');
 
+    function atualizarEstoqueDoTamanho() {
+        if (!selectProd || !selectTamanho || !selectProd.value || !selectTamanho.value) return;
+        const option = selectProd.options[selectProd.selectedIndex];
+        const estoque = parseInt(option.getAttribute(`data-tamanho-${selectTamanho.value.toLowerCase()}`) || '0');
+        document.getElementById('pdv-estoque').value = `${estoque} un`;
+        document.getElementById('pdv-qtd').max = estoque;
+    }
+
     // 1. Monitora a mudança do produto para atualizar campos e exibir tamanho se for camiseta
     if (selectProd) {
         selectProd.addEventListener('change', function () {
@@ -28,6 +36,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (grupoTamanho && selectTamanho && nomeProduto.toLowerCase().includes('camiseta')) {
                 grupoTamanho.style.display = 'block';
                 selectTamanho.required = true;
+                selectTamanho.value = '';
+                Array.from(selectTamanho.options).forEach(opcao => {
+                    if (!opcao.value) return;
+                    const saldo = parseInt(selectedOption.getAttribute(`data-tamanho-${opcao.value.toLowerCase()}`) || '0');
+                    opcao.disabled = saldo <= 0;
+                    opcao.textContent = `${opcao.value} (${saldo} un)`;
+                });
             } else if (grupoTamanho && selectTamanho) {
                 grupoTamanho.style.display = 'none';
                 selectTamanho.required = false;
@@ -37,6 +52,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // 2. Controla a inserção do item no carrinho local
+    if (selectTamanho) {
+        selectTamanho.addEventListener('change', atualizarEstoqueDoTamanho);
+    }
+
     if (formAddItem) {
         formAddItem.addEventListener('submit', function (e) {
             e.preventDefault();
@@ -49,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const pId = parseInt(selectProd.value);
             const nome = option.getAttribute('data-nome');
             const preco = parseFloat(option.getAttribute('data-preco'));
-            const estoqueMax = parseInt(option.getAttribute('data-estoque'));
             const qtd = parseInt(document.getElementById('pdv-qtd').value);
             const tamanho = grupoTamanho && grupoTamanho.style.display === 'block'
                 ? selectTamanho.value
@@ -61,6 +79,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             // Evita duplicados idênticos (mesmo ID e mesmo Tamanho)
+            const estoqueMax = tamanho
+                ? parseInt(option.getAttribute(`data-tamanho-${tamanho.toLowerCase()}`) || '0')
+                : parseInt(option.getAttribute('data-estoque'));
             const itemExistente = carrinho.find(item => item.produto_id === pId && item.tamanho === tamanho);
 
             if (itemExistente) {

@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.venda import Venda, ItemVenda
-from app.models.produtos import Produto
+from app.models.produtos import Produto, EstoqueTamanho
 from app.models.cliente import Cliente
 from app.auth import get_usuario_logado
 
@@ -148,6 +148,23 @@ def finalizar_venda(
         if qtd <= 0:
             return RedirectResponse(url="/pdv?erro=quantidade", status_code=302)
 
+        try:
+            tamanho = obter_tamanho_item(item)
+        except ValueError:
+            return RedirectResponse(url="/pdv?erro=tamanho", status_code=302)
+
+        if produto.eh_camiseta and not tamanho:
+            return RedirectResponse(url="/pdv?erro=tamanho", status_code=302)
+
+        estoque_tamanho = None
+        if produto.eh_camiseta:
+            estoque_tamanho = db.query(EstoqueTamanho).filter(
+                EstoqueTamanho.produto_id == produto.id,
+                EstoqueTamanho.tamanho == tamanho,
+            ).with_for_update().first()
+            if not estoque_tamanho or estoque_tamanho.estoque_atual < qtd:
+                return RedirectResponse(url=f"/pdv?erro=estoque_tamanho&produto={produto.nome}&tamanho={tamanho}", status_code=302)
+
         if produto.estoque_atual < qtd:
             return RedirectResponse(
                 url=f"/pdv?erro=estoque&produto={produto.nome}",
@@ -157,17 +174,13 @@ def finalizar_venda(
         subtotal    = produto.preco * qtd
         total_bruto += subtotal
 
-        try:
-            tamanho = obter_tamanho_item(item)
-        except ValueError:
-            return RedirectResponse(url="/pdv?erro=tamanho", status_code=302)
-
         itens_validados.append({
             "produto":       produto,
             "quantidade":    qtd,
             "preco":         produto.preco,
             "produto_nome":  produto.nome,
             "tamanho":       tamanho,
+            "estoque_tamanho": estoque_tamanho,
         })
 
     # ── Calcula desconto e total final
@@ -197,6 +210,8 @@ def finalizar_venda(
         ))
         # Baixa o estoque do produto
         item["produto"].estoque_atual -= item["quantidade"]
+        if item["estoque_tamanho"]:
+            item["estoque_tamanho"].estoque_atual -= item["quantidade"]
 
     db.commit()
 

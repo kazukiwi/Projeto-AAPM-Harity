@@ -51,13 +51,26 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="estoque_atual">Estoque Inicial / Atual</label>
+                        <label for="estoque_atual">Estoque total (produtos sem tamanho)</label>
                         <input type="number"
                                id="estoque_atual"
                                name="estoque_atual"
                                min="0"
                                value="{{ editando.estoque_atual if editando else (valores.estoque_atual if valores else '0') }}"
                                required>
+                    </div>
+
+                    <div class="form-group full-width" id="estoques-camiseta">
+                        <label>Estoque por tamanho de camiseta</label>
+                        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-top:8px;">
+                            {% for tamanho in ['P', 'M', 'G', 'GG'] %}
+                            <div>
+                                <label for="estoque_{{ tamanho|lower }}" style="font-size:0.85rem;">{{ tamanho }}</label>
+                                <input type="number" id="estoque_{{ tamanho|lower }}" name="estoque_{{ tamanho|lower }}" min="0" value="{{ editando.estoque_do_tamanho(tamanho) if editando else 0 }}">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small>Para camisetas, o total é calculado pela soma dos tamanhos.</small>
                     </div>
 
                     <div class="form-group full-width">
@@ -106,6 +119,15 @@
     </main>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+        const nomeProduto = document.getElementById('nome');
+        const estoquesCamiseta = document.getElementById('estoques-camiseta');
+        function atualizarCamposTamanho() {
+            estoquesCamiseta.style.display = nomeProduto.value.toLowerCase().includes('camiseta') ? 'block' : 'none';
+        }
+        nomeProduto.addEventListener('input', atualizarCamposTamanho);
+        atualizarCamposTamanho();
+    </script>
 </body>
 </html>
