@@ -10,13 +10,15 @@
 
 import json
 import re
+from datetime import date, datetime, time, timedelta, timezone
 from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.models.venda import Venda, ItemVenda
+from app.database import Session as SessionLocal, get_db
+from app.models.venda import FechamentoDiario, Venda, ItemVenda
 from app.models.produtos import Produto, EstoqueTamanho
 from app.models.cliente import Cliente
 from app.auth import get_usuario_logado
@@ -26,6 +28,56 @@ templates = Jinja2Templates(directory="app/templates")
 
 DESCONTO_ASSOCIADO = 10.0  # percentual fixo
 TAMANHOS_CAMISETA = {"P", "M", "G", "GG"}
+# O Brasil não adota horário de verão desde 2019. Usar UTC-3 evita depender do
+# pacote tzdata, que não vem instalado em algumas instalações do Windows.
+FUSO_HORARIO = timezone(timedelta(hours=-3), name="America/Sao_Paulo")
+
+
+def fechar_dia(db: Session, data_referencia: date, automatico: bool = False) -> FechamentoDiario:
+    """Cria ou atualiza o resumo de vendas de uma data, inclusive quando o total é zero."""
+    # SQLite grava CURRENT_TIMESTAMP em UTC. Convertemos os limites do dia de
+    # Brasília para UTC antes da consulta, para que uma venda feita às 22h não
+    # seja contabilizada no dia seguinte.
+    inicio = datetime.combine(data_referencia, time.min, tzinfo=FUSO_HORARIO)
+    fim = inicio + timedelta(days=1)
+    inicio_utc = inicio.astimezone(timezone.utc).replace(tzinfo=None)
+    fim_utc = fim.astimezone(timezone.utc).replace(tzinfo=None)
+    total, quantidade = (
+        db.query(
+            func.coalesce(func.sum(Venda.total_liquido), 0.0),
+            func.count(Venda.id),
+        )
+        .filter(Venda.criado_em >= inicio_utc, Venda.criado_em < fim_utc)
+        .one()
+    )
+
+    fechamento = db.query(FechamentoDiario).filter(FechamentoDiario.data == data_referencia).first()
+    if not fechamento:
+        fechamento = FechamentoDiario(data=data_referencia)
+        db.add(fechamento)
+
+    fechamento.total_vendido = round(float(total or 0.0), 2)
+    fechamento.quantidade_vendas = int(quantidade or 0)
+    fechamento.fechado_em = datetime.now(FUSO_HORARIO).replace(tzinfo=None)
+    fechamento.fechado_automaticamente = fechamento.fechado_automaticamente or automatico
+    db.commit()
+    db.refresh(fechamento)
+    return fechamento
+
+
+def executar_fechamento_automatico() -> None:
+    """Fecha o dia atual e recupera somente o dia anterior se o sistema reiniciou."""
+    agora = datetime.now(FUSO_HORARIO)
+    db = SessionLocal()
+    try:
+        if agora.hour == 23 and agora.minute == 59:
+            fechar_dia(db, agora.date(), automatico=True)
+        else:
+            ontem = agora.date() - timedelta(days=1)
+            if not db.query(FechamentoDiario.id).filter(FechamentoDiario.data == ontem).first():
+                fechar_dia(db, ontem, automatico=True)
+    finally:
+        db.close()
 
 
 def obter_tamanho_item(item: dict) -> str | None:
@@ -241,6 +293,16 @@ def detalhe_venda(
     )
 
 
+@router.post("/finalizar-dia")
+def finalizar_dia(
+    db: Session = Depends(get_db),
+    usuario = Depends(get_usuario_logado),
+):
+    """Fecha manualmente o caixa do dia atual; uma nova ação atualiza o mesmo registro."""
+    fechar_dia(db, datetime.now(FUSO_HORARIO).date())
+    return RedirectResponse(url="/pdv/historico?dia_finalizado=ok", status_code=303)
+
+
 @router.get("/historico")
 def historico_vendas(
     request: Request,
@@ -268,6 +330,12 @@ def historico_vendas(
         .order_by(Cliente.nome)
         .all()
     )
+    fechamentos = (
+        db.query(FechamentoDiario)
+        .order_by(FechamentoDiario.data.desc())
+        .limit(100)
+        .all()
+    )
 
     return templates.TemplateResponse(
         request,
@@ -278,6 +346,7 @@ def historico_vendas(
             "vendas": vendas,
             "produtos": produtos,
             "clientes": clientes,
+            "fechamentos": fechamentos,
             "desconto_associado": DESCONTO_ASSOCIADO,
         }
     )

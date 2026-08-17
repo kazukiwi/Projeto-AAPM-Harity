@@ -7,7 +7,7 @@
 # o mesmo padrão usado em qualquer sistema comercial real.
 # ============================================================
 
-from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, Float, String, Date, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -62,6 +62,19 @@ class Venda(Base):
 
     def __repr__(self):
         return f"<Venda id={self.id} total={self.total_liquido}>"
+
+
+class FechamentoDiario(Base):
+    """Resumo imutável por data, atualizado quando o dia é fechado novamente."""
+
+    __tablename__ = "fechamentos_diarios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    data = Column(Date, nullable=False, unique=True, index=True)
+    total_vendido = Column(Float, nullable=False, default=0.0)
+    quantidade_vendas = Column(Integer, nullable=False, default=0)
+    fechado_em = Column(DateTime, nullable=False, server_default=func.now())
+    fechado_automaticamente = Column(Boolean, nullable=False, default=False)
 
 
 class ItemVenda(Base):

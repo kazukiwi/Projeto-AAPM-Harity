@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Depends, Form
@@ -27,8 +28,24 @@ from app.controllers import (
 from app.auth import get_usuario_opcional, get_usuario_logado
 
 
+async def rotina_fechamento_diario():
+    """Mantém o fechamento automático ativo enquanto o servidor estiver em execução."""
+    while True:
+        try:
+            pdv_controller.executar_fechamento_automatico()
+        except Exception as erro:
+            # O loop não pode parar por uma falha pontual de banco.
+            print(f"Erro no fechamento diário automático: {erro}")
+        await asyncio.sleep(30)
+
+
 # 1º: CRIAR A INSTÂNCIA DO APP
 app = FastAPI(title="Sistema Estoque")
+
+
+@app.on_event("startup")
+async def iniciar_rotina_fechamento_diario():
+    asyncio.create_task(rotina_fechamento_diario())
 
 # 2º: CONFIGURAR ARQUIVOS ESTÁTICOS E TEMPLATES
 APP_DIR = Path(__file__).resolve().parent
