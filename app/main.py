@@ -22,7 +22,8 @@ from app.controllers import (
     produto_controller,
     movimentacao_controller,
     pdv_controller,
-    clientes_controller
+    clientes_controller,
+    tamanhos_controller,
 )
 
 from app.auth import get_usuario_opcional, get_usuario_logado
@@ -99,6 +100,7 @@ app.include_router(produto_controller.router)
 app.include_router(movimentacao_controller.router)
 app.include_router(pdv_controller.router)
 app.include_router(clientes_controller.router)
+app.include_router(tamanhos_controller.router)
 
 
 # --- BANCO DE DADOS TEMPORÁRIO PARA OS ARMÁRIOS (ESTRUTURA INDESTRUTÍVEL) ---

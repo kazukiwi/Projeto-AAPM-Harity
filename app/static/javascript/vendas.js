@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function atualizarEstoqueDoTamanho() {
         if (!selectProd || !selectTamanho || !selectProd.value || !selectTamanho.value) return;
         const option = selectProd.options[selectProd.selectedIndex];
-        const estoque = parseInt(option.getAttribute(`data-tamanho-${selectTamanho.value.toLowerCase()}`) || '0');
+        const estoque = parseInt(option.getAttribute(`data-tamanho-${selectTamanho.value}`) || '0');
         document.getElementById('pdv-estoque').value = `${estoque} un`;
         document.getElementById('pdv-qtd').max = estoque;
     }
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (selectProd) {
         selectProd.addEventListener('change', function () {
             const selectedOption = this.options[this.selectedIndex];
-            const nomeProduto = selectedOption.getAttribute('data-nome') || '';
+            const possuiVariacoes = selectedOption.getAttribute('data-possui-variacoes') === 'true';
             const preco = selectedOption.getAttribute('data-preco');
             const estoque = selectedOption.getAttribute('data-estoque');
 
@@ -32,14 +32,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             document.getElementById('pdv-qtd').value = 1;
 
-            // Verifica se o termo 'camiseta' existe no nome do produto
-            if (grupoTamanho && selectTamanho && nomeProduto.toLowerCase().includes('camiseta')) {
+            if (grupoTamanho && selectTamanho && possuiVariacoes) {
                 grupoTamanho.style.display = 'block';
                 selectTamanho.required = true;
                 selectTamanho.value = '';
                 Array.from(selectTamanho.options).forEach(opcao => {
                     if (!opcao.value) return;
-                    const saldo = parseInt(selectedOption.getAttribute(`data-tamanho-${opcao.value.toLowerCase()}`) || '0');
+                    const saldo = parseInt(selectedOption.getAttribute(`data-tamanho-${opcao.value}`) || '0');
                     opcao.disabled = saldo <= 0;
                     opcao.textContent = `${opcao.value} (${saldo} un)`;
                 });
@@ -69,20 +68,21 @@ document.addEventListener('DOMContentLoaded', function () {
             const nome = option.getAttribute('data-nome');
             const preco = parseFloat(option.getAttribute('data-preco'));
             const qtd = parseInt(document.getElementById('pdv-qtd').value);
-            const tamanho = grupoTamanho && grupoTamanho.style.display === 'block'
+            const tamanhoId = grupoTamanho && grupoTamanho.style.display === 'block'
                 ? selectTamanho.value
                 : null;
+            const tamanho = tamanhoId ? selectTamanho.options[selectTamanho.selectedIndex].textContent.split(' (')[0] : null;
 
-            if (grupoTamanho && grupoTamanho.style.display === 'block' && !tamanho) {
+            if (grupoTamanho && grupoTamanho.style.display === 'block' && !tamanhoId) {
                 selectTamanho.reportValidity();
                 return;
             }
 
             // Evita duplicados idênticos (mesmo ID e mesmo Tamanho)
-            const estoqueMax = tamanho
-                ? parseInt(option.getAttribute(`data-tamanho-${tamanho.toLowerCase()}`) || '0')
+            const estoqueMax = tamanhoId
+                ? parseInt(option.getAttribute(`data-tamanho-${tamanhoId}`) || '0')
                 : parseInt(option.getAttribute('data-estoque'));
-            const itemExistente = carrinho.find(item => item.produto_id === pId && item.tamanho === tamanho);
+            const itemExistente = carrinho.find(item => item.produto_id === pId && item.tamanho_id === tamanhoId);
 
             if (itemExistente) {
                 if (itemExistente.quantidade + qtd > estoqueMax) {
@@ -100,7 +100,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     nome: nome,
                     preco: preco,
                     quantidade: qtd,
-                    tamanho: tamanho
+                    tamanho: tamanho,
+                    tamanho_id: tamanhoId
                 });
             }
 

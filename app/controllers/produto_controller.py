@@ -11,7 +11,7 @@ from sqlalchemy import func
 from app.models.movimentacao import Movimentacao
 
 from app.database import get_db
-from app.models.produtos import Produto, EstoqueTamanho
+from app.models.produtos import Produto, EstoqueTamanho, Tamanho, ordenar_tamanhos
 from app.models.categoria import Categoria
 from app.auth import get_usuario_logado, get_admin
 
@@ -25,26 +25,35 @@ templates = Jinja2Templates(directory=APP_DIR / "templates")
 
 # Pasta onde as imagens serão salvas dentro de /static
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-TAMANHOS_CAMISETA = ("P", "M", "G", "GG")
-
-
-def _eh_camiseta(nome: str) -> bool:
-    return "camiseta" in nome.lower()
-
-
-def _salvar_estoques_tamanho(produto: Produto, nome: str, estoques: dict[str, int]) -> None:
-    if not _eh_camiseta(nome):
+def _salvar_estoques_tamanho(produto: Produto, possui_variacoes_tamanho: bool, estoques: dict[int, int]) -> None:
+    if not possui_variacoes_tamanho:
         produto.estoques_tamanho.clear()
         return
 
-    existentes = {registro.tamanho: registro for registro in produto.estoques_tamanho}
-    for tamanho, quantidade in estoques.items():
-        registro = existentes.get(tamanho)
+    existentes = {registro.tamanho_id: registro for registro in produto.estoques_tamanho}
+    for tamanho_id, quantidade in estoques.items():
+        registro = existentes.get(tamanho_id)
         if registro:
             registro.estoque_atual = quantidade
         else:
-            produto.estoques_tamanho.append(EstoqueTamanho(tamanho=tamanho, estoque_atual=quantidade))
+            produto.estoques_tamanho.append(EstoqueTamanho(tamanho_id=tamanho_id, estoque_atual=quantidade))
     produto.estoque_atual = sum(estoques.values())
+
+
+async def _obter_estoques_tamanho(request: Request, db: Session) -> dict[int, int]:
+    """Lê os campos dinâmicos estoque_tamanho_<id>."""
+    form = await request.form()
+    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).all()
+    estoques = {}
+    for tamanho in tamanhos:
+        try:
+            quantidade = int(form.get(f"estoque_tamanho_{tamanho.id}", 0) or 0)
+        except (TypeError, ValueError):
+            raise ValueError("estoque inválido")
+        if quantidade < 0:
+            raise ValueError("estoque inválido")
+        estoques[tamanho.id] = quantidade
+    return estoques
 
 
 # ============================================================
@@ -95,6 +104,7 @@ def form_novo_produto(
     admin = Depends(get_admin)
 ):
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     return templates.TemplateResponse(
         request,
@@ -103,7 +113,8 @@ def form_novo_produto(
             "request":    request,
             "usuario":    admin,
             "editando":   None,
-            "categorias": categorias
+            "categorias": categorias,
+            "tamanhos": tamanhos,
         }
     )
 
@@ -113,17 +124,15 @@ async def criar_produto(
     request: Request,
     nome: str          = Form(...),
     preco: float       = Form(...),
-    estoque_atual: int = Form(...),
-    estoque_p: int = Form(0),
-    estoque_m: int = Form(0),
-    estoque_g: int = Form(0),
-    estoque_gg: int = Form(0),
+    estoque_atual: int = Form(0),
+    possui_variacoes_tamanho: bool = Form(False),
     categoria_id: int  = Form(0),   # 0 = sem categoria
     imagem: UploadFile = File(None), # None = campo opcional
     db: Session        = Depends(get_db),
     admin              = Depends(get_admin)
 ):
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     # Verifica duplicidade de nome
     if db.query(Produto).filter(Produto.nome.ilike(nome)).first():
@@ -135,31 +144,55 @@ async def criar_produto(
                 "usuario":    admin,
                 "editando":   None,
                 "categorias": categorias,
+                "tamanhos": tamanhos,
                 "erro":       "Já existe um produto com este nome.",
                 "valores":    {"nome": nome, "preco": preco,
                                "estoque_atual": estoque_atual,
-                               "categoria_id": categoria_id}
+                               "categoria_id": categoria_id,
+                               "possui_variacoes_tamanho": possui_variacoes_tamanho}
             },
             status_code=400
         )
 
-    # Processa o upload da imagem
-    imagem_path = await _salvar_imagem(imagem)
-
     # O preço é armazenado em reais, na mesma unidade usada pelo PDV e pelas vendas.
-    estoques_tamanho = {"P": estoque_p, "M": estoque_m, "G": estoque_g, "GG": estoque_gg}
-    if any(qtd < 0 for qtd in estoques_tamanho.values()):
+    try:
+        estoques_tamanho = await _obter_estoques_tamanho(request, db)
+    except ValueError:
         return RedirectResponse(url="/produtos/novo?erro=estoque", status_code=302)
+    if possui_variacoes_tamanho and sum(estoques_tamanho.values()) == 0:
+        return templates.TemplateResponse(
+            request,
+            "produtos/form.html",
+            {
+                "request": request,
+                "usuario": admin,
+                "editando": None,
+                "categorias": categorias,
+                "tamanhos": tamanhos,
+                "erro": "Informe a quantidade de pelo menos um tamanho.",
+                "valores": {
+                    "nome": nome, "preco": preco, "estoque_atual": estoque_atual,
+                    "estoques_tamanho": {str(k): v for k, v in estoques_tamanho.items()},
+                    "categoria_id": categoria_id,
+                    "possui_variacoes_tamanho": possui_variacoes_tamanho,
+                },
+            },
+            status_code=400,
+        )
+
+    # Processa o upload da imagem após validar os dados do produto.
+    imagem_path = await _salvar_imagem(imagem)
 
     produto = Produto(
         nome          = nome,
         preco         = preco,
-        estoque_atual = sum(estoques_tamanho.values()) if _eh_camiseta(nome) else estoque_atual,
+        estoque_atual = sum(estoques_tamanho.values()) if possui_variacoes_tamanho else estoque_atual,
+        possui_variacoes_tamanho = possui_variacoes_tamanho,
         categoria_id  = categoria_id or None,  # 0 vira NULL no banco
         imagem_path   = imagem_path,
     )
-    if _eh_camiseta(nome):
-        _salvar_estoques_tamanho(produto, nome, estoques_tamanho)
+    if possui_variacoes_tamanho:
+        _salvar_estoques_tamanho(produto, possui_variacoes_tamanho, estoques_tamanho)
 
     db.add(produto)
     db.commit()
@@ -200,6 +233,7 @@ def form_editar_produto(
 ):
     editando   = db.query(Produto).filter(Produto.id == produto_id).first()
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     if not editando:
         return RedirectResponse(url="/produtos", status_code=302)
@@ -211,7 +245,8 @@ def form_editar_produto(
             "request":    request,
             "usuario":    admin,
             "editando":   editando,
-            "categorias": categorias
+            "categorias": categorias,
+            "tamanhos": tamanhos,
         }
     )
 
@@ -222,11 +257,8 @@ async def editar_produto(
     request: Request,
     nome: str          = Form(...),
     preco: float       = Form(...),
-    estoque_atual: int = Form(...),
-    estoque_p: int = Form(0),
-    estoque_m: int = Form(0),
-    estoque_g: int = Form(0),
-    estoque_gg: int = Form(0),
+    estoque_atual: int = Form(0),
+    possui_variacoes_tamanho: bool = Form(False),
     categoria_id: int  = Form(0),
     imagem: UploadFile = File(None),
     db: Session        = Depends(get_db),
@@ -234,6 +266,7 @@ async def editar_produto(
 ):
     editando   = db.query(Produto).filter(Produto.id == produto_id).first()
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     if not editando:
         return RedirectResponse(url="/produtos", status_code=302)
@@ -253,28 +286,45 @@ async def editar_produto(
                 "usuario":    admin,
                 "editando":   editando,
                 "categorias": categorias,
+                "tamanhos": tamanhos,
                 "erro":       "Já existe outro produto com este nome.",
             },
             status_code=400
         )
 
-    # Processa nova imagem — só substitui se um arquivo foi enviado
+    # Mantém o preço em reais ao atualizar o cadastro.
+    try:
+        estoques_tamanho = await _obter_estoques_tamanho(request, db)
+    except ValueError:
+        return RedirectResponse(url=f"/produtos/{produto_id}/editar?erro=estoque", status_code=302)
+    if possui_variacoes_tamanho and sum(estoques_tamanho.values()) == 0:
+        return templates.TemplateResponse(
+            request,
+            "produtos/form.html",
+            {
+                "request": request,
+                "usuario": admin,
+                "editando": editando,
+                "categorias": categorias,
+                "tamanhos": tamanhos,
+                "erro": "Informe a quantidade de pelo menos um tamanho.",
+            },
+            status_code=400,
+        )
+
+    # Processa nova imagem — só substitui se um arquivo foi enviado.
     nova_imagem_path = await _salvar_imagem(imagem)
     if nova_imagem_path:
         # Remove a imagem antiga do disco para não acumular arquivos
         _remover_imagem(editando.imagem_path)
         editando.imagem_path = nova_imagem_path
 
-    # Mantém o preço em reais ao atualizar o cadastro.
-    estoques_tamanho = {"P": estoque_p, "M": estoque_m, "G": estoque_g, "GG": estoque_gg}
-    if any(qtd < 0 for qtd in estoques_tamanho.values()):
-        return RedirectResponse(url=f"/produtos/{produto_id}/editar?erro=estoque", status_code=302)
-
     editando.nome          = nome
     editando.preco         = preco
     editando.estoque_atual = estoque_atual
+    editando.possui_variacoes_tamanho = possui_variacoes_tamanho
     editando.categoria_id  = categoria_id or None
-    _salvar_estoques_tamanho(editando, nome, estoques_tamanho)
+    _salvar_estoques_tamanho(editando, possui_variacoes_tamanho, estoques_tamanho)
 
     db.commit()
 
