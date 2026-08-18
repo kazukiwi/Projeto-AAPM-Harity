@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_admin
 from app.database import get_db
-from app.models.produtos import EstoqueTamanho, Tamanho
+from app.models.produtos import EstoqueTamanho, Tamanho, ordenar_tamanhos
 
 router = APIRouter(prefix="/tamanhos", tags=["Tamanhos"])
 templates = Jinja2Templates(directory="app/templates")
@@ -14,16 +14,16 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/")
 def listar_tamanhos(request: Request, db: Session = Depends(get_db), admin=Depends(get_admin)):
-    tamanhos = db.query(Tamanho).order_by(Tamanho.ativo.desc(), Tamanho.ordem, Tamanho.nome).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).all())
     return templates.TemplateResponse(request, "tamanhos/index.html", {"request": request, "usuario": admin, "tamanhos": tamanhos})
 
 
 @router.post("/")
-def criar_tamanho(nome: str = Form(...), ordem: int = Form(0), db: Session = Depends(get_db), admin=Depends(get_admin)):
+def criar_tamanho(nome: str = Form(...), db: Session = Depends(get_db), admin=Depends(get_admin)):
     nome = nome.strip().upper()
     if not nome or len(nome) > 30 or db.query(Tamanho).filter(func.lower(Tamanho.nome) == nome.lower()).first():
         return RedirectResponse(url="/tamanhos?erro=nome", status_code=303)
-    db.add(Tamanho(nome=nome, ordem=max(0, ordem), ativo=True))
+    db.add(Tamanho(nome=nome, ativo=True))
     db.commit()
     return RedirectResponse(url="/tamanhos?criado=ok", status_code=303)
 

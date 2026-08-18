@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 from sqlalchemy import Column, Integer, Float, String, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
@@ -6,6 +7,22 @@ from app.database import Base
 
 STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
 IMAGEM_PADRAO_URL = "/static/img/produto_padrao.png"
+
+
+def ordenar_tamanhos(tamanhos):
+    """Ordena numerações e tamanhos de vestuário do menor para o maior."""
+    ordem_roupa = {"PPP": 10, "PP": 20, "P": 30, "M": 40, "G": 50, "GG": 60, "XG": 70, "XGG": 80, "UNICO": 90, "ÚNICO": 90}
+
+    def chave(tamanho):
+        nome = tamanho.nome.strip().upper()
+        numero = re.fullmatch(r"(\d+)(?:[.,](\d+))?", nome)
+        if numero:
+            return (0, int(numero.group(1)), int(numero.group(2) or 0), nome)
+        if nome in ordem_roupa:
+            return (1, ordem_roupa[nome], 0, nome)
+        return (2, 0, 0, nome)
+
+    return sorted(tamanhos, key=chave)
 
 class Produto(Base):
     __tablename__ = "produtos"

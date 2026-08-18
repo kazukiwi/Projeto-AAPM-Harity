@@ -11,7 +11,7 @@ from sqlalchemy import func
 from app.models.movimentacao import Movimentacao
 
 from app.database import get_db
-from app.models.produtos import Produto, EstoqueTamanho, Tamanho
+from app.models.produtos import Produto, EstoqueTamanho, Tamanho, ordenar_tamanhos
 from app.models.categoria import Categoria
 from app.auth import get_usuario_logado, get_admin
 
@@ -104,7 +104,7 @@ def form_novo_produto(
     admin = Depends(get_admin)
 ):
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
-    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).order_by(Tamanho.ordem, Tamanho.nome).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     return templates.TemplateResponse(
         request,
@@ -132,7 +132,7 @@ async def criar_produto(
     admin              = Depends(get_admin)
 ):
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
-    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).order_by(Tamanho.ordem, Tamanho.nome).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     # Verifica duplicidade de nome
     if db.query(Produto).filter(Produto.nome.ilike(nome)).first():
@@ -233,7 +233,7 @@ def form_editar_produto(
 ):
     editando   = db.query(Produto).filter(Produto.id == produto_id).first()
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
-    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).order_by(Tamanho.ordem, Tamanho.nome).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     if not editando:
         return RedirectResponse(url="/produtos", status_code=302)
@@ -266,7 +266,7 @@ async def editar_produto(
 ):
     editando   = db.query(Produto).filter(Produto.id == produto_id).first()
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
-    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).order_by(Tamanho.ordem, Tamanho.nome).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     if not editando:
         return RedirectResponse(url="/produtos", status_code=302)

@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.database import Session as SessionLocal, get_db
 from app.models.venda import FechamentoDiario, Venda, ItemVenda
-from app.models.produtos import Produto, EstoqueTamanho, Tamanho
+from app.models.produtos import Produto, EstoqueTamanho, Tamanho, ordenar_tamanhos
 from app.models.cliente import Cliente
 from app.auth import get_usuario_logado
 
@@ -114,7 +114,7 @@ def tela_pdv(
         .order_by(Cliente.nome)
         .all()
     )
-    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).order_by(Tamanho.ordem, Tamanho.nome).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     return templates.TemplateResponse(
         request,
@@ -329,7 +329,7 @@ def historico_vendas(
         .limit(100)
         .all()
     )
-    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).order_by(Tamanho.ordem, Tamanho.nome).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     return templates.TemplateResponse(
         request,
