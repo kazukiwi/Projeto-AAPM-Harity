@@ -11,7 +11,7 @@ from sqlalchemy import func
 from app.models.movimentacao import Movimentacao
 
 from app.database import get_db
-from app.models.produtos import Produto, EstoqueTamanho
+from app.models.produtos import Produto, EstoqueTamanho, Tamanho
 from app.models.categoria import Categoria
 from app.auth import get_usuario_logado, get_admin
 
@@ -25,22 +25,35 @@ templates = Jinja2Templates(directory=APP_DIR / "templates")
 
 # Pasta onde as imagens serão salvas dentro de /static
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-TAMANHOS_CAMISETA = ("P", "M", "G", "GG")
-
-
-def _salvar_estoques_tamanho(produto: Produto, possui_variacoes_tamanho: bool, estoques: dict[str, int]) -> None:
+def _salvar_estoques_tamanho(produto: Produto, possui_variacoes_tamanho: bool, estoques: dict[int, int]) -> None:
     if not possui_variacoes_tamanho:
         produto.estoques_tamanho.clear()
         return
 
-    existentes = {registro.tamanho: registro for registro in produto.estoques_tamanho}
-    for tamanho, quantidade in estoques.items():
-        registro = existentes.get(tamanho)
+    existentes = {registro.tamanho_id: registro for registro in produto.estoques_tamanho}
+    for tamanho_id, quantidade in estoques.items():
+        registro = existentes.get(tamanho_id)
         if registro:
             registro.estoque_atual = quantidade
         else:
-            produto.estoques_tamanho.append(EstoqueTamanho(tamanho=tamanho, estoque_atual=quantidade))
+            produto.estoques_tamanho.append(EstoqueTamanho(tamanho_id=tamanho_id, estoque_atual=quantidade))
     produto.estoque_atual = sum(estoques.values())
+
+
+async def _obter_estoques_tamanho(request: Request, db: Session) -> dict[int, int]:
+    """Lê os campos dinâmicos estoque_tamanho_<id>."""
+    form = await request.form()
+    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).all()
+    estoques = {}
+    for tamanho in tamanhos:
+        try:
+            quantidade = int(form.get(f"estoque_tamanho_{tamanho.id}", 0) or 0)
+        except (TypeError, ValueError):
+            raise ValueError("estoque inválido")
+        if quantidade < 0:
+            raise ValueError("estoque inválido")
+        estoques[tamanho.id] = quantidade
+    return estoques
 
 
 # ============================================================
@@ -91,6 +104,7 @@ def form_novo_produto(
     admin = Depends(get_admin)
 ):
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).order_by(Tamanho.ordem, Tamanho.nome).all()
 
     return templates.TemplateResponse(
         request,
@@ -99,7 +113,8 @@ def form_novo_produto(
             "request":    request,
             "usuario":    admin,
             "editando":   None,
-            "categorias": categorias
+            "categorias": categorias,
+            "tamanhos": tamanhos,
         }
     )
 
@@ -110,10 +125,6 @@ async def criar_produto(
     nome: str          = Form(...),
     preco: float       = Form(...),
     estoque_atual: int = Form(0),
-    estoque_p: int = Form(0),
-    estoque_m: int = Form(0),
-    estoque_g: int = Form(0),
-    estoque_gg: int = Form(0),
     possui_variacoes_tamanho: bool = Form(False),
     categoria_id: int  = Form(0),   # 0 = sem categoria
     imagem: UploadFile = File(None), # None = campo opcional
@@ -121,6 +132,7 @@ async def criar_produto(
     admin              = Depends(get_admin)
 ):
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).order_by(Tamanho.ordem, Tamanho.nome).all()
 
     # Verifica duplicidade de nome
     if db.query(Produto).filter(Produto.nome.ilike(nome)).first():
@@ -132,6 +144,7 @@ async def criar_produto(
                 "usuario":    admin,
                 "editando":   None,
                 "categorias": categorias,
+                "tamanhos": tamanhos,
                 "erro":       "Já existe um produto com este nome.",
                 "valores":    {"nome": nome, "preco": preco,
                                "estoque_atual": estoque_atual,
@@ -142,8 +155,9 @@ async def criar_produto(
         )
 
     # O preço é armazenado em reais, na mesma unidade usada pelo PDV e pelas vendas.
-    estoques_tamanho = {"P": estoque_p, "M": estoque_m, "G": estoque_g, "GG": estoque_gg}
-    if any(qtd < 0 for qtd in estoques_tamanho.values()):
+    try:
+        estoques_tamanho = await _obter_estoques_tamanho(request, db)
+    except ValueError:
         return RedirectResponse(url="/produtos/novo?erro=estoque", status_code=302)
     if possui_variacoes_tamanho and sum(estoques_tamanho.values()) == 0:
         return templates.TemplateResponse(
@@ -154,11 +168,11 @@ async def criar_produto(
                 "usuario": admin,
                 "editando": None,
                 "categorias": categorias,
+                "tamanhos": tamanhos,
                 "erro": "Informe a quantidade de pelo menos um tamanho.",
                 "valores": {
                     "nome": nome, "preco": preco, "estoque_atual": estoque_atual,
-                    "estoque_p": estoque_p, "estoque_m": estoque_m,
-                    "estoque_g": estoque_g, "estoque_gg": estoque_gg,
+                    "estoques_tamanho": {str(k): v for k, v in estoques_tamanho.items()},
                     "categoria_id": categoria_id,
                     "possui_variacoes_tamanho": possui_variacoes_tamanho,
                 },
@@ -219,6 +233,7 @@ def form_editar_produto(
 ):
     editando   = db.query(Produto).filter(Produto.id == produto_id).first()
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).order_by(Tamanho.ordem, Tamanho.nome).all()
 
     if not editando:
         return RedirectResponse(url="/produtos", status_code=302)
@@ -230,7 +245,8 @@ def form_editar_produto(
             "request":    request,
             "usuario":    admin,
             "editando":   editando,
-            "categorias": categorias
+            "categorias": categorias,
+            "tamanhos": tamanhos,
         }
     )
 
@@ -242,10 +258,6 @@ async def editar_produto(
     nome: str          = Form(...),
     preco: float       = Form(...),
     estoque_atual: int = Form(0),
-    estoque_p: int = Form(0),
-    estoque_m: int = Form(0),
-    estoque_g: int = Form(0),
-    estoque_gg: int = Form(0),
     possui_variacoes_tamanho: bool = Form(False),
     categoria_id: int  = Form(0),
     imagem: UploadFile = File(None),
@@ -254,6 +266,7 @@ async def editar_produto(
 ):
     editando   = db.query(Produto).filter(Produto.id == produto_id).first()
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).order_by(Tamanho.ordem, Tamanho.nome).all()
 
     if not editando:
         return RedirectResponse(url="/produtos", status_code=302)
@@ -273,14 +286,16 @@ async def editar_produto(
                 "usuario":    admin,
                 "editando":   editando,
                 "categorias": categorias,
+                "tamanhos": tamanhos,
                 "erro":       "Já existe outro produto com este nome.",
             },
             status_code=400
         )
 
     # Mantém o preço em reais ao atualizar o cadastro.
-    estoques_tamanho = {"P": estoque_p, "M": estoque_m, "G": estoque_g, "GG": estoque_gg}
-    if any(qtd < 0 for qtd in estoques_tamanho.values()):
+    try:
+        estoques_tamanho = await _obter_estoques_tamanho(request, db)
+    except ValueError:
         return RedirectResponse(url=f"/produtos/{produto_id}/editar?erro=estoque", status_code=302)
     if possui_variacoes_tamanho and sum(estoques_tamanho.values()) == 0:
         return templates.TemplateResponse(
@@ -291,6 +306,7 @@ async def editar_produto(
                 "usuario": admin,
                 "editando": editando,
                 "categorias": categorias,
+                "tamanhos": tamanhos,
                 "erro": "Informe a quantidade de pelo menos um tamanho.",
             },
             status_code=400,

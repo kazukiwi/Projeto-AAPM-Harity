@@ -74,12 +74,12 @@
                     </div>
 
                     <div class="form-group full-width" id="estoques-tamanho">
-                        <label>Estoque por tamanho</label>
+                        <label>Estoque por tamanho <a href="/tamanhos" style="font-size:.85em;font-weight:normal">gerenciar tamanhos</a></label>
                         <div class="tamanhos-grid">
-                            {% for tamanho in ['P', 'M', 'G', 'GG'] %}
+                            {% for tamanho in tamanhos %}
                             <div class="tamanho-group">
-                                <label for="estoque_{{ tamanho|lower }}">{{ tamanho }}</label>
-                                <input type="number" class="estoque-tamanho-input" id="estoque_{{ tamanho|lower }}" name="estoque_{{ tamanho|lower }}" min="0" value="{{ editando.estoque_do_tamanho(tamanho) if editando else (valores['estoque_' + tamanho|lower] if valores else 0) }}">
+                                <label for="estoque_tamanho_{{ tamanho.id }}">{{ tamanho.nome }}</label>
+                                <input type="number" class="estoque-tamanho-input" id="estoque_tamanho_{{ tamanho.id }}" name="estoque_tamanho_{{ tamanho.id }}" min="0" value="{{ editando.estoque_do_tamanho(tamanho.id) if editando else (valores.estoques_tamanho[tamanho.id|string] if valores and valores.estoques_tamanho else 0) }}">
                             </div>
                             {% endfor %}
                         </div>

@@ -191,7 +191,7 @@
                                 <option value="" disabled selected>Escolha um produto...</option>
                                 {% for produto in produtos %}
                                     {% if produto.ativo and produto.estoque_atual > 0 %}
-                                    <option value="{{ produto.id }}" data-nome="{{ produto.nome }}" data-preco="{{ produto.preco }}" data-estoque="{{ produto.estoque_atual }}" data-possui-variacoes="{{ 'true' if produto.possui_variacoes_tamanho else 'false' }}" data-tamanho-p="{{ produto.estoque_do_tamanho('P') }}" data-tamanho-m="{{ produto.estoque_do_tamanho('M') }}" data-tamanho-g="{{ produto.estoque_do_tamanho('G') }}" data-tamanho-gg="{{ produto.estoque_do_tamanho('GG') }}">
+                                    <option value="{{ produto.id }}" data-nome="{{ produto.nome }}" data-preco="{{ produto.preco }}" data-estoque="{{ produto.estoque_atual }}" data-possui-variacoes="{{ 'true' if produto.possui_variacoes_tamanho else 'false' }}"{% for estoque in produto.estoques_tamanho %} data-tamanho-{{ estoque.tamanho_id }}="{{ estoque.estoque_atual }}"{% endfor %}>
                                         {{ produto.nome }}
                                     </option>
                                     {% endif %}
@@ -203,10 +203,9 @@
                             <label for="pdv-tamanho" style="display:block; font-weight:bold; margin-bottom:5px; color: #4f46e5;">Tamanho da Camiseta</label>
                             <select id="pdv-tamanho" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; background-color: white;">
                                 <option value="" disabled selected>Selecione o tamanho...</option>
-                                <option value="P">P</option>
-                                <option value="M">M</option>
-                                <option value="G">G</option>
-                                <option value="GG">GG</option>
+                                {% for tamanho in tamanhos %}
+                                <option value="{{ tamanho.id }}">{{ tamanho.nome }}</option>
+                                {% endfor %}
                             </select>
                         </div>
 
