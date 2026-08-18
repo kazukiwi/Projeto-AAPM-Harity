@@ -14,6 +14,7 @@ class Produto(Base):
     nome = Column(String(200), unique=True, index=True)
     preco = Column(Float)
     estoque_atual = Column(Integer, nullable=False, default=0)
+    possui_variacoes_tamanho = Column(Boolean, nullable=False, default=False, server_default="false")
     ativo = Column(Boolean, default=True)
 
     imagem_path = Column(String(255), nullable=True)
@@ -26,7 +27,8 @@ class Produto(Base):
 
     @property
     def eh_camiseta(self):
-        return "camiseta" in (self.nome or "").lower()
+        """Compatibilidade com o fluxo antigo de vendas."""
+        return self.possui_variacoes_tamanho
 
     def estoque_do_tamanho(self, tamanho):
         registro = next((e for e in self.estoques_tamanho if e.tamanho == tamanho), None)

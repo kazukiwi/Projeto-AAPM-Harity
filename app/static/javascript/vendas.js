@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (selectProd) {
         selectProd.addEventListener('change', function () {
             const selectedOption = this.options[this.selectedIndex];
-            const nomeProduto = selectedOption.getAttribute('data-nome') || '';
+            const possuiVariacoes = selectedOption.getAttribute('data-possui-variacoes') === 'true';
             const preco = selectedOption.getAttribute('data-preco');
             const estoque = selectedOption.getAttribute('data-estoque');
 
@@ -32,8 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             document.getElementById('pdv-qtd').value = 1;
 
-            // Verifica se o termo 'camiseta' existe no nome do produto
-            if (grupoTamanho && selectTamanho && nomeProduto.toLowerCase().includes('camiseta')) {
+            if (grupoTamanho && selectTamanho && possuiVariacoes) {
                 grupoTamanho.style.display = 'block';
                 selectTamanho.required = true;
                 selectTamanho.value = '';

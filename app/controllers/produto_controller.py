@@ -28,12 +28,8 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 TAMANHOS_CAMISETA = ("P", "M", "G", "GG")
 
 
-def _eh_camiseta(nome: str) -> bool:
-    return "camiseta" in nome.lower()
-
-
-def _salvar_estoques_tamanho(produto: Produto, nome: str, estoques: dict[str, int]) -> None:
-    if not _eh_camiseta(nome):
+def _salvar_estoques_tamanho(produto: Produto, possui_variacoes_tamanho: bool, estoques: dict[str, int]) -> None:
+    if not possui_variacoes_tamanho:
         produto.estoques_tamanho.clear()
         return
 
@@ -113,11 +109,12 @@ async def criar_produto(
     request: Request,
     nome: str          = Form(...),
     preco: float       = Form(...),
-    estoque_atual: int = Form(...),
+    estoque_atual: int = Form(0),
     estoque_p: int = Form(0),
     estoque_m: int = Form(0),
     estoque_g: int = Form(0),
     estoque_gg: int = Form(0),
+    possui_variacoes_tamanho: bool = Form(False),
     categoria_id: int  = Form(0),   # 0 = sem categoria
     imagem: UploadFile = File(None), # None = campo opcional
     db: Session        = Depends(get_db),
@@ -138,28 +135,50 @@ async def criar_produto(
                 "erro":       "Já existe um produto com este nome.",
                 "valores":    {"nome": nome, "preco": preco,
                                "estoque_atual": estoque_atual,
-                               "categoria_id": categoria_id}
+                               "categoria_id": categoria_id,
+                               "possui_variacoes_tamanho": possui_variacoes_tamanho}
             },
             status_code=400
         )
-
-    # Processa o upload da imagem
-    imagem_path = await _salvar_imagem(imagem)
 
     # O preço é armazenado em reais, na mesma unidade usada pelo PDV e pelas vendas.
     estoques_tamanho = {"P": estoque_p, "M": estoque_m, "G": estoque_g, "GG": estoque_gg}
     if any(qtd < 0 for qtd in estoques_tamanho.values()):
         return RedirectResponse(url="/produtos/novo?erro=estoque", status_code=302)
+    if possui_variacoes_tamanho and sum(estoques_tamanho.values()) == 0:
+        return templates.TemplateResponse(
+            request,
+            "produtos/form.html",
+            {
+                "request": request,
+                "usuario": admin,
+                "editando": None,
+                "categorias": categorias,
+                "erro": "Informe a quantidade de pelo menos um tamanho.",
+                "valores": {
+                    "nome": nome, "preco": preco, "estoque_atual": estoque_atual,
+                    "estoque_p": estoque_p, "estoque_m": estoque_m,
+                    "estoque_g": estoque_g, "estoque_gg": estoque_gg,
+                    "categoria_id": categoria_id,
+                    "possui_variacoes_tamanho": possui_variacoes_tamanho,
+                },
+            },
+            status_code=400,
+        )
+
+    # Processa o upload da imagem após validar os dados do produto.
+    imagem_path = await _salvar_imagem(imagem)
 
     produto = Produto(
         nome          = nome,
         preco         = preco,
-        estoque_atual = sum(estoques_tamanho.values()) if _eh_camiseta(nome) else estoque_atual,
+        estoque_atual = sum(estoques_tamanho.values()) if possui_variacoes_tamanho else estoque_atual,
+        possui_variacoes_tamanho = possui_variacoes_tamanho,
         categoria_id  = categoria_id or None,  # 0 vira NULL no banco
         imagem_path   = imagem_path,
     )
-    if _eh_camiseta(nome):
-        _salvar_estoques_tamanho(produto, nome, estoques_tamanho)
+    if possui_variacoes_tamanho:
+        _salvar_estoques_tamanho(produto, possui_variacoes_tamanho, estoques_tamanho)
 
     db.add(produto)
     db.commit()
@@ -222,11 +241,12 @@ async def editar_produto(
     request: Request,
     nome: str          = Form(...),
     preco: float       = Form(...),
-    estoque_atual: int = Form(...),
+    estoque_atual: int = Form(0),
     estoque_p: int = Form(0),
     estoque_m: int = Form(0),
     estoque_g: int = Form(0),
     estoque_gg: int = Form(0),
+    possui_variacoes_tamanho: bool = Form(False),
     categoria_id: int  = Form(0),
     imagem: UploadFile = File(None),
     db: Session        = Depends(get_db),
@@ -258,23 +278,37 @@ async def editar_produto(
             status_code=400
         )
 
-    # Processa nova imagem — só substitui se um arquivo foi enviado
+    # Mantém o preço em reais ao atualizar o cadastro.
+    estoques_tamanho = {"P": estoque_p, "M": estoque_m, "G": estoque_g, "GG": estoque_gg}
+    if any(qtd < 0 for qtd in estoques_tamanho.values()):
+        return RedirectResponse(url=f"/produtos/{produto_id}/editar?erro=estoque", status_code=302)
+    if possui_variacoes_tamanho and sum(estoques_tamanho.values()) == 0:
+        return templates.TemplateResponse(
+            request,
+            "produtos/form.html",
+            {
+                "request": request,
+                "usuario": admin,
+                "editando": editando,
+                "categorias": categorias,
+                "erro": "Informe a quantidade de pelo menos um tamanho.",
+            },
+            status_code=400,
+        )
+
+    # Processa nova imagem — só substitui se um arquivo foi enviado.
     nova_imagem_path = await _salvar_imagem(imagem)
     if nova_imagem_path:
         # Remove a imagem antiga do disco para não acumular arquivos
         _remover_imagem(editando.imagem_path)
         editando.imagem_path = nova_imagem_path
 
-    # Mantém o preço em reais ao atualizar o cadastro.
-    estoques_tamanho = {"P": estoque_p, "M": estoque_m, "G": estoque_g, "GG": estoque_gg}
-    if any(qtd < 0 for qtd in estoques_tamanho.values()):
-        return RedirectResponse(url=f"/produtos/{produto_id}/editar?erro=estoque", status_code=302)
-
     editando.nome          = nome
     editando.preco         = preco
     editando.estoque_atual = estoque_atual
+    editando.possui_variacoes_tamanho = possui_variacoes_tamanho
     editando.categoria_id  = categoria_id or None
-    _salvar_estoques_tamanho(editando, nome, estoques_tamanho)
+    _salvar_estoques_tamanho(editando, possui_variacoes_tamanho, estoques_tamanho)
 
     db.commit()
 
