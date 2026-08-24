@@ -75,10 +75,20 @@
                             <option value="" disabled selected>Escolha um produto...</option>
                             {% for produto in produtos %}
                                 {% if produto.ativo and (produto.estoque_atual > 0) %}
-                                <option value="{{ produto.id }}" data-nome="{{ produto.nome }}" data-preco="{{ produto.preco }}" data-estoque="{{ produto.estoque_atual }}">
+                                <option value="{{ produto.id }}" data-nome="{{ produto.nome }}" data-preco="{{ produto.preco }}" data-estoque="{{ produto.estoque_atual }}" data-possui-variacoes="{{ 'true' if produto.possui_variacoes_tamanho else 'false' }}"{% for estoque in produto.estoques_tamanho %} data-tamanho-{{ estoque.tamanho_id }}="{{ estoque.estoque_atual }}"{% endfor %}>
                                     {{ produto.nome }}
                                 </option>
                                 {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="grupo-tamanho" style="display: none; margin-bottom: 15px;">
+                        <label for="pdv-tamanho" style="display:block; font-weight:bold; margin-bottom:5px;">Tamanho</label>
+                        <select id="pdv-tamanho" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; background-color: white;">
+                            <option value="" disabled selected>Selecione o tamanho...</option>
+                            {% for tamanho in tamanhos %}
+                            <option value="{{ tamanho.id }}">{{ tamanho.nome }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -165,11 +175,14 @@
 
         // Atualiza campos de preço e estoque ao mudar o produto selecionado
         const selectProd = document.getElementById('select-prod');
+        const grupoTamanho = document.getElementById('grupo-tamanho');
+        const selectTamanho = document.getElementById('pdv-tamanho');
         if (selectProd) {
             selectProd.addEventListener('change', function () {
                 const selectedOption = this.options[this.selectedIndex];
                 const preco = selectedOption.getAttribute('data-preco');
                 const estoque = selectedOption.getAttribute('data-estoque');
+                const possuiVariacoes = selectedOption.getAttribute('data-possui-variacoes') === 'true';
 
                 if (preco) {
                     document.getElementById('pdv-preco').value = `R$ ${parseFloat(preco).toFixed(2).replace('.', ',')}`;
@@ -179,6 +192,31 @@
                     document.getElementById('pdv-qtd').max = estoque;
                 }
                 document.getElementById('pdv-qtd').value = 1;
+
+                if (possuiVariacoes) {
+                    grupoTamanho.style.display = 'block';
+                    selectTamanho.required = true;
+                    selectTamanho.value = '';
+                    Array.from(selectTamanho.options).forEach(opcao => {
+                        if (!opcao.value) return;
+                        const saldo = parseInt(selectedOption.getAttribute(`data-tamanho-${opcao.value}`) || '0');
+                        opcao.disabled = saldo <= 0;
+                        opcao.textContent = `${opcao.value} (${saldo} un)`;
+                    });
+                } else {
+                    grupoTamanho.style.display = 'none';
+                    selectTamanho.required = false;
+                    selectTamanho.value = '';
+                }
+            });
+        }
+
+        if (selectTamanho) {
+            selectTamanho.addEventListener('change', function () {
+                const option = selectProd.options[selectProd.selectedIndex];
+                const estoque = parseInt(option.getAttribute(`data-tamanho-${this.value}`) || '0');
+                document.getElementById('pdv-estoque').value = `${estoque} un`;
+                document.getElementById('pdv-qtd').max = estoque;
             });
         }
 
@@ -196,10 +234,18 @@
                 const pId = parseInt(select.value);
                 const nome = option.getAttribute('data-nome');
                 const preco = parseFloat(option.getAttribute('data-preco'));
-                const estoqueMax = parseInt(option.getAttribute('data-estoque'));
                 const qtd = parseInt(document.getElementById('pdv-qtd').value);
+                const tamanhoId = grupoTamanho.style.display === 'block' ? selectTamanho.value : null;
+                const tamanho = tamanhoId ? selectTamanho.options[selectTamanho.selectedIndex].textContent.split(' (')[0] : null;
+                if (grupoTamanho.style.display === 'block' && !tamanhoId) {
+                    selectTamanho.reportValidity();
+                    return;
+                }
+                const estoqueMax = tamanhoId
+                    ? parseInt(option.getAttribute(`data-tamanho-${tamanhoId}`) || '0')
+                    : parseInt(option.getAttribute('data-estoque'));
 
-                const itemExistente = carrinho.find(item => item.produto_id === pId);
+                const itemExistente = carrinho.find(item => item.produto_id === pId && item.tamanho_id === tamanhoId);
 
                 if (itemExistente) {
                     if (itemExistente.quantidade + qtd > estoqueMax) {
@@ -216,7 +262,9 @@
                         produto_id: pId,
                         nome: nome,
                         preco: preco,
-                        quantidade: qtd
+                        quantidade: qtd,
+                        tamanho: tamanho,
+                        tamanho_id: tamanhoId
                     });
                 }
 
@@ -227,6 +275,9 @@
                 document.getElementById('pdv-estoque').value = "--";
                 document.getElementById('pdv-preco').value = "R$ 0,00";
                 document.getElementById('pdv-qtd').value = 1;
+                grupoTamanho.style.display = 'none';
+                selectTamanho.required = false;
+                selectTamanho.value = '';
             });
         }
 
@@ -251,7 +302,7 @@
 
                 corpo.innerHTML += `
                     <tr>
-                        <td style="padding:10px; border-bottom:1px solid #e5e7eb;"><strong>${item.nome}</strong></td>
+                        <td style="padding:10px; border-bottom:1px solid #e5e7eb;"><strong>${item.nome}${item.tamanho ? ` (Tam: ${item.tamanho})` : ''}</strong></td>
                         <td style="padding:10px; border-bottom:1px solid #e5e7eb;">${item.quantidade}x</td>
                         <td style="padding:10px; border-bottom:1px solid #e5e7eb;">R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
                         <td style="padding:10px; border-bottom:1px solid #e5e7eb; text-align: center;">

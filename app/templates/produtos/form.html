@@ -52,7 +52,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="estoque_atual">Estoque total (produtos sem tamanho)</label>
+                        <label for="estoque_atual">Estoque total (produtos sem variações)</label>
                         <input type="number"
                                id="estoque_atual"
                                name="estoque_atual"
@@ -61,17 +61,29 @@
                                required>
                     </div>
 
-                    <div class="form-group full-width" id="estoques-camiseta">
-                        <label>Estoque por tamanho de camiseta</label>
+                    <div class="form-group full-width">
+                        {% set possui_variacoes = editando.possui_variacoes_tamanho if editando else (valores.possui_variacoes_tamanho if valores else false) %}
+                        <label for="possui_variacoes_tamanho" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox"
+                                   id="possui_variacoes_tamanho"
+                                   name="possui_variacoes_tamanho"
+                                   value="true"
+                                   {{ 'checked' if possui_variacoes else '' }}>
+                            Esse produto possui variação de tamanho
+                        </label>
+                    </div>
+
+                    <div class="form-group full-width" id="estoques-tamanho">
+                        <label>Estoque por tamanho <a href="/tamanhos" style="font-size:.85em;font-weight:normal">gerenciar tamanhos</a></label>
                         <div class="tamanhos-grid">
-                            {% for tamanho in ['P', 'M', 'G', 'GG'] %}
+                            {% for tamanho in tamanhos %}
                             <div class="tamanho-group">
-                                <label for="estoque_{{ tamanho|lower }}">{{ tamanho }}</label>
-                                <input type="number" id="estoque_{{ tamanho|lower }}" name="estoque_{{ tamanho|lower }}" min="0" value="{{ editando.estoque_do_tamanho(tamanho) if editando else 0 }}">
+                                <label for="estoque_tamanho_{{ tamanho.id }}">{{ tamanho.nome }}</label>
+                                <input type="number" class="estoque-tamanho-input" id="estoque_tamanho_{{ tamanho.id }}" name="estoque_tamanho_{{ tamanho.id }}" min="0" value="{{ editando.estoque_do_tamanho(tamanho.id) if editando else (valores.estoques_tamanho[tamanho.id|string] if valores and valores.estoques_tamanho else 0) }}">
                             </div>
                             {% endfor %}
                         </div>
-                        <small>Para camisetas, o total é calculado pela soma dos tamanhos.</small>
+                        <small>O estoque total é calculado pela soma dos tamanhos.</small>
                     </div>
 
                     <div class="form-group full-width">
@@ -122,12 +134,36 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         lucide.createIcons();
-        const nomeProduto = document.getElementById('nome');
-        const estoquesCamiseta = document.getElementById('estoques-camiseta');
-        function atualizarCamposTamanho() {
-            estoquesCamiseta.style.display = nomeProduto.value.toLowerCase().includes('camiseta') ? 'block' : 'none';
+        const estoqueTotal = document.getElementById('estoque_atual');
+        const estoquesTamanho = document.getElementById('estoques-tamanho');
+        const possuiVariacoesInput = document.getElementById('possui_variacoes_tamanho');
+        const inputsEstoqueTamanho = document.querySelectorAll('.estoque-tamanho-input');
+        const formulario = document.querySelector('.form-container form');
+
+        function atualizarTotalVariacoes() {
+            const total = Array.from(inputsEstoqueTamanho)
+                .reduce((soma, input) => soma + (parseInt(input.value, 10) || 0), 0);
+            estoqueTotal.value = total;
+            return total;
         }
-        nomeProduto.addEventListener('input', atualizarCamposTamanho);
+
+        function atualizarCamposTamanho() {
+            const possuiVariacoes = possuiVariacoesInput.checked;
+            estoquesTamanho.style.display = possuiVariacoes ? 'block' : 'none';
+            estoqueTotal.disabled = possuiVariacoes;
+            estoqueTotal.required = !possuiVariacoes;
+            inputsEstoqueTamanho.forEach(input => input.disabled = !possuiVariacoes);
+            if (possuiVariacoes) atualizarTotalVariacoes();
+        }
+        possuiVariacoesInput.addEventListener('change', atualizarCamposTamanho);
+        inputsEstoqueTamanho.forEach(input => input.addEventListener('input', atualizarTotalVariacoes));
+        formulario.addEventListener('submit', function (evento) {
+            if (possuiVariacoesInput.checked && atualizarTotalVariacoes() === 0) {
+                evento.preventDefault();
+                alert('Informe a quantidade de pelo menos um tamanho.');
+                inputsEstoqueTamanho[0].focus();
+            }
+        });
         atualizarCamposTamanho();
     </script>
 </body>

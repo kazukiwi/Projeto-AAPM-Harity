@@ -11,6 +11,7 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRACAO_MINUTOS = os.getenv("ACCESS_TOKEN_EXPIRACAO_MINUTOS")
+RESET_TOKEN_EXPIRACAO_MINUTOS = int(os.getenv("RESET_TOKEN_EXPIRACAO_MINUTOS", "30"))
 
 #CryptContent
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -43,7 +44,7 @@ def criar_token_redefinicao_senha(email: str):
     payload = {
         "sub": email,
         "finalidade": "redefinir_senha",
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRACAO_MINUTOS),
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 

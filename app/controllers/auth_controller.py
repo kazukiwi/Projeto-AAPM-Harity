@@ -1,5 +1,6 @@
 import os
 import smtplib
+import ssl
 from email.message import EmailMessage
 from html import escape
 
@@ -28,7 +29,7 @@ def enviar_email_redefinicao(destinatario: str, link: str):
     """Envia o link usando as configurações SMTP definidas no ambiente."""
     host = os.getenv("SMTP_HOST")
     porta = int(os.getenv("SMTP_PORT", "587"))
-    remetente = os.getenv("SMTP_FROM")
+    remetente = os.getenv("SMTP_FROM") or os.getenv("SMTP_USER")
     usuario = os.getenv("SMTP_USER")
     senha = os.getenv("SMTP_PASSWORD")
     usar_ssl = os.getenv("SMTP_USE_SSL", "false").lower() == "true"
@@ -105,10 +106,15 @@ def enviar_email_redefinicao(destinatario: str, link: str):
         subtype="html",
     )
 
-    classe_smtp = smtplib.SMTP_SSL if usar_ssl else smtplib.SMTP
-    with classe_smtp(host, porta, timeout=25) as servidor:
+    contexto_ssl = ssl.create_default_context()
+    if usar_ssl:
+        conexao = smtplib.SMTP_SSL(host, porta, timeout=25, context=contexto_ssl)
+    else:
+        conexao = smtplib.SMTP(host, porta, timeout=25)
+
+    with conexao as servidor:
         if not usar_ssl and os.getenv("SMTP_USE_TLS", "true").lower() == "true":
-            servidor.starttls()
+            servidor.starttls(context=contexto_ssl)
         if usuario and senha:
             servidor.login(usuario, senha)
         servidor.send_message(mensagem)
