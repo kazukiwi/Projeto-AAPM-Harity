@@ -46,6 +46,17 @@
     </header>{% endif %}
     {% include "partials/navbar.html" %}
 
+    {% if request.query_params.get('login') == 'ok' %}
+    <div id="feedback-bem-vindo" aria-hidden="false">
+        <div class="feedback-bem-vindo-card" role="dialog" aria-modal="true" aria-labelledby="feedback-bem-vindo-titulo">
+            <div class="feedback-bem-vindo-icone"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></div>
+            <h2 id="feedback-bem-vindo-titulo">Acesso realizado com sucesso!</h2>
+            <p>Bem-vindo, {{ usuario.nome or 'ao sistema' }}. Seu acesso foi confirmado.</p>
+            <button type="button" class="feedback-bem-vindo-fechar">Continuar</button>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="dashboard">
 
         <div class="header">
@@ -54,6 +65,13 @@
                 <p>Visão geral do estoque e armários AAPM</p>
             </div>
         </div>
+
+        {% if request.query_params.get('login') == 'ok' %}
+        <div class="alert-box alert-success">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            Acesso realizado com sucesso. Bem-vindo, {{ usuario.nome or 'ao sistema' }}!
+        </div>
+        {% endif %}
 
         <h2>Estoque</h2>
         <div class="cards">

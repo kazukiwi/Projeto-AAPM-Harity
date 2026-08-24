@@ -64,6 +64,12 @@
             {% endif %}
         </div>
 
+        {% if request.query_params.get('criado') == 'ok' %}
+        <div class="alert-box alert-success"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Produto criado com sucesso.</div>
+        {% elif request.query_params.get('desativado') == 'ok' %}
+        <div class="alert-box alert-success"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Produto desativado com sucesso.</div>
+        {% endif %}
+
         <form method="GET" action="/produtos/" class="filtros-container" id="form-filtros">
             <div class="busca-wrapper">
                 <i class="fa-solid fa-magnifying-glass icone-busca"></i>
