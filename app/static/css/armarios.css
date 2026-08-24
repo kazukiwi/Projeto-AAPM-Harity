@@ -1,142 +1,420 @@
-/* ============================================================
-   GRID DE ARMÁRIOS E BOTÕES DOS FILTROS
-   ============================================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+    background: #f8fafc;
+    color: #020617;
+}
+
+.navbar {
+    width: 100%;
+    min-height: 80px;
+    height: auto;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 60px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.logo img {
+    height: 65px;
+    width: auto;
+    display: block;
+}
+
+.menu {
+    display: flex;
+    gap: 28px;
+    list-style: none;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.menu a {
+    text-decoration: none;
+    color: #6b7280;
+    font-size: 17px;
+    transition: 0.3s;
+}
+
+.menu a:hover,
+.menu a.active {
+    color: #09145c;
+    font-weight: 700;
+}
+
+.menu a.btn-sair {
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.armarios-page {
+    flex: 1;
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 40px 0;
+}
+
+.page-title {
+    margin-bottom: 24px;
+}
+
+.page-title h1 {
+    font-size: 32px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    color: #020617;
+}
+
+.page-title p {
+    font-size: 16px;
+    color: #64748b;
+}
+
+.cards-resumo-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.card-resumo {
+    min-height: 104px;
+    background: #fff;
+    border: 1px solid #d9dee7;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-resumo span {
+    display: block;
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.card-resumo strong {
+    display: block;
+    font-size: 28px;
+}
+
+.card-resumo i {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.card-total i { background: #f1f5f9; color: #475569; }
+.card-disponivel { border-color: #86efac; }
+.card-disponivel strong { color: #00a84f; }
+.card-disponivel i { background: #dcfce7; color: #00a84f; }
+.card-ocupado { border-color: #93c5fd; }
+.card-ocupado strong { color: #2563eb; }
+.card-ocupado i { background: #eff6ff; color: #2563eb; }
+.card-manutencao { border-color: #fdba74; }
+.card-manutencao strong { color: #f97316; }
+.card-manutencao i { background: #fff7ed; color: #f97316; }
+
+.filtro-bar,
+.legenda-bar,
+.grid-shell {
+    background: #fff;
+    border: 1px solid #d9dee7;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.filtro-bar {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.filtro-bar span,
+.legenda-bar span {
+    font-size: 14px;
+    color: #0f172a;
+}
+
+.btn-filtro {
+    border: 0;
+    border-radius: 6px;
+    padding: 9px 14px;
+    background: #f3f4f6;
+    color: #020617;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.btn-filtro.active {
+    background: #020617;
+    color: #fff;
+}
+
+.legenda-bar {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.legenda-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.dot-disponivel { background: #00c853; }
+.dot-ocupado { background: #3b73f6; }
+.dot-manutencao { background: #ff6d00; }
+
+.grid-shell {
+    padding: 20px;
+}
+
 .grid-armarios {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     gap: 12px;
-    margin-top: 20px;
 }
 
-.card-armario {
-    background: #fff;
-    border-radius: 8px;
-    padding: 16px 8px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: bold;
-    color: white;
+.item-armario {
+    aspect-ratio: 1 / 1;
+    min-height: 72px;
+    border: 0;
+    border-radius: 6px;
+    color: #fff;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: none;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    gap: 4px;
+    font-weight: 700;
+    transition: transform 0.15s, filter 0.15s;
 }
 
-.card-armario:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.item-armario:hover {
+    transform: translateY(-1px);
+    filter: brightness(0.96);
 }
 
-/* Cores de Status dos Armários */
-.armario-disponivel { background-color: #10b981 !important; }
-.armario-ocupado { background-color: #3b82f6 !important; }
-.armario-manutencao { background-color: #f97316 !important; }
-
-/* Indicadores de Borda Lateral */
-.card-ind-disponivel { border-left: 4px solid #10b981; }
-.card-ind-ocupado { border-left: 4px solid #3b82f6; }
-.card-ind-manutencao { border-left: 4px solid #f97316; }
-
-.txt-disponivel { color: #10b981; }
-.txt-ocupado { color: #3b82f6; }
-.txt-manutencao { color: #f97316; }
-
-/* Legendas e Bolinhas de Cores */
-.legendas-container {
-    font-size: 13px;
-    color: #64748b;
+.item-armario i {
+    font-size: 20px;
 }
-.dot-disponivel { color: #10b981; }
-.dot-ocupado { color: #3b82f6; }
-.dot-manutencao { color: #f97316; }
 
-/* Botão do Excel */
-.btn-exportar {
-    padding: 10px 18px;
-    background-color: #16a34a;
-    color: white;
-    border: none;
+.item-armario span {
+    font-size: 16px;
+}
+
+.alerta-erro {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
     border-radius: 6px;
-    font-weight: 600;
     font-size: 14px;
-    cursor: pointer;
-    display: flex;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+}
+
+.status-disponivel { background: #00c853; }
+.status-ocupado { background: #3b73f6; }
+.status-manutencao { background: #ff6d00; }
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
     align-items: center;
-    gap: 8px;
-    transition: background-color 0.2s;
-}
-.btn-exportar:hover {
-    background-color: #15803d;
-}
-
-/* ============================================================
-   ESTILIZAÇÃO DO MODAL DE ARMÁRIO
-   ============================================================ */
-.modal-armario-layout {
-    width: 500px !important;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.45);
+    padding: 20px;
+    z-index: 20;
 }
 
-.modal-botoes-row {
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-card {
+    width: min(460px, 100%);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+    padding: 20px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 16px;
+}
+
+.modal-header h2 {
+    font-size: 18px;
+}
+
+.modal-header p,
+.modal-info,
+.modal-form small {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.btn-fechar {
+    border: 0;
+    background: #f1f5f9;
+    color: #334155;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.modal-form {
+    display: grid;
+    gap: 14px;
+}
+
+.modal-form label span {
+    display: block;
+    margin-bottom: 6px;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.modal-form select,
+.modal-form input {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 14px;
+    background: #fff;
+}
+
+.modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
+    gap: 10px;
+    margin-top: 4px;
 }
 
-.btn-atribuir {
-    background-color: #2563eb;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: bold;
+.btn-secundario,
+.btn-primario {
+    border: 0;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-weight: 700;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: background-color 0.2s;
 }
-.btn-atribuir:hover { background-color: #1d4ed8; }
 
-.btn-manutencao {
-    background-color: #ea580c;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: background-color 0.2s;
+.btn-secundario {
+    background: #e5e7eb;
+    color: #111827;
 }
-.btn-manutencao:hover { background-color: #c2410c; }
 
-.badge-status {
-    display: inline-block;
-    padding: 6px 14px;
-    border-radius: 20px;
+.btn-primario {
+    background: #020617;
+    color: #fff;
+}
+
+.main-footer {
+    margin-top: auto;
+    width: 100%;
+    background: #09145c;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
     font-size: 13px;
-    font-weight: 600;
-    margin-top: 10px;
-}
-.badge-disponivel {
-    background-color: #d1fae5;
-    color: #065f46;
 }
 
-/* Responsividade do Grid */
-@media(max-width: 1024px) {
+@media (max-width: 1100px) {
+    .navbar {
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .menu {
+        justify-content: center;
+        gap: 14px;
+    }
+}
+
+@media (max-width: 760px) {
+    .cards-resumo-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     .grid-armarios {
         grid-template-columns: repeat(5, 1fr);
     }
+
+    .armarios-page {
+        padding: 28px 0;
+    }
+
+    .page-title h1 {
+        font-size: 26px;
+    }
 }
-@media(max-width: 600px) {
+
+@media (max-width: 460px) {
+    .cards-resumo-container {
+        grid-template-columns: 1fr;
+    }
+
     .grid-armarios {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .item-armario {
+        min-height: 58px;
     }
 }

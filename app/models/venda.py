@@ -7,7 +7,7 @@
 # o mesmo padrão usado em qualquer sistema comercial real.
 # ============================================================
 
-from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, Float, String, Date, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -64,6 +64,19 @@ class Venda(Base):
         return f"<Venda id={self.id} total={self.total_liquido}>"
 
 
+class FechamentoDiario(Base):
+    """Resumo imutável por data, atualizado quando o dia é fechado novamente."""
+
+    __tablename__ = "fechamentos_diarios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    data = Column(Date, nullable=False, unique=True, index=True)
+    total_vendido = Column(Float, nullable=False, default=0.0)
+    quantidade_vendas = Column(Integer, nullable=False, default=0)
+    fechado_em = Column(DateTime, nullable=False, server_default=func.now())
+    fechado_automaticamente = Column(Boolean, nullable=False, default=False)
+
+
 class ItemVenda(Base):
     __tablename__ = "itens_venda"
 
@@ -83,6 +96,9 @@ class ItemVenda(Base):
 
     # Dados históricos — não dependem do produto atual no banco
     produto_nome   = Column(String(150), nullable=False)
+    # Tamanho escolhido no momento da venda (quando o produto for uma camiseta).
+    # Fica no item para preservar o histórico independentemente do cadastro atual.
+    tamanho        = Column(String(10), nullable=True)
     quantidade     = Column(Integer, nullable=False)
     preco_unitario = Column(Float, nullable=False)   # preço no momento da venda
 

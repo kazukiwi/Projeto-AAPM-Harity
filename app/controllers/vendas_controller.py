@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.produtos import Produto
-from app.models.vendas import Venda
+from app.models.venda import Venda
 
 @router.post("/nova")
 def nova_venda(

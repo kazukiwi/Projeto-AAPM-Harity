@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/img/image.ico" type="image/x-icon">
     <title>Comprovante de Venda #{{ venda.id }}</title>
     <link rel="stylesheet" href="/static/css/vendas.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -27,9 +28,21 @@
             <ul class="menu">
                 <li><a href="/">Dashboard</a></li>
                 <li><a href="/produtos">Produtos</a></li>
+                {% if usuario.role == 'admin' %}
+                <li><a href="/clientes">Clientes</a></li>
+                {% endif %}
                 <li><a href="/pdv/historico" class="active">Vendas</a></li>
                 <li><a href="/mais_vendidos">Mais vendidos</a></li>
+                {% if usuario.role == 'admin' %}
                 <li><a href="/armarios">Armários</a></li>
+
+                <li><a href="/usuarios" >
+                </i> Usuários
+                </a></li>
+                <li><a href="/categorias" >
+                    </i> Categorias
+                </a></li>
+                {% endif %}
                 <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
             </ul>
         </nav>
@@ -73,7 +86,7 @@
                 <tbody>
                     {% for item in venda.itens %}
                     <tr>
-                        <td style="padding:6px 0;">{{ item.produto_nome }} <br> <small style="color:#666;">1 un x R$ {{ "%.2f"|format(item.preco_unitario) }}</small></td>
+                        <td style="padding:6px 0;">{{ item.produto_nome }}{% if item.tamanho %} (Tam: {{ item.tamanho }}){% endif %} <br> <small style="color:#666;">1 un x R$ {{ "%.2f"|format(item.preco_unitario) }}</small></td>
                         <td style="padding:6px 0; text-align:center;">{{ item.quantidade }}</td>
                         <td style="padding:6px 0; text-align:right;">R$ {{ "%.2f"|format(item.quantidade * item.preco_unitario) }}</td>
                     </tr>

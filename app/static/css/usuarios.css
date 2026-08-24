@@ -393,39 +393,99 @@ button:active, a:active {
     transform: translateY(0) !important;
 }
 
-/* ==========================================================================
-   9. RODAPÉ (FOOTER)
-   ========================================================================== */
-.main-footer {
-    width: 100%;
-    background-color: #09145c;
-    padding: 25px 60px;
+/* ============================================================
+   RODAPÉ (FOOTER)
+   ============================================================ */
+.main-footer { 
+    width: 100%; 
+    background-color: #09145c; 
+    padding: 20px; 
+    text-align: center; 
+    color: rgb(255, 255, 255); 
+    font-size: 13px; 
     margin-top: auto; 
 }
 
-.footer-content {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center;
+@media (max-width: 1100px) {
+    .navbar {
+        height: auto;
+        min-height: 80px;
+        padding: 16px 24px;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .menu {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 14px 22px;
+        text-align: center;
+    }
+
+    .menu a,
+    .menu .nav-link {
+        font-size: 16px;
+    }
+
+    .main-content,
+    .produtos-container-main {
+        padding: 28px 24px;
+    }
+
+    .table-container,
+    .tabela-container {
+        overflow-x: auto;
+    }
+
+    table,
+    .tabela-produtos {
+        min-width: 760px;
+    }
 }
 
-.footer-content p {
-    font-size: 15px;
-    color: #ffffff;
-}
+@media (max-width: 640px) {
+    .logo img {
+        height: 54px;
+    }
 
-.footer-links {
-    display: flex;
-    gap: 25px;
-}
+    .main-content,
+    .produtos-container-main {
+        padding: 22px 16px;
+    }
 
-.footer-links a {
-    color: rgba(255, 255, 255, 0.8);
-    text-decoration: none;
-    font-size: 15px;
-}
+    .page-header,
+    .header-produtos {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
 
-.footer-links a:hover {
-    color: #ffffff;
-    text-decoration: underline;
+    .page-header h1,
+    .header-produtos h1 {
+        font-size: 26px;
+    }
+
+    .btn-create {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .filtros-container {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .busca-wrapper,
+    .select-wrapper,
+    .filtros-container input[type="text"],
+    .filtros-container select,
+    .checkbox-wrapper {
+        width: 100%;
+    }
+
+    .actions-cell,
+    .user-actions-wrapper {
+        flex-wrap: wrap;
+    }
 }

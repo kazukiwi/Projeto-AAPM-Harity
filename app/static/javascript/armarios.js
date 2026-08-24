@@ -1,106 +1,114 @@
-// Mocking de dados simulando perfeitamente a imagem enviada
-const armariosDados = [];
-for (let i = 1; i <= 50; i++) {
-    let status = 'disponivel';
-    // Define os azuis (ocupados) e laranjas (manutenção) baseados na imagem
-    if ([1, 5, 12, 25].includes(i)) status = 'ocupado';
-    if (i === 20) status = 'manutencao';
-    
-    armariosDados.push({ id: i, status: status });
-}
+document.addEventListener("DOMContentLoaded", function () {
+    const cards = Array.from(document.querySelectorAll("[data-armario-card]"));
+    const botoesFiltro = Array.from(document.querySelectorAll("[data-filtro]"));
+    const modal = document.getElementById("modal-armario");
+    const form = document.getElementById("form-armario");
+    const modalTitulo = document.getElementById("modal-titulo");
+    const modalSubtitulo = document.getElementById("modal-subtitulo");
+    const modalInfo = document.getElementById("modal-info");
+    const inputArmarioId = document.getElementById("modal-armario-id");
+    const selectStatus = document.getElementById("modal-status");
+    const selectUsuario = document.getElementById("modal-usuario");
+    const inputObservacoes = document.getElementById("modal-observacoes");
+    const campoUsuario = document.querySelector(".campo-usuario");
+    const campoObservacao = document.querySelector(".campo-observacao");
+    const btnFechar = document.getElementById("btn-fechar-modal");
+    const btnCancelar = document.getElementById("btn-cancelar");
 
-let armarioSelecionadoId = null;
-
-// Renderizar o grid de armários dinamicamente
-function renderizarGrid(filtro = 'todos') {
-    const container = document.getElementById('container-grid-armarios');
-    if (!container) return;
-    container.innerHTML = '';
-
-    armariosDados.forEach(armario => {
-        if (filtro !== 'todos' && armario.status !== filtro) return;
-
-        const btn = document.createElement('button');
-        btn.className = `card-armario armario-${armario.status}`;
-        
-        // Define o ícone correto baseado no estado atual
-        let icone = 'fa-lock-open';
-        if (armario.status === 'ocupado') icone = 'fa-lock';
-        if (armario.status === 'manutencao') icone = 'fa-wrench';
-
-        btn.innerHTML = `
-            <i class="fa-solid ${icone}" style="font-size: 16px;"></i>
-            <span>${armario.id}</span>
-        `;
-
-        // Regra de negócio: clique só funciona e abre tela se for VERDE (disponível)
-        btn.onclick = () => {
-            if (armario.status === 'disponivel') {
-                abrirModalArmario(armario.id);
-            } else {
-                alert(`Armário #${armario.id} não está disponível para modificação direta (Status: ${armario.status.toUpperCase()}).`);
-            }
-        };
-
-        container.appendChild(btn);
-    });
-}
-
-// Alternar entre os filtros de visualização superior
-function filtrarArmarios(status) {
-    const botoes = document.querySelectorAll('.btn-periodo');
-    botoes.forEach(btn => btn.classList.remove('active'));
-    
-    if (event && event.target) {
-        event.target.classList.add('active');
+    function aplicarFiltro(status) {
+        cards.forEach(function (card) {
+            const statusCard = card.getAttribute("data-status");
+            card.style.display = !status || statusCard === status ? "" : "none";
+        });
     }
 
-    renderizarGrid(status);
-}
+    function atualizarCamposModal() {
+        const status = selectStatus ? selectStatus.value : "";
 
-// Abrir a tela modal customizada (Imagem 4)
-function abrirModalArmario(id) {
-    armarioSelecionadoId = id;
-    document.getElementById('modal-titulo-armario').innerText = `Armário #${id}`;
-    document.getElementById('modal-armario').style.display = 'flex';
-}
+        if (campoUsuario) {
+            campoUsuario.style.display = status === "ocupado" ? "" : "none";
+        }
 
-// Função do Botão Azul (Atribuir Associado)
-function atribuirAssociado() {
-    alert(`Redirecionando/Ação para Atribuir Associado ao Armário #${armarioSelecionadoId}`);
-    document.getElementById('modal-armario').style.display = 'none';
-}
+        if (selectUsuario) {
+            selectUsuario.required = status === "ocupado";
+        }
 
-// Função do Botão Laranja (Marcar Manutenção)
-function marcarManutencao() {
-    alert(`Armário #${armarioSelecionadoId} foi colocado na lista de manutenção.`);
-    document.getElementById('modal-armario').style.display = 'none';
-}
+        if (campoObservacao) {
+            campoObservacao.style.display = status === "manutencao" ? "" : "none";
+        }
 
-// Exportação para arquivo Excel (.csv tratado com cabeçalho legível)
-function exportarParaExcel() {
-    // Adiciona o caractere BOM (\uFEFF) para forçar o Excel a ler os acentos e pontuação em UTF-8 corretamente
-    let conteudoCsv = "\uFEFFID do Armário,Status do Armário\n";
-    
-    armariosDados.forEach(a => {
-        let statusFormatado = "DISPONÍVEL";
-        if (a.status === 'ocupado') statusFormatado = "OCUPADO";
-        if (a.status === 'manutencao') statusFormatado = "EM MANUTENÇÃO";
-        
-        conteudoCsv += `${a.id},${statusFormatado}\n`;
+        if (inputObservacoes) {
+            inputObservacoes.required = status === "manutencao";
+        }
+    }
+
+    function abrirModal(card) {
+        const numero = card.getAttribute("data-numero") || "";
+        const status = card.getAttribute("data-status") || "disponivel";
+        const associadoId = card.getAttribute("data-associado-id") || "0";
+        const observacoes = card.getAttribute("data-observacoes") || "";
+        const nome = card.getAttribute("data-nome") || "";
+        const matricula = card.getAttribute("data-matricula") || "";
+
+        if (modalTitulo) modalTitulo.textContent = "Armario #" + numero;
+        if (modalSubtitulo) modalSubtitulo.textContent = "Status atual: " + status;
+        if (modalInfo) {
+            modalInfo.textContent = nome ? (nome + (matricula ? " - " + matricula : "")) : "Sem associado vinculado.";
+        }
+        if (inputArmarioId) inputArmarioId.value = card.getAttribute("data-id") || "";
+        if (selectStatus) selectStatus.value = status;
+        if (selectUsuario) selectUsuario.value = associadoId;
+        if (inputObservacoes) inputObservacoes.value = observacoes;
+
+        atualizarCamposModal();
+
+        if (modal) {
+            modal.classList.add("open");
+            modal.setAttribute("aria-hidden", "false");
+        }
+    }
+
+    function fecharModal() {
+        if (modal) {
+            modal.classList.remove("open");
+            modal.setAttribute("aria-hidden", "true");
+        }
+    }
+
+    botoesFiltro.forEach(function (botao) {
+        botao.addEventListener("click", function () {
+            botoesFiltro.forEach(function (item) {
+                item.classList.remove("active");
+            });
+            botao.classList.add("active");
+            aplicarFiltro(botao.getAttribute("data-filtro") || "");
+        });
     });
 
-    const blob = new Blob([conteudoCsv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "controle_de_armarios_aapm.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+    cards.forEach(function (card) {
+        card.addEventListener("click", function () {
+            abrirModal(card);
+        });
+    });
 
-// Gatilho inicial ao carregar a página
-document.addEventListener('DOMContentLoaded', () => {
-    renderizarGrid();
+    if (selectStatus) {
+        selectStatus.addEventListener("change", atualizarCamposModal);
+    }
+
+    if (form) {
+        form.addEventListener("submit", function (event) {
+            if (selectStatus && selectStatus.value === "ocupado" && selectUsuario && selectUsuario.value === "0") {
+                event.preventDefault();
+                alert("Selecione um associado cadastrado para ocupar o armario.");
+            }
+        });
+    }
+
+    if (btnFechar) btnFechar.addEventListener("click", fecharModal);
+    if (btnCancelar) btnCancelar.addEventListener("click", fecharModal);
+    if (modal) {
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) fecharModal();
+        });
+    }
 });

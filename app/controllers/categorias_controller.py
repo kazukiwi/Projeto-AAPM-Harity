@@ -8,6 +8,7 @@ from typing import Optional # <-- Importado para permitir descrição vazia
 
 from app.database import get_db
 from app.models.categoria import Categoria
+from app.models.produtos import Produto
 from app.auth import get_admin
 
 router = APIRouter(prefix="/categorias", tags=["categorias"])
@@ -115,6 +116,7 @@ def editar_categoria(
     request: Request,
     nome: str = Form(...),
     descricao: Optional[str] = Form(None), # <-- 3. CAPTURA A DESCRIÇÃO NA EDIÇÃO
+    ativo: bool = Form(True),
     db: Session = Depends(get_db),
     admin = Depends(get_admin)
 ):
@@ -147,6 +149,12 @@ def editar_categoria(
     # <-- 4. ATUALIZA A DESCRIÇÃO NO BANCO
     editando.nome = nome.strip()
     editando.descricao = descricao.strip() if descricao else None
+    editando.ativo = ativo
+
+    db.query(Produto).filter(Produto.categoria_id == categoria_id).update(
+        {Produto.ativo: ativo},
+        synchronize_session=False,
+    )
     db.commit() 
 
     return RedirectResponse("/categorias/", status_code=302)

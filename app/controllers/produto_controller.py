@@ -3,6 +3,7 @@ import math
 import os
 import shutil
 import uuid
+from pathlib import Path
 from fastapi import APIRouter, Depends, Request, Form, UploadFile, File, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -11,17 +12,49 @@ from sqlalchemy import func
 from app.models.movimentacao import Movimentacao
 
 from app.database import get_db
-from app.models.produtos import Produto
+from app.models.produtos import Produto, EstoqueTamanho, Tamanho, ordenar_tamanhos
 from app.models.categoria import Categoria
 from app.auth import get_usuario_logado, get_admin
 
 router = APIRouter(prefix="/produtos", tags=["Produtos"])
 
-templates = Jinja2Templates(directory="app/templates")
+APP_DIR = Path(__file__).resolve().parents[1]
+STATIC_DIR = APP_DIR / "static"
+UPLOAD_DIR = STATIC_DIR / "uploads"
+
+templates = Jinja2Templates(directory=APP_DIR / "templates")
 
 # Pasta onde as imagens serão salvas dentro de /static
-UPLOAD_DIR = "app/static/uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)  # cria a pasta se não existir
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+def _salvar_estoques_tamanho(produto: Produto, possui_variacoes_tamanho: bool, estoques: dict[int, int]) -> None:
+    if not possui_variacoes_tamanho:
+        produto.estoques_tamanho.clear()
+        return
+
+    existentes = {registro.tamanho_id: registro for registro in produto.estoques_tamanho}
+    for tamanho_id, quantidade in estoques.items():
+        registro = existentes.get(tamanho_id)
+        if registro:
+            registro.estoque_atual = quantidade
+        else:
+            produto.estoques_tamanho.append(EstoqueTamanho(tamanho_id=tamanho_id, estoque_atual=quantidade))
+    produto.estoque_atual = sum(estoques.values())
+
+
+async def _obter_estoques_tamanho(request: Request, db: Session) -> dict[int, int]:
+    """Lê os campos dinâmicos estoque_tamanho_<id>."""
+    form = await request.form()
+    tamanhos = db.query(Tamanho).filter(Tamanho.ativo == True).all()
+    estoques = {}
+    for tamanho in tamanhos:
+        try:
+            quantidade = int(form.get(f"estoque_tamanho_{tamanho.id}", 0) or 0)
+        except (TypeError, ValueError):
+            raise ValueError("estoque inválido")
+        if quantidade < 0:
+            raise ValueError("estoque inválido")
+        estoques[tamanho.id] = quantidade
+    return estoques
 
 
 # ============================================================
@@ -90,6 +123,7 @@ def form_novo_produto(
     admin = Depends(get_admin)
 ):
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     return templates.TemplateResponse(
         request,
@@ -98,7 +132,8 @@ def form_novo_produto(
             "request":    request,
             "usuario":    admin,
             "editando":   None,
-            "categorias": categorias
+            "categorias": categorias,
+            "tamanhos": tamanhos,
         }
     )
 
@@ -108,16 +143,17 @@ async def criar_produto(
     request: Request,
     nome: str          = Form(...),
     preco: float       = Form(...),
-    estoque_atual: int = Form(...),
+    estoque_atual: int = Form(0),
+    possui_variacoes_tamanho: bool = Form(False),
     categoria_id: int  = Form(0),   # 0 = sem categoria
     imagem: UploadFile = File(None), # None = campo opcional
     db: Session        = Depends(get_db),
     admin              = Depends(get_admin)
 ):
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     # Verifica duplicidade de nome
-    # ilike() para comparação case-insensitive, evitando produtos "Camiseta" e "camiseta".
     if db.query(Produto).filter(Produto.nome.ilike(nome)).first():
         return templates.TemplateResponse(
             request,
@@ -127,24 +163,55 @@ async def criar_produto(
                 "usuario":    admin,
                 "editando":   None,
                 "categorias": categorias,
+                "tamanhos": tamanhos,
                 "erro":       "Já existe um produto com este nome.",
                 "valores":    {"nome": nome, "preco": preco,
                                "estoque_atual": estoque_atual,
-                               "categoria_id": categoria_id}
+                               "categoria_id": categoria_id,
+                               "possui_variacoes_tamanho": possui_variacoes_tamanho}
             },
             status_code=400
         )
 
-    # Processa o upload da imagem
+    # O preço é armazenado em reais, na mesma unidade usada pelo PDV e pelas vendas.
+    try:
+        estoques_tamanho = await _obter_estoques_tamanho(request, db)
+    except ValueError:
+        return RedirectResponse(url="/produtos/novo?erro=estoque", status_code=302)
+    if possui_variacoes_tamanho and sum(estoques_tamanho.values()) == 0:
+        return templates.TemplateResponse(
+            request,
+            "produtos/form.html",
+            {
+                "request": request,
+                "usuario": admin,
+                "editando": None,
+                "categorias": categorias,
+                "tamanhos": tamanhos,
+                "erro": "Informe a quantidade de pelo menos um tamanho.",
+                "valores": {
+                    "nome": nome, "preco": preco, "estoque_atual": estoque_atual,
+                    "estoques_tamanho": {str(k): v for k, v in estoques_tamanho.items()},
+                    "categoria_id": categoria_id,
+                    "possui_variacoes_tamanho": possui_variacoes_tamanho,
+                },
+            },
+            status_code=400,
+        )
+
+    # Processa o upload da imagem após validar os dados do produto.
     imagem_path = await _salvar_imagem(imagem)
 
     produto = Produto(
         nome          = nome,
         preco         = preco,
-        estoque_atual = estoque_atual,
+        estoque_atual = sum(estoques_tamanho.values()) if possui_variacoes_tamanho else estoque_atual,
+        possui_variacoes_tamanho = possui_variacoes_tamanho,
         categoria_id  = categoria_id or None,  # 0 vira NULL no banco
         imagem_path   = imagem_path,
     )
+    if possui_variacoes_tamanho:
+        _salvar_estoques_tamanho(produto, possui_variacoes_tamanho, estoques_tamanho)
 
     db.add(produto)
     db.commit()
@@ -175,7 +242,6 @@ def detalhe_produto(
     )
 
 
-
 # EDIÇÃO
 @router.get("/{produto_id}/editar")
 def form_editar_produto(
@@ -186,6 +252,7 @@ def form_editar_produto(
 ):
     editando   = db.query(Produto).filter(Produto.id == produto_id).first()
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     if not editando:
         return RedirectResponse(url="/produtos", status_code=302)
@@ -197,7 +264,8 @@ def form_editar_produto(
             "request":    request,
             "usuario":    admin,
             "editando":   editando,
-            "categorias": categorias
+            "categorias": categorias,
+            "tamanhos": tamanhos,
         }
     )
 
@@ -208,7 +276,8 @@ async def editar_produto(
     request: Request,
     nome: str          = Form(...),
     preco: float       = Form(...),
-    estoque_atual: int = Form(...),
+    estoque_atual: int = Form(0),
+    possui_variacoes_tamanho: bool = Form(False),
     categoria_id: int  = Form(0),
     imagem: UploadFile = File(None),
     db: Session        = Depends(get_db),
@@ -216,6 +285,7 @@ async def editar_produto(
 ):
     editando   = db.query(Produto).filter(Produto.id == produto_id).first()
     categorias = db.query(Categoria).filter(Categoria.ativo == True).all()
+    tamanhos = ordenar_tamanhos(db.query(Tamanho).filter(Tamanho.ativo == True).all())
 
     if not editando:
         return RedirectResponse(url="/produtos", status_code=302)
@@ -235,12 +305,33 @@ async def editar_produto(
                 "usuario":    admin,
                 "editando":   editando,
                 "categorias": categorias,
+                "tamanhos": tamanhos,
                 "erro":       "Já existe outro produto com este nome.",
             },
             status_code=400
         )
 
-    # Processa nova imagem — só substitui se um arquivo foi enviado
+    # Mantém o preço em reais ao atualizar o cadastro.
+    try:
+        estoques_tamanho = await _obter_estoques_tamanho(request, db)
+    except ValueError:
+        return RedirectResponse(url=f"/produtos/{produto_id}/editar?erro=estoque", status_code=302)
+    if possui_variacoes_tamanho and sum(estoques_tamanho.values()) == 0:
+        return templates.TemplateResponse(
+            request,
+            "produtos/form.html",
+            {
+                "request": request,
+                "usuario": admin,
+                "editando": editando,
+                "categorias": categorias,
+                "tamanhos": tamanhos,
+                "erro": "Informe a quantidade de pelo menos um tamanho.",
+            },
+            status_code=400,
+        )
+
+    # Processa nova imagem — só substitui se um arquivo foi enviado.
     nova_imagem_path = await _salvar_imagem(imagem)
     if nova_imagem_path:
         # Remove a imagem antiga do disco para não acumular arquivos
@@ -250,7 +341,9 @@ async def editar_produto(
     editando.nome          = nome
     editando.preco         = preco
     editando.estoque_atual = estoque_atual
+    editando.possui_variacoes_tamanho = possui_variacoes_tamanho
     editando.categoria_id  = categoria_id or None
+    _salvar_estoques_tamanho(editando, possui_variacoes_tamanho, estoques_tamanho)
 
     db.commit()
 
@@ -282,13 +375,9 @@ def desativar_produto(
 
 async def _salvar_imagem(imagem: UploadFile | None):
     """
-    Salva o arquivo enviado em /static/uploads/ e retorna
+    Salva o arquivo enviado em /app/static/uploads/ e retorna
     o path relativo para guardar no banco.
-
-    Retorna None se nenhum arquivo foi enviado ou se o
-    arquivo enviado estiver vazio (campo deixado em branco).
     """
-    # UploadFile com filename vazio = campo não preenchido
     if not imagem or not imagem.filename:
         return None
 
@@ -297,19 +386,17 @@ async def _salvar_imagem(imagem: UploadFile | None):
     _, ext = os.path.splitext(imagem.filename.lower())
 
     if ext not in extensoes_permitidas:
-        return None  # ignora silenciosamente — pode virar erro em produção
+        return None
 
-    # Garante nome de arquivo único usando o nome original
-    # Em produção: use uuid4() para evitar colisões e exposição de nomes
-    # nome_arquivo = f"{imagem.filename}"
+    # Garante nome de arquivo único usando UUID para evitar colisões
     nome_arquivo = f"{uuid.uuid4()}{ext}"
-    caminho_completo = os.path.join(UPLOAD_DIR, nome_arquivo)
+    caminho_completo = UPLOAD_DIR / nome_arquivo
 
     # Salva o arquivo no disco
     with open(caminho_completo, "wb") as buffer:
         shutil.copyfileobj(imagem.file, buffer)
 
-    # Retorna o path relativo ao /static (para montar a URL)
+    # Retorna o path relativo que a propriedade do modelo espera encontrar
     return f"uploads/{nome_arquivo}"
 
 
@@ -318,10 +405,24 @@ def _remover_imagem(imagem_path: str | None) -> None:
     if not imagem_path:
         return
 
-    caminho = os.path.join("app/static", imagem_path)
+    # Remove referências de barras iniciais repetidas
+    imagem_path_limpo = imagem_path.strip().lstrip('/').replace("\\", "/")
+    
+    # Se o path salvo já continha 'static/', removemos para não duplicar com o join abaixo
+    if imagem_path_limpo.startswith("static/"):
+        imagem_path_limpo = imagem_path_limpo.replace("static/", "", 1)
 
-    if os.path.exists(caminho):
-        os.remove(caminho)
+    caminho = (STATIC_DIR / imagem_path_limpo).resolve()
+
+    # Nunca remove arquivos fora da pasta estática, mesmo se o banco tiver um caminho inválido.
+    try:
+        caminho.relative_to(STATIC_DIR.resolve())
+    except ValueError:
+        return
+
+    if caminho.is_file():
+        caminho.unlink()
+
 
 @router.get("/mais-vendidos")
 def mais_vendidos(db: Session = Depends(get_db)):
@@ -331,19 +432,4 @@ def mais_vendidos(db: Session = Depends(get_db)):
             Produto.nome,
             func.sum(Movimentacao.quantidade).label("total_vendido")
         )
-        .join(Movimentacao, Movimentacao.produto_id == Produto.id)
-        .filter(Movimentacao.tipo == "saida")
-        .group_by(Produto.id, Produto.nome)
-        .order_by(func.sum(Movimentacao.quantidade).desc())
-        .limit(10)
-        .all()
     )
-
-    return [
-        {
-            "id": r.id,
-            "nome": r.nome,
-            "total_vendido": int(r.total_vendido)
-        }
-        for r in resultado
-    ]

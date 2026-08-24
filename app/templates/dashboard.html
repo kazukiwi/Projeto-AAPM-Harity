@@ -8,6 +8,8 @@
 
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="icon" href="../static/img/image.ico" type="image/x-icon">
 </head>
 
 <body>
@@ -20,12 +22,16 @@
                 </a>
             </div>
             <ul class="menu">
-                <li><a href="/"class="active">Dashboard</a></li>
-                <li><a href="/produtos" >Produtos</a></li>
-                <a href="/pdv/historico">Vendas</a>
-                <li><a href="/mais_vendidos">Mais vendidos</a></li>
-                <li><a href="/armarios">Armários</a></li>
+                <li><a href="/" class="active">Dashboard</a></li>
+                <li><a href="/produtos">Produtos</a></li>
                 {% if usuario.role == 'admin' %}
+                <li><a href="/clientes">Clientes</a></li>
+                {% endif %}
+                <li><a href="/pdv/historico">Vendas</a></li>
+                <li><a href="/mais_vendidos">Mais vendidos</a></li>
+                {% if usuario.role == 'admin' %}
+                <li><a href="/armarios">Armários</a></li>
+
                 <li><a href="/usuarios" class="nav-link">
                     <i data-lucide="users"></i> Usuários
                 </a></li>
@@ -33,11 +39,11 @@
                     <i data-lucide="tag"></i> Categorias
                 </a></li>
                 {% endif %}
+                
                 <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
             </ul>
         </nav>
     </header>
-
 
     <div class="dashboard">
 
@@ -101,6 +107,14 @@
                 <i class="fa-solid fa-lock-open"></i>
             </div>
 
+            <div class="card vermelho">
+                <div>
+                    <span>Armários em Manutenção</span>
+                    <h3 id="armarios-manutencao">{{ armarios_manutencao | default(0) }}</h3>
+                </div>
+                <i class="fa-solid fa-wrench"></i>
+            </div>
+
             <div class="card roxo">
                 <div>
                     <span>Total de Associados</span>
@@ -140,7 +154,7 @@
                         <div class="lista-customizada">
                             {% for cat, qtd in contagem_por_categoria.items() %}
                                 <div class="item-lista" style="display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f3f4f6; align-items: center;">
-                                    <span style="font-weight: 500; color: #374151;">{{ cat.nome }}</span>
+                                    <span style="font-weight: 500; color: #374151;">{{ cat }}</span>
                                     <span style="background-color: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold;">{{ qtd }} {{ 'produto' if qtd == 1 else 'produtos' }}</span>
                                 </div>
                             {% endfor %}
@@ -155,17 +169,11 @@
     </div>
 
     <footer class="main-footer">
-        <div class="footer-content">
+        <div class="footer-content" style="text-align:center; padding:20px; color:#ffffff;">
             <p>&copy; 2026 AAPM - SENAI. Todos os direitos reservados.</p>
-            <div class="footer-links">
-                <a href="#">Termos de Uso</a>
-                <a href="#">Política de Privacidade</a>
-                <a href="#">Suporte</a>
-            </div>
         </div>
     </footer>
 
-    <script src="/static/javascript/dashboard.js"></script>
 </body>
 
 </html>

@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/img/image.ico" type="image/x-icon">
     <title>Gerenciamento de Usuários</title>
     <link rel="stylesheet" href="/static/css/usuarios.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -79,14 +80,20 @@
             <ul class="menu">
                 <li><a href="/">Dashboard</a></li>
                 <li><a href="/produtos">Produtos</a></li>
+                {% if usuario.role == 'admin' %}
+                <li><a href="/clientes">Clientes</a></li>
+                {% endif %}
                 <li><a href="/pdv/historico">Vendas</a></li>
                 <li><a href="/mais_vendidos">Mais vendidos</a></li>
+                {% if usuario.role == 'admin' %}
                 <li><a href="/armarios">Armários</a></li>
 
-                {# Proteção contra UndefinedError do Jinja2 #}
-                {% if usuario is defined and usuario and usuario.role == 'admin' %}
-                <li><a href="/usuarios" class="active">Usuários</a></li>
-                <li><a href="/categorias">Categorias</a></li>
+                <li><a href="/usuarios"class="active">
+                     Usuários
+                </a></li>
+                <li><a href="/categorias">
+                    Categorias
+                </a></li>
                 {% endif %}
 
                 <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
@@ -204,12 +211,8 @@
     </main>
 
     <footer class="main-footer">
-        <div class="footer-content">
-            <p>&copy; 2026 AAPM. Todos os direitos reservados.</p>
-            <div class="footer-links">
-                <a href="#">Suporte</a>
-                <a href="#">Privacidade</a>
-            </div>
+        <div class="footer-content" style="text-align:center; padding:20px; color:#ffffff;">
+            <p>&copy; 2026 AAPM - SENAI. Todos os direitos reservados.</p>
         </div>
     </footer>
 

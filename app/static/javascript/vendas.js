@@ -2,15 +2,24 @@ let carrinho = [];
 
 document.addEventListener('DOMContentLoaded', function () {
     const selectProd = document.getElementById('select-prod');
+    const selectCliente = document.getElementById('select-cliente');
     const grupoTamanho = document.getElementById('grupo-tamanho');
     const selectTamanho = document.getElementById('pdv-tamanho');
     const formAddItem = document.getElementById('form-add-item-pdv');
+
+    function atualizarEstoqueDoTamanho() {
+        if (!selectProd || !selectTamanho || !selectProd.value || !selectTamanho.value) return;
+        const option = selectProd.options[selectProd.selectedIndex];
+        const estoque = parseInt(option.getAttribute(`data-tamanho-${selectTamanho.value}`) || '0');
+        document.getElementById('pdv-estoque').value = `${estoque} un`;
+        document.getElementById('pdv-qtd').max = estoque;
+    }
 
     // 1. Monitora a mudança do produto para atualizar campos e exibir tamanho se for camiseta
     if (selectProd) {
         selectProd.addEventListener('change', function () {
             const selectedOption = this.options[this.selectedIndex];
-            const nomeProduto = selectedOption.getAttribute('data-nome') || '';
+            const possuiVariacoes = selectedOption.getAttribute('data-possui-variacoes') === 'true';
             const preco = selectedOption.getAttribute('data-preco');
             const estoque = selectedOption.getAttribute('data-estoque');
 
@@ -23,11 +32,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             document.getElementById('pdv-qtd').value = 1;
 
-            // Verifica se o termo 'camiseta' existe no nome do produto
-            if (nomeProduto.toLowerCase().includes('camiseta')) {
+            if (grupoTamanho && selectTamanho && possuiVariacoes) {
                 grupoTamanho.style.display = 'block';
                 selectTamanho.required = true;
-            } else {
+                selectTamanho.value = '';
+                Array.from(selectTamanho.options).forEach(opcao => {
+                    if (!opcao.value) return;
+                    const saldo = parseInt(selectedOption.getAttribute(`data-tamanho-${opcao.value}`) || '0');
+                    opcao.disabled = saldo <= 0;
+                    opcao.textContent = `${opcao.value} (${saldo} un)`;
+                });
+            } else if (grupoTamanho && selectTamanho) {
                 grupoTamanho.style.display = 'none';
                 selectTamanho.required = false;
                 selectTamanho.value = '';
@@ -36,26 +51,38 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // 2. Controla a inserção do item no carrinho local
+    if (selectTamanho) {
+        selectTamanho.addEventListener('change', atualizarEstoqueDoTamanho);
+    }
+
     if (formAddItem) {
         formAddItem.addEventListener('submit', function (e) {
             e.preventDefault();
+
+            if (!selectProd || !selectProd.value) return;
 
             const option = selectProd.options[selectProd.selectedIndex];
             if (!selectProd.value) return;
 
             const pId = parseInt(selectProd.value);
-            let nome = option.getAttribute('data-nome');
+            const nome = option.getAttribute('data-nome');
             const preco = parseFloat(option.getAttribute('data-preco'));
-            const estoqueMax = parseInt(option.getAttribute('data-estoque'));
             const qtd = parseInt(document.getElementById('pdv-qtd').value);
+            const tamanhoId = grupoTamanho && grupoTamanho.style.display === 'block'
+                ? selectTamanho.value
+                : null;
+            const tamanho = tamanhoId ? selectTamanho.options[selectTamanho.selectedIndex].textContent.split(' (')[0] : null;
 
-            // Injeta o tamanho na string do nome se o campo estiver ativo e preenchido
-            if (grupoTamanho.style.display === 'block' && selectTamanho.value) {
-                nome = `${nome} (Tam: ${selectTamanho.value})`;
+            if (grupoTamanho && grupoTamanho.style.display === 'block' && !tamanhoId) {
+                selectTamanho.reportValidity();
+                return;
             }
 
             // Evita duplicados idênticos (mesmo ID e mesmo Tamanho)
-            const itemExistente = carrinho.find(item => item.produto_id === pId && item.nome === nome);
+            const estoqueMax = tamanhoId
+                ? parseInt(option.getAttribute(`data-tamanho-${tamanhoId}`) || '0')
+                : parseInt(option.getAttribute('data-estoque'));
+            const itemExistente = carrinho.find(item => item.produto_id === pId && item.tamanho_id === tamanhoId);
 
             if (itemExistente) {
                 if (itemExistente.quantidade + qtd > estoqueMax) {
@@ -72,7 +99,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     produto_id: pId,
                     nome: nome,
                     preco: preco,
-                    quantidade: qtd
+                    quantidade: qtd,
+                    tamanho: tamanho,
+                    tamanho_id: tamanhoId
                 });
             }
 
@@ -83,9 +112,17 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('pdv-estoque').value = "--";
             document.getElementById('pdv-preco').value = "R$ 0,00";
             document.getElementById('pdv-qtd').value = 1;
-            grupoTamanho.style.display = 'none';
-            selectTamanho.required = false;
-            selectTamanho.value = '';
+            if (grupoTamanho && selectTamanho) {
+                grupoTamanho.style.display = 'none';
+                selectTamanho.required = false;
+                selectTamanho.value = '';
+            }
+        });
+    }
+
+    if (selectCliente) {
+        selectCliente.addEventListener('change', function () {
+            atualizarTabelaCarrinho();
         });
     }
 });
@@ -93,9 +130,13 @@ document.addEventListener('DOMContentLoaded', function () {
 // 3. Atualiza a exibição da tabela do carrinho e do input serializado
 function atualizarTabelaCarrinho() {
     const corpo = document.getElementById('corpo-carrinho-pdv');
+    const totalBrutoTxt = document.getElementById('pdv-total-bruto');
     const totalTxt = document.getElementById('pdv-total-geral');
+    const descontoTxt = document.getElementById('pdv-desconto');
+    const linhaDesconto = document.getElementById('pdv-linha-desconto');
     const btnFinalizar = document.getElementById('btn-salvar-venda-banco');
     const hiddenInput = document.getElementById('carrinho_json_input');
+    const selectCliente = document.getElementById('select-cliente');
 
     if (!corpo) return;
     corpo.innerHTML = "";
@@ -107,7 +148,7 @@ function atualizarTabelaCarrinho() {
 
         corpo.innerHTML += `
             <tr>
-                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>${item.nome}</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>${item.nome}${item.tamanho ? ` (Tam: ${item.tamanho})` : ''}</strong></td>
                 <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${item.quantidade}x</td>
                 <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
                 <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: center;">
@@ -119,7 +160,17 @@ function atualizarTabelaCarrinho() {
         `;
     });
 
-    if (totalTxt) totalTxt.textContent = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+    const clienteSelecionado = selectCliente ? selectCliente.options[selectCliente.selectedIndex] : null;
+    const associado = clienteSelecionado && clienteSelecionado.getAttribute('data-associado') === 'true';
+    const descontoPadrao = selectCliente ? parseFloat(selectCliente.getAttribute('data-desconto-associado') || '10') : 10;
+    const descontoPercentual = associado ? descontoPadrao : 0;
+    const descontoValor = totalGeral * (descontoPercentual / 100);
+    const totalFinal = totalGeral - descontoValor;
+
+    if (totalBrutoTxt) totalBrutoTxt.textContent = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+    if (descontoTxt) descontoTxt.textContent = `- R$ ${descontoValor.toFixed(2).replace('.', ',')}`;
+    if (linhaDesconto) linhaDesconto.style.display = associado && totalGeral > 0 ? "flex" : "none";
+    if (totalTxt) totalTxt.textContent = `R$ ${totalFinal.toFixed(2).replace('.', ',')}`;
     if (hiddenInput) hiddenInput.value = JSON.stringify(carrinho);
 
     if (btnFinalizar) {
