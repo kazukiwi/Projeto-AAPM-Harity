@@ -8,6 +8,7 @@
     <title>Produtos - AAPM</title>
 
     <link class="cdn" rel="stylesheet" href="/static/css/produtos.css">
+    <link rel="stylesheet" href="/static/css/listagem.css">
     <link class="cdn" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
@@ -82,9 +83,10 @@
                 <span>Apenas estoque baixo</span>
             </label>
         </form>
+        <div class="listagem-acoes"><span>Use os filtros para refinar a lista.</span><label>Ordenar <select id="ordem-produtos" class="listagem-ordem"><option value="asc">Nome: A–Z</option><option value="desc">Nome: Z–A</option></select></label></div>
 
         <div class="tabela-container">
-            <table class="tabela-produtos">
+            <table class="tabela-produtos" data-listagem data-busca="#input-busca" data-ordem="#ordem-produtos" data-por-pagina="8">
                 <thead>
                     <tr>
                         <th>IMAGEM</th>
@@ -231,6 +233,7 @@
 
 
     <script src="/static/javascript/produtos.js"></script>
+    <script src="/static/javascript/listagem.js"></script>
 </body>
 
 </html>

@@ -8,6 +8,7 @@
     <title>Histórico de Vendas - AAPM</title>
 
     <link rel="stylesheet" href="{{ url_for('static', path='css/vendas.css') }}">
+    <link rel="stylesheet" href="/static/css/listagem.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
@@ -85,9 +86,10 @@
         <div class="card-historico">
             <h3>Lista de Vendas Registradas</h3>
             <p class="sub-contador">{{ vendas | length }} registros encontrados</p>
+            <div class="listagem-acoes"><input id="busca-vendas" class="listagem-ordem" type="search" placeholder="Buscar por ID, data ou valor"><label>Ordenar <select id="ordem-vendas" class="listagem-ordem"><option value="asc">ID crescente</option><option value="desc">ID decrescente</option></select></label></div>
             
             <div class="tabela-container">
-                <table class="tabela-vendas">
+                <table class="tabela-vendas" data-listagem data-busca="#busca-vendas" data-ordem="#ordem-vendas" data-por-pagina="8">
                     <thead>
                         <tr>
                             <th>ID VENDA</th>
@@ -280,5 +282,6 @@
     </footer>
 
     <script src="{{ url_for('static', path='javascript/vendas.js') }}?v=20260818"></script>
+    <script src="/static/javascript/listagem.js"></script>
 </body>
 </html>
