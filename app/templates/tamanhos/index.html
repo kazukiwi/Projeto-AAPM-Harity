@@ -7,13 +7,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
-    <header><nav class="navbar"><div class="logo"><a href="/"><img src="/static/img/logo.png" alt="Logo AAPM"></a></div><ul class="menu">
+    {% if false %}<header><nav class="navbar"><div class="logo"><a href="/"><img src="/static/img/logo.png" alt="Logo AAPM"></a></div><ul class="menu">
         <li><a href="/">Dashboard</a></li><li><a href="/produtos" class="active">Produtos</a></li>
         {% if usuario.role == 'admin' %}<li><a href="/clientes">Clientes</a></li>{% endif %}
         <li><a href="/pdv/historico">Vendas</a></li><li><a href="/mais_vendidos">Mais vendidos</a></li>
         {% if usuario.role == 'admin' %}<li><a href="/armarios">Armários</a></li><li><a href="/usuarios">Usuários</a></li><li><a href="/categorias">Categorias</a></li>{% endif %}
         <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
-    </ul></nav></header>
+    </ul></nav></header>{% endif %}
+    {% include "partials/navbar.html" %}
     <main class="main-content">
         <div class="page-header"><div><h1>Gerenciamento de Tamanhos</h1><p class="page-subtitle">Cadastre os tamanhos disponíveis para produtos com variações.</p></div><a href="/produtos" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Voltar aos produtos</a></div>
         {% if request.query_params.get('criado') == 'ok' %}<div class="alert-box alert-success"><i data-lucide="check-circle"></i> Tamanho cadastrado com sucesso!</div>{% endif %}

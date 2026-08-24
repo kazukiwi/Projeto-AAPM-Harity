@@ -9,7 +9,7 @@ from app.auth import get_admin, hash_senha, verificar_senha, criar_token
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 
-templates = Jinja2Templates(directory="app/templates/users")
+templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 def listar_usuarios(
@@ -20,7 +20,7 @@ def listar_usuarios(
     usuarios = db.query(Usuario).order_by(Usuario.nome)
     return templates.TemplateResponse(
         request,
-        "index.html", 
+        "users/index.html",
         {
             "request": request, 
             "usuarios": usuarios,
@@ -35,7 +35,7 @@ def form_novo_usuario(
 ):
     return templates.TemplateResponse(
         request,
-        "criar_usuarios.html",
+        "users/criar_usuarios.html",
         {
             "request": request,
             "usuario": admin
@@ -55,7 +55,7 @@ def cadastrar_usuario(
     if usuario_existente:
         return templates.TemplateResponse(
             request,
-            "templates/users/criar_usuarios.html",
+            "users/criar_usuarios.html",
             {"request": request, "erro": "E-mail já cadastrado"}
         )
     

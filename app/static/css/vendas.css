@@ -133,6 +133,14 @@ body {
     background-color: #047857;
 }
 
+.btn-finalizar-dia:disabled { cursor: wait; opacity: .75; }
+.modal-finalizar-dia { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15,23,42,.52); }
+.modal-finalizar-dia.aberto { display: flex; }
+.modal-finalizar-dia-card { width: min(430px, 100%); padding: 30px; border-radius: 14px; text-align: center; background: #fff; box-shadow: 0 25px 60px rgba(15,23,42,.3); }
+.modal-finalizar-dia-icon { width: 56px; height: 56px; display: grid; place-items: center; margin: 0 auto 15px; border-radius: 50%; color: #047857; background: #d1fae5; font-size: 23px; }
+.modal-finalizar-dia-card h2 { margin: 0 0 10px; color: #0f172a; font-size: 22px; }.modal-finalizar-dia-card p { margin: 0; color: #64748b; font-size: 14px; line-height: 1.55; }
+.modal-finalizar-dia-acoes { display: flex; justify-content: center; gap: 10px; margin-top: 24px; }.btn-cancelar-finalizacao,.btn-confirmar-finalizacao { border: 0; border-radius: 7px; padding: 11px 14px; font-weight: 700; cursor: pointer; }.btn-cancelar-finalizacao { color: #334155; background: #e2e8f0; }.btn-confirmar-finalizacao { color: #fff; background: #059669; }.btn-confirmar-finalizacao:hover { background: #047857; }
+
 .aviso-sucesso {
     margin: -10px 0 25px;
     padding: 12px 16px;
