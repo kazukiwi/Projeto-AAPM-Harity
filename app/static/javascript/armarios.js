@@ -18,6 +18,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const panels = Array.from(document.querySelectorAll("[data-armarios-panel]"));
     const buscaReserva = document.getElementById("busca-reserva");
     const filtroSemestre = document.getElementById("filtro-semestre");
+    const btnDesativarArmario = document.getElementById("btn-desativar-armario");
+    const modalConfirmacao = document.getElementById("modal-confirmacao");
+    const formConfirmacao = document.getElementById("form-confirmacao");
+    const textoConfirmacao = document.getElementById("confirmacao-texto");
+    const tituloConfirmacao = document.getElementById("confirmacao-titulo");
+    const btnFecharConfirmacao = document.getElementById("btn-fechar-confirmacao");
 
     function abrirAba(nome) {
         tabs.forEach(function (tab) { tab.classList.toggle("active", tab.dataset.armariosTab === nome); });
@@ -93,6 +99,23 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function abrirConfirmacao(action, titulo, texto, botao) {
+        if (!modalConfirmacao || !formConfirmacao) return;
+        formConfirmacao.action = action;
+        if (tituloConfirmacao) tituloConfirmacao.textContent = titulo;
+        if (textoConfirmacao) textoConfirmacao.textContent = texto;
+        const confirmar = document.getElementById("btn-confirmar-acao");
+        if (confirmar) confirmar.textContent = botao;
+        modalConfirmacao.classList.add("open");
+        modalConfirmacao.setAttribute("aria-hidden", "false");
+    }
+
+    function fecharConfirmacao() {
+        if (!modalConfirmacao) return;
+        modalConfirmacao.classList.remove("open");
+        modalConfirmacao.setAttribute("aria-hidden", "true");
+    }
+
     botoesFiltro.forEach(function (botao) {
         botao.addEventListener("click", function () {
             botoesFiltro.forEach(function (item) {
@@ -129,6 +152,13 @@ document.addEventListener("DOMContentLoaded", function () {
             if (event.target === modal) fecharModal();
         });
     }
+    if (btnDesativarArmario) {
+        btnDesativarArmario.addEventListener("click", function () {
+            const id = inputArmarioId?.value;
+            const numero = modalTitulo?.textContent.replace("Armario #", "") || "";
+            if (id) abrirConfirmacao(`/armarios/${id}/desativar`, "Desativar armário?", `O armário #${numero} deixará de aparecer como disponível. O histórico de reservas será mantido.`, "Desativar armário");
+        });
+    }
 
     tabs.forEach(function (tab) {
         tab.addEventListener("click", function () { abrirAba(tab.dataset.armariosTab); });
@@ -138,9 +168,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.querySelectorAll("[data-confirm]").forEach(function (formulario) {
         formulario.addEventListener("submit", function (event) {
-            if (!window.confirm(formulario.dataset.confirm)) event.preventDefault();
+            event.preventDefault();
+            const linha = formulario.closest("tr");
+            const armario = linha?.cells[0]?.textContent || "este armário";
+            const aluno = linha?.cells[1]?.textContent || "o associado";
+            abrirConfirmacao(formulario.action, "Cancelar reserva?", `A reserva de ${aluno} para ${armario} será cancelada. Esta ação será registrada no histórico.`, "Cancelar reserva");
         });
     });
+    if (btnFecharConfirmacao) btnFecharConfirmacao.addEventListener("click", fecharConfirmacao);
+    if (modalConfirmacao) modalConfirmacao.addEventListener("click", function (event) { if (event.target === modalConfirmacao) fecharConfirmacao(); });
     document.querySelectorAll("[data-feedback-form]").forEach(function (formulario) {
         formulario.addEventListener("submit", function () {
             const botao = formulario.querySelector("button[type='submit']");

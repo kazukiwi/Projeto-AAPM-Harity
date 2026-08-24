@@ -372,6 +372,13 @@ body {
     color: #fff;
 }
 
+.btn-desativar { margin-right: auto; border: 1px solid #fecaca; background: #fff5f5; color: #b91c1c; border-radius: 6px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
+.btn-desativar:hover { background: #fee2e2; }
+.modal-confirmacao { z-index: 30; }
+.confirmacao-card { width: min(400px, 100%); background: #fff; border-radius: 14px; padding: 28px; text-align: center; box-shadow: 0 24px 60px rgba(15,23,42,.3); }
+.confirmacao-icone { width: 52px; height: 52px; margin: 0 auto 15px; display: grid; place-items: center; border-radius: 50%; color: #c2410c; background: #fff7ed; font-size: 22px; }
+.confirmacao-card h2 { font-size: 20px; margin-bottom: 9px; }.confirmacao-card p { color: #64748b; font-size: 14px; line-height: 1.5; }.confirmacao-acoes { display: flex; justify-content: center; gap: 10px; margin-top: 24px; }.btn-confirmar-perigo { border: 0; border-radius: 6px; padding: 10px 14px; color: #fff; background: #dc2626; font-weight: 700; cursor: pointer; }.btn-confirmar-perigo:hover { background: #b91c1c; }
+
 .main-footer {
     margin-top: auto;
     width: 100%;

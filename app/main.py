@@ -310,6 +310,27 @@ def listar_armarios(
 
     garantir_armarios_iniciais(db)
 
+    # Compatibiliza reservas já registradas antes da sincronização de status.
+    # Assim, elas deixam de aparecer como disponíveis sem exigir novo cadastro.
+    reservas_ativas = (
+        db.query(ReservaArmario)
+        .filter(ReservaArmario.status == "ativa")
+        .order_by(ReservaArmario.id.desc())
+        .all()
+    )
+    alterou_status = False
+    for reserva in reservas_ativas:
+        if reserva.armario and reserva.armario.status == "disponivel":
+            reserva.armario.status = "ocupado"
+            if reserva.associado:
+                reserva.armario.associado_id = reserva.associado.id
+                reserva.armario.associado_nome = reserva.associado.nome
+                reserva.armario.associado_telefone = reserva.associado.telefone or ""
+                reserva.armario.associado_matricula = reserva.associado.matricula or ""
+            alterou_status = True
+    if alterou_status:
+        db.commit()
+
     total = db.query(Armario).count()
     disponiveis = db.query(Armario).filter(Armario.status == "disponivel").count()
     ocupados = db.query(Armario).filter(Armario.status == "ocupado").count()
@@ -415,6 +436,28 @@ def cadastrar_armario(numero: str = Form(...), db: Session = Depends(get_db), us
     return RedirectResponse(url="/armarios?armario=ok", status_code=303)
 
 
+@app.post("/armarios/{armario_id}/desativar")
+def desativar_armario(
+    armario_id: int,
+    db: Session = Depends(get_db),
+    usuario=Depends(get_usuario_opcional),
+):
+    armario = db.query(Armario).filter(Armario.id == armario_id).first()
+    if not armario:
+        return RedirectResponse(url="/armarios?erro=armario", status_code=303)
+    if armario.status == "ocupado":
+        return RedirectResponse(url="/armarios?erro=ocupado", status_code=303)
+    armario.status = "desativado"
+    armario.associado_id = None
+    armario.associado_nome = ""
+    armario.associado_email = ""
+    armario.associado_telefone = ""
+    armario.associado_matricula = ""
+    armario.atribuido_em = ""
+    db.commit()
+    return RedirectResponse(url="/armarios?armario=desativado", status_code=303)
+
+
 @app.post("/armarios/reservas")
 def criar_reserva_armario(
     armario_id: int = Form(...),
@@ -457,6 +500,15 @@ def criar_reserva_armario(
         fim_em=fim,
         status="ativa",
     ))
+    # A disponibilidade usa o status do próprio armário. Mantemos os dois
+    # módulos sincronizados para que uma reserva não apareça como disponível.
+    armario.status = "ocupado"
+    armario.associado_id = associado.id
+    armario.associado_nome = associado.nome
+    armario.associado_telefone = associado.telefone or ""
+    armario.associado_matricula = associado.matricula or ""
+    armario.atribuido_em = inicio_em.strftime("%d/%m/%Y")
+    armario.observacoes = ""
     db.commit()
     return RedirectResponse(url="/armarios?reserva=ok", status_code=303)
 
@@ -470,5 +522,19 @@ def cancelar_reserva_armario(
     reserva = db.query(ReservaArmario).filter(ReservaArmario.id == reserva_id).first()
     if reserva and reserva.status == "ativa":
         reserva.status = "cancelada"
+        ainda_reservado = db.query(ReservaArmario).filter(
+            ReservaArmario.armario_id == reserva.armario_id,
+            ReservaArmario.id != reserva.id,
+            ReservaArmario.status == "ativa",
+        ).first()
+        if not ainda_reservado and reserva.armario:
+            reserva.armario.status = "disponivel"
+            reserva.armario.associado_id = None
+            reserva.armario.associado_nome = ""
+            reserva.armario.associado_email = ""
+            reserva.armario.associado_telefone = ""
+            reserva.armario.associado_matricula = ""
+            reserva.armario.atribuido_em = ""
+            reserva.armario.observacoes = ""
         db.commit()
     return RedirectResponse(url="/armarios?reserva=cancelada", status_code=303)
