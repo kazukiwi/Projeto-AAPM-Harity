@@ -24,16 +24,19 @@
             <ul class="menu">
                 <li><a href="/">Dashboard</a></li>
                 <li><a href="/produtos">Produtos</a></li>
+                {% if usuario.role == 'admin' %}
                 <li><a href="/clientes">Clientes</a></li>
+                {% endif %}
                 <li><a href="/pdv/historico" class="active">Vendas</a></li>
                 <li><a href="/mais_vendidos">Mais vendidos</a></li>
-                <li><a href="/armarios">Armários</a></li>
                 {% if usuario.role == 'admin' %}
-                <li><a href="/usuarios" class="nav-link">
-                    <i data-lucide="users"></i> Usuários
+                <li><a href="/armarios">Armários</a></li>
+
+                <li><a href="/usuarios" >
+                </i> Usuários
                 </a></li>
-                <li><a href="/categorias" class="nav-link">
-                    <i data-lucide="tag"></i> Categorias
+                <li><a href="/categorias" >
+                    </i> Categorias
                 </a></li>
                 {% endif %}
                 <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
@@ -48,10 +51,21 @@
                 <h1>Histórico de Vendas</h1>
                 <p>Monitore o desempenho comercial e transações</p>
             </div>
-            <button class="btn-nova-venda" onclick="document.getElementById('modal-pdv').style.display='flex'">
-                <i class="fa-solid fa-plus"></i> Nova Venda
-            </button>
+            <div class="acoes-historico">
+                <form action="/pdv/finalizar-dia" method="POST">
+                    <button class="btn-finalizar-dia" type="submit" onclick="return confirm('Finalizar e atualizar o total de vendas de hoje?')">
+                        <i class="fa-solid fa-calendar-check"></i> Finalizar Dia
+                    </button>
+                </form>
+                <button class="btn-nova-venda" onclick="document.getElementById('modal-pdv').style.display='flex'">
+                    <i class="fa-solid fa-plus"></i> Nova Venda
+                </button>
+            </div>
         </div>
+
+        {% if request.query_params.get('dia_finalizado') == 'ok' %}
+        <div class="aviso-sucesso">O total de vendas de hoje foi atualizado no fechamento diário.</div>
+        {% endif %}
 
         <div class="indicadores-grid">
             <div class="card-indicador">
@@ -118,6 +132,37 @@
                 <p>Verifique o ID digitado</p>
             </div>
         </div>
+
+        <div class="card-historico">
+            <h3>Fechamentos Diários</h3>
+            <p class="sub-contador">Total registrado em cada dia, inclusive quando não houver vendas.</p>
+            <div class="tabela-container">
+                <table class="tabela-vendas">
+                    <thead>
+                        <tr>
+                            <th>DATA</th>
+                            <th>QUANTIDADE DE VENDAS</th>
+                            <th>TOTAL VENDIDO</th>
+                            <th>FECHAMENTO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fechamento in fechamentos %}
+                        <tr>
+                            <td>{{ fechamento.data.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ fechamento.quantidade_vendas }}</td>
+                            <td style="font-weight: bold; color: #111827;">R$ {{ "%.2f"|format(fechamento.total_vendido) }}</td>
+                            <td>{{ 'Automático' if fechamento.fechado_automaticamente else 'Manual' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #94a3b8; padding: 30px;">Nenhum dia foi finalizado ainda.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <div id="modal-pdv" class="modal-overlay" style="display: none;">
@@ -148,7 +193,7 @@
                                 <option value="" disabled selected>Escolha um produto...</option>
                                 {% for produto in produtos %}
                                     {% if produto.ativo and produto.estoque_atual > 0 %}
-                                    <option value="{{ produto.id }}" data-nome="{{ produto.nome }}" data-preco="{{ produto.preco }}" data-estoque="{{ produto.estoque_atual }}" data-tamanho-p="{{ produto.estoque_do_tamanho('P') }}" data-tamanho-m="{{ produto.estoque_do_tamanho('M') }}" data-tamanho-g="{{ produto.estoque_do_tamanho('G') }}" data-tamanho-gg="{{ produto.estoque_do_tamanho('GG') }}">
+                                    <option value="{{ produto.id }}" data-nome="{{ produto.nome }}" data-preco="{{ produto.preco }}" data-estoque="{{ produto.estoque_atual }}" data-possui-variacoes="{{ 'true' if produto.possui_variacoes_tamanho else 'false' }}"{% for estoque in produto.estoques_tamanho %} data-tamanho-{{ estoque.tamanho_id }}="{{ estoque.estoque_atual }}"{% endfor %}>
                                         {{ produto.nome }}
                                     </option>
                                     {% endif %}
@@ -160,10 +205,9 @@
                             <label for="pdv-tamanho" style="display:block; font-weight:bold; margin-bottom:5px; color: #4f46e5;">Tamanho da Camiseta</label>
                             <select id="pdv-tamanho" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; background-color: white;">
                                 <option value="" disabled selected>Selecione o tamanho...</option>
-                                <option value="P">P</option>
-                                <option value="M">M</option>
-                                <option value="G">G</option>
-                                <option value="GG">GG</option>
+                                {% for tamanho in tamanhos %}
+                                <option value="{{ tamanho.id }}">{{ tamanho.nome }}</option>
+                                {% endfor %}
                             </select>
                         </div>
 
@@ -237,7 +281,11 @@
         </div>
     </footer>
 
+<<<<<<< HEAD
     <script src="{{ url_for('static', path='javascript/vendas.js') }}?v=20260811"></script>
     <script src="/static/javascript/listagem.js"></script>
+=======
+    <script src="{{ url_for('static', path='javascript/vendas.js') }}?v=20260818"></script>
+>>>>>>> dec01a0ca9cbe2de00b458c68fd689ebafcb69f3
 </body>
 </html>

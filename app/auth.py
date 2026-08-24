@@ -11,6 +11,7 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRACAO_MINUTOS = os.getenv("ACCESS_TOKEN_EXPIRACAO_MINUTOS")
+RESET_TOKEN_EXPIRACAO_MINUTOS = int(os.getenv("RESET_TOKEN_EXPIRACAO_MINUTOS", "30"))
 
 #CryptContent
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -36,6 +37,24 @@ def criar_token(data: dict):
     #Criar o token
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     return token
+
+
+def criar_token_redefinicao_senha(email: str):
+    """Cria um token de uso exclusivo para a redefinição de senha."""
+    payload = {
+        "sub": email,
+        "purpose": "password_reset",
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRACAO_MINUTOS),
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def validar_token_redefinicao_senha(token: str):
+    """Retorna o e-mail do token de redefinição ou levanta JWTError."""
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    if payload.get("purpose") != "password_reset" or not payload.get("sub"):
+        raise JWTError("Token inválido para redefinição de senha")
+    return payload["sub"]
 
 def decodificar_token(token: str):
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

@@ -24,12 +24,14 @@
             <ul class="menu">
                 <li><a href="/" class="active">Dashboard</a></li>
                 <li><a href="/produtos">Produtos</a></li>
+                {% if usuario.role == 'admin' %}
                 <li><a href="/clientes">Clientes</a></li>
+                {% endif %}
                 <li><a href="/pdv/historico">Vendas</a></li>
                 <li><a href="/mais_vendidos">Mais vendidos</a></li>
-                <li><a href="/armarios">Armários</a></li>
-                
                 {% if usuario.role == 'admin' %}
+                <li><a href="/armarios">Armários</a></li>
+
                 <li><a href="/usuarios" class="nav-link">
                     <i data-lucide="users"></i> Usuários
                 </a></li>

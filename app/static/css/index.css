@@ -415,3 +415,76 @@ button:hover{
     }
 
 }
+
+/* Ações e mensagens do fluxo de recuperação de senha */
+.password-action{
+    margin-top: 22px;
+    text-align: center;
+}
+
+.password-action a{
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 18px;
+    border: 1px solid rgba(255,255,255,0.38);
+    border-radius: 999px;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .1px;
+    text-decoration: none;
+    transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.password-action a:hover{
+    background: rgba(255,255,255,.14);
+    border-color: #ffffff;
+    transform: translateY(-2px);
+}
+
+.password-action a span{
+    font-size: 19px;
+    line-height: 1;
+}
+
+.password-action-back{
+    text-align: left;
+}
+
+.auth-feedback{
+    margin: -10px 0 22px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.auth-feedback-success{
+    color: #eafff3;
+    background: rgba(20, 137, 82, .34);
+    border: 1px solid rgba(160, 255, 204, .5);
+}
+
+.auth-feedback-error{
+    color: #fff0f2;
+    background: rgba(184, 43, 67, .38);
+    border: 1px solid rgba(255, 184, 195, .55);
+}
+
+.auth-page{
+    min-height: 100vh;
+    background: linear-gradient(135deg, #c7c4e8, #b4b0df, #c9c7ea);
+}
+
+.auth-page .container{
+    min-height: 100vh;
+    justify-content: center;
+}
+
+.auth-page .right{
+    width: auto;
+}

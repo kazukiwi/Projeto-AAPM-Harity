@@ -28,10 +28,21 @@
             <ul class="menu">
                 <li><a href="/">Dashboard</a></li>
                 <li><a href="/produtos">Produtos</a></li>
+                {% if usuario.role == 'admin' %}
                 <li><a href="/clientes">Clientes</a></li>
+                {% endif %}
                 <li><a href="/pdv/historico" class="active">Vendas</a></li>
                 <li><a href="/mais_vendidos">Mais vendidos</a></li>
+                {% if usuario.role == 'admin' %}
                 <li><a href="/armarios">Armários</a></li>
+
+                <li><a href="/usuarios" >
+                </i> Usuários
+                </a></li>
+                <li><a href="/categorias" >
+                    </i> Categorias
+                </a></li>
+                {% endif %}
                 <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
             </ul>
         </nav>

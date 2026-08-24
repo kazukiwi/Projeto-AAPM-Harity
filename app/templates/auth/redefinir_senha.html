@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova senha | AAPM</title>
+    <link rel="stylesheet" href="/static/css/index.css">
+</head>
+<body class="auth-page">
+    <main class="container">
+        <section class="right">
+            <div class="login-card">
+                <h1>Crie uma nova senha</h1>
+                {% if erro %}<p class="auth-feedback auth-feedback-error" role="alert">{{ erro }}</p>{% endif %}
+                {% if token %}
+                <form method="post" action="/auth/redefinir-senha">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    <div class="input-box"><input type="password" name="senha" placeholder="Nova senha (mínimo 8 caracteres)" minlength="8" required></div>
+                    <div class="input-box"><input type="password" name="confirmar_senha" placeholder="Confirme a nova senha" minlength="8" required></div>
+                    <button type="submit">Salvar nova senha</button>
+                </form>
+                {% endif %}
+                <p class="password-action password-action-back">
+                    <a href="/"><span aria-hidden="true">←</span> Voltar ao login</a>
+                </p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

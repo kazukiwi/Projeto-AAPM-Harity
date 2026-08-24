@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 from datetime import date, datetime
@@ -24,14 +25,31 @@ from app.controllers import (
     produto_controller,
     movimentacao_controller,
     pdv_controller,
-    clientes_controller
+    clientes_controller,
+    tamanhos_controller,
 )
 
 from app.auth import get_usuario_opcional, get_usuario_logado
 
 
+async def rotina_fechamento_diario():
+    """Mantém o fechamento automático ativo enquanto o servidor estiver em execução."""
+    while True:
+        try:
+            pdv_controller.executar_fechamento_automatico()
+        except Exception as erro:
+            # O loop não pode parar por uma falha pontual de banco.
+            print(f"Erro no fechamento diário automático: {erro}")
+        await asyncio.sleep(30)
+
+
 # 1º: CRIAR A INSTÂNCIA DO APP
 app = FastAPI(title="Sistema Estoque")
+
+
+@app.on_event("startup")
+async def iniciar_rotina_fechamento_diario():
+    asyncio.create_task(rotina_fechamento_diario())
 
 # 2º: CONFIGURAR ARQUIVOS ESTÁTICOS E TEMPLATES
 APP_DIR = Path(__file__).resolve().parent
@@ -85,6 +103,7 @@ app.include_router(produto_controller.router)
 app.include_router(movimentacao_controller.router)
 app.include_router(pdv_controller.router)
 app.include_router(clientes_controller.router)
+app.include_router(tamanhos_controller.router)
 
 
 # --- BANCO DE DADOS TEMPORÁRIO PARA OS ARMÁRIOS (ESTRUTURA INDESTRUTÍVEL) ---
