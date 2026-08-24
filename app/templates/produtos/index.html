@@ -14,7 +14,7 @@
 
 <body>
 
-    <header>
+    {% if false %}<header>
         <nav class="navbar">
             <div class="logo">
                 <a href="#">
@@ -42,7 +42,8 @@
                 <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
             </ul>
         </nav>
-    </header>
+    </header>{% endif %}
+    {% include "partials/navbar.html" %}
 
     <div class="produtos-container-main">
 
