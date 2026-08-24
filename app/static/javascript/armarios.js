@@ -14,6 +14,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const campoObservacao = document.querySelector(".campo-observacao");
     const btnFechar = document.getElementById("btn-fechar-modal");
     const btnCancelar = document.getElementById("btn-cancelar");
+    const tabs = Array.from(document.querySelectorAll("[data-armarios-tab]"));
+    const panels = Array.from(document.querySelectorAll("[data-armarios-panel]"));
+    const buscaReserva = document.getElementById("busca-reserva");
+    const filtroSemestre = document.getElementById("filtro-semestre");
+
+    function abrirAba(nome) {
+        tabs.forEach(function (tab) { tab.classList.toggle("active", tab.dataset.armariosTab === nome); });
+        panels.forEach(function (panel) { panel.hidden = panel.dataset.armariosPanel !== nome; });
+    }
+
+    function filtrarReservas() {
+        const termo = (buscaReserva ? buscaReserva.value : "").toLocaleLowerCase("pt-BR");
+        const semestre = filtroSemestre ? filtroSemestre.value : "";
+        document.querySelectorAll("[data-reserva]").forEach(function (linha) {
+            const aluno = (linha.dataset.aluno || "").toLocaleLowerCase("pt-BR");
+            linha.hidden = !(aluno.includes(termo) && (!semestre || linha.dataset.semestre === semestre));
+        });
+    }
 
     function aplicarFiltro(status) {
         cards.forEach(function (card) {
@@ -111,4 +129,22 @@ document.addEventListener("DOMContentLoaded", function () {
             if (event.target === modal) fecharModal();
         });
     }
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener("click", function () { abrirAba(tab.dataset.armariosTab); });
+    });
+    if (buscaReserva) buscaReserva.addEventListener("input", filtrarReservas);
+    if (filtroSemestre) filtroSemestre.addEventListener("change", filtrarReservas);
+
+    document.querySelectorAll("[data-confirm]").forEach(function (formulario) {
+        formulario.addEventListener("submit", function (event) {
+            if (!window.confirm(formulario.dataset.confirm)) event.preventDefault();
+        });
+    });
+    document.querySelectorAll("[data-feedback-form]").forEach(function (formulario) {
+        formulario.addEventListener("submit", function () {
+            const botao = formulario.querySelector("button[type='submit']");
+            if (botao) { botao.disabled = true; botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...'; }
+        });
+    });
 });

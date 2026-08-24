@@ -43,16 +43,16 @@ def criar_token_redefinicao_senha(email: str):
     """Cria um token de uso exclusivo para a redefinição de senha."""
     payload = {
         "sub": email,
-        "purpose": "password_reset",
+        "finalidade": "redefinir_senha",
         "exp": datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRACAO_MINUTOS),
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
 def validar_token_redefinicao_senha(token: str):
-    """Retorna o e-mail do token de redefinição ou levanta JWTError."""
+    """Retorna o e-mail do token válido ou levanta JWTError."""
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    if payload.get("purpose") != "password_reset" or not payload.get("sub"):
+    if payload.get("finalidade") != "redefinir_senha" or not payload.get("sub"):
         raise JWTError("Token inválido para redefinição de senha")
     return payload["sub"]
 
