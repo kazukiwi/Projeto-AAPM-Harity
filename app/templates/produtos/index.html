@@ -9,12 +9,13 @@
 
     <link class="cdn" rel="stylesheet" href="/static/css/produtos.css">
     <link rel="stylesheet" href="/static/css/listagem.css">
+    <link rel="stylesheet" href="/static/css/confirmacao.css">
     <link class="cdn" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
 <body>
 
-    <header>
+    {% if false %}<header>
         <nav class="navbar">
             <div class="logo">
                 <a href="#">
@@ -42,7 +43,8 @@
                 <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
             </ul>
         </nav>
-    </header>
+    </header>{% endif %}
+    {% include "partials/navbar.html" %}
 
     <div class="produtos-container-main">
 
@@ -132,7 +134,9 @@
                                 </a>
 
                                 <form action="/produtos/{{ produto.id }}/desativar" method="POST"
-                                    onsubmit="return confirm('Tem certeza que deseja desativar este produto?')"
+                                    data-confirmacao data-titulo="Desativar produto?"
+                                    data-mensagem="{{ produto.nome }} deixará de aparecer nas vendas e na lista de produtos ativos."
+                                    data-confirmar="Desativar produto"
                                     style="margin: 0; padding: 0; display: inline-flex; align-items: center;">
                                     <button type="submit"
                                         style="background: none; border: none; color: red; cursor: pointer; font-size: 18px; padding: 0; display: inline-flex; align-items: center;">
@@ -225,6 +229,14 @@
     </div>
     {% endif %}
 
+    <div class="modal-confirmacao-acao" id="modal-confirmacao-acao" aria-hidden="true">
+        <div class="confirmacao-acao-card" role="dialog" aria-modal="true" aria-labelledby="confirmacao-acao-titulo">
+            <div class="confirmacao-acao-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h2 id="confirmacao-acao-titulo">Confirmar ação</h2><p id="confirmacao-acao-texto"></p>
+            <form method="post" id="form-confirmacao-acao" class="confirmacao-acao-botoes"><button type="button" class="confirmacao-acao-cancelar" id="confirmacao-acao-cancelar">Voltar</button><button type="button" class="confirmacao-acao-confirmar" id="confirmacao-acao-confirmar">Confirmar</button></form>
+        </div>
+    </div>
+
     <footer class="main-footer">
         <div class="footer-content" style="text-align:center; padding:20px; color:#ffffff;">
             <p>&copy; 2026 AAPM - SENAI. Todos os direitos reservados.</p>
@@ -234,6 +246,7 @@
 
     <script src="/static/javascript/produtos.js"></script>
     <script src="/static/javascript/listagem.js?v=3"></script>
+    <script src="/static/javascript/confirmacao.js?v=1"></script>
 </body>
 
 </html>

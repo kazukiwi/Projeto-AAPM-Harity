@@ -20,7 +20,7 @@
 
 <body>
 
-    <header class="no-print">
+    {% if false %}<header class="no-print">
         <nav class="navbar">
             <div class="logo">
                 <a href="#"><img src="/static/img/logo.png" alt="Logo AAPM"></a>
@@ -46,7 +46,8 @@
                 <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
             </ul>
         </nav>
-    </header>
+    </header>{% endif %}
+    {% include "partials/navbar.html" %}
 
     <div class="vendas-container-main" style="max-width: 600px; margin: 40px auto; padding: 0 20px;">
         
