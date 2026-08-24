@@ -14,6 +14,6 @@
     <div class="listagem-acoes"><span>Busca instantânea e paginação.</span><label>Ordenar <select id="ordem-movimentacoes" class="listagem-ordem"><option value="desc">Mais recentes</option><option value="asc">Mais antigos</option></select></label></div>
     <div class="tabela"><table data-listagem data-busca="#busca-movimentacoes" data-ordem="#ordem-movimentacoes" data-por-pagina="10"><thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th>Quantidade</th><th>Observação</th></tr></thead><tbody>{% for movimentacao in movimentacoes %}<tr><td>{{ movimentacao.criado_em.strftime('%d/%m/%Y %H:%M') }}</td><td>{{ movimentacao.produto.nome if movimentacao.produto else 'Produto removido' }}</td><td class="{{ movimentacao.tipo }}">{{ movimentacao.tipo }}</td><td>{{ movimentacao.quantidade }}</td><td>{{ movimentacao.observacao or '—' }}</td></tr>{% else %}<tr><td colspan="5">Nenhuma movimentação encontrada.</td></tr>{% endfor %}</tbody></table></div>
   </main>
-  <script src="/static/javascript/listagem.js"></script>
+  <script src="/static/javascript/listagem.js?v=3"></script>
 </body>
 </html>

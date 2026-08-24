@@ -67,7 +67,7 @@ def listar_produtos(
     busca: str = "",
     categoria_id: int = 0,
     pagina: int = 1,
-    por_pagina: int = 3,
+    por_pagina: int = 10,
     db: Session = Depends(get_db),
     usuario = Depends(get_usuario_logado)
 ):

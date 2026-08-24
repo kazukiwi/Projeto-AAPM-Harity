@@ -1,5 +1,5 @@
 /* Componente reutilizável: busca, ordenação, paginação e estado vazio para tabelas. */
-document.addEventListener("DOMContentLoaded", () => {
+function iniciarListagens() {
   document.querySelectorAll("[data-listagem]").forEach((tabela) => {
     const corpo = tabela.tBodies[0];
     if (!corpo) return;
@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const porPagina = Number(tabela.dataset.porPagina || 8);
     const busca = document.querySelector(tabela.dataset.busca || "");
     const ordem = document.querySelector(tabela.dataset.ordem || "");
+    const colunaOrdenacao = Number(tabela.dataset.ordemColuna || 0);
     let pagina = 1;
 
     const controles = document.createElement("div");
@@ -33,7 +34,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return true;
       });
       const tipoOrdem = ordem?.value || "";
-      if (tipoOrdem) visiveis.sort((a, b) => normalizar(a.cells[0]?.textContent).localeCompare(normalizar(b.cells[0]?.textContent)) * (tipoOrdem === "desc" ? -1 : 1));
+      if (tipoOrdem) {
+        visiveis.sort((a, b) => {
+          const primeiro = normalizar(a.cells[colunaOrdenacao]?.textContent);
+          const segundo = normalizar(b.cells[colunaOrdenacao]?.textContent);
+          return primeiro.localeCompare(segundo, "pt-BR", { numeric: true }) * (tipoOrdem === "desc" ? -1 : 1);
+        });
+        // sort() altera apenas o array. Ao reposicionar as linhas no tbody,
+        // a ordem escolhida passa a ser refletida visualmente na tabela.
+        visiveis.forEach(linha => corpo.appendChild(linha));
+      }
       const totalPaginas = Math.max(1, Math.ceil(visiveis.length / porPagina));
       pagina = Math.min(pagina, totalPaginas);
       linhas.forEach(linha => { linha.hidden = true; });
@@ -53,4 +63,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("form[data-confirm]").forEach(form => form.addEventListener("submit", event => {
     if (!confirm(form.dataset.confirm)) event.preventDefault();
   }));
-});
+}
+
+// Funciona tanto quando o arquivo é carregado durante o parsing quanto depois
+// (por exemplo, após navegação parcial ou cache do navegador).
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", iniciarListagens, { once: true });
+} else {
+  iniciarListagens();
+}
