@@ -7,6 +7,7 @@
     <link rel="icon" href="/static/img/image.ico" type="image/x-icon">
     <title>Clientes - AAPM</title>
     <link rel="stylesheet" href="/static/css/clientes.css">
+    <link rel="stylesheet" href="/static/css/listagem.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
@@ -71,9 +72,10 @@
                 <i class="fa-solid fa-filter"></i> Filtrar
             </button>
         </form>
+        <div class="listagem-acoes"><span>Resultados atualizados durante a pesquisa.</span><label>Ordenar <select id="ordem-clientes" class="listagem-ordem"><option value="asc">Nome: A–Z</option><option value="desc">Nome: Z–A</option></select></label></div>
 
         <div class="table-shell">
-            <table>
+            <table data-listagem data-busca=".search-field input" data-ordem="#ordem-clientes" data-por-pagina="8">
                 <thead>
                     <tr>
                         <th>Nome</th>
@@ -108,7 +110,7 @@
                             <a href="/clientes/{{ cliente.id }}/editar" title="Editar cliente">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
-                            <form action="/clientes/{{ cliente.id }}/toggle-ativo" method="post">
+                            <form action="/clientes/{{ cliente.id }}/toggle-ativo" method="post" data-confirm="Alterar o status deste cliente?">
                                 <button type="submit" title="Alterar status">
                                     {% if cliente.ativo %}
                                     <i class="fa-solid fa-ban"></i>
@@ -132,6 +134,7 @@
     <footer class="main-footer">
         <p>2026 AAPM - SENAI. Todos os direitos reservados.</p>
     </footer>
+    <script src="/static/javascript/listagem.js"></script>
 </body>
 
 </html>

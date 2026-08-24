@@ -7,6 +7,7 @@
     <link rel="icon" href="/static/img/image.ico" type="image/x-icon">
     <title>Gerenciamento de Usuários</title>
     <link rel="stylesheet" href="/static/css/usuarios.css">
+    <link rel="stylesheet" href="/static/css/listagem.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -150,9 +151,10 @@
                 <span>Mostrar apenas ativos</span>
             </label>
         </div>
+        <div class="listagem-acoes"><span>Pesquisa e filtros aplicados na tabela.</span><label>Ordenar <select id="ordem-usuarios" class="listagem-ordem"><option value="asc">Nome: A–Z</option><option value="desc">Nome: Z–A</option></select></label></div>
 
         <div class="tabela-container">
-            <table class="tabela-produtos">
+            <table class="tabela-produtos" data-listagem data-busca="#inputBusca" data-ordem="#ordem-usuarios" data-por-pagina="8">
                 <thead>
                     <tr>
                         <th>Nome</th>
@@ -179,7 +181,7 @@
                         </td>
                         <td>
                             <div class="user-actions-wrapper">
-                                <form action="/usuarios/{{ u.id }}/toggle-ativo" method="post" style="display:inline">
+                                <form action="/usuarios/{{ u.id }}/toggle-ativo" method="post" style="display:inline" data-confirm="Alterar o status deste usuário?">
                                     {% if u.ativo %}
                                     <button type="submit" class="btn-acao excluir" title="Desativar Usuário"
                                         style="font-size: 15px;">
@@ -212,6 +214,7 @@
     </footer>
 
     <script src="/static/javascript/users.js"></script>
+    <script src="/static/javascript/listagem.js"></script>
     <script>
         // Renderiza os ícones do Lucide do seu projeto
         lucide.createIcons();

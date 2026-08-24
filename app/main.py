@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from datetime import date, datetime
+
 from fastapi import FastAPI, Request, Depends, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -13,6 +15,7 @@ from app.database import get_db
 from app.models.produtos import Produto
 from app.models.cliente import Cliente
 from app.models.armario import Armario
+from app.models.reserva_armario import ReservaArmario
 
 from app.controllers import (
     auth_controller,
@@ -302,6 +305,11 @@ def listar_armarios(
         .order_by(Cliente.nome)
         .all()
     )
+    reservas = (
+        db.query(ReservaArmario)
+        .order_by(ReservaArmario.inicio_em.desc(), ReservaArmario.id.desc())
+        .all()
+    )
 
     return templates.TemplateResponse(
         request=request, 
@@ -315,6 +323,7 @@ def listar_armarios(
             "armarios_ocupados": ocupados,
             "armarios_manutencao": manutencao,
             "associados": associados,
+            "reservas": reservas,
         }
     )
 
@@ -375,3 +384,72 @@ def alterar_status_armario(
     db.commit()
             
     return RedirectResponse(url="/armarios", status_code=303)
+
+
+@app.post("/armarios")
+def cadastrar_armario(numero: str = Form(...), db: Session = Depends(get_db), usuario=Depends(get_usuario_opcional)):
+    numero = numero.strip()
+    if not numero or db.query(Armario).filter(Armario.numero == numero).first():
+        return RedirectResponse(url="/armarios?erro=numero", status_code=303)
+    db.add(Armario(numero=numero.zfill(2), status="disponivel"))
+    db.commit()
+    return RedirectResponse(url="/armarios?armario=ok", status_code=303)
+
+
+@app.post("/armarios/reservas")
+def criar_reserva_armario(
+    armario_id: int = Form(...),
+    associado_id: int = Form(...),
+    semestre: str = Form(...),
+    inicio_em: date = Form(...),
+    fim_em: date = Form(...),
+    db: Session = Depends(get_db),
+    usuario=Depends(get_usuario_opcional),
+):
+    """Registra uma reserva e impede sobreposição para o mesmo armário."""
+    if fim_em < inicio_em:
+        return RedirectResponse(url="/armarios?erro=periodo", status_code=303)
+
+    armario = db.query(Armario).filter(Armario.id == armario_id).first()
+    associado = db.query(Cliente).filter(
+        Cliente.id == associado_id,
+        Cliente.ativo == True,
+        Cliente.is_associado == True,
+    ).first()
+    if not armario or not associado:
+        return RedirectResponse(url="/armarios?erro=reservadados", status_code=303)
+
+    inicio = datetime.combine(inicio_em, datetime.min.time())
+    fim = datetime.combine(fim_em, datetime.max.time())
+    conflito = db.query(ReservaArmario).filter(
+        ReservaArmario.armario_id == armario.id,
+        ReservaArmario.status == "ativa",
+        ReservaArmario.inicio_em <= fim,
+        ReservaArmario.fim_em >= inicio,
+    ).first()
+    if conflito:
+        return RedirectResponse(url="/armarios?erro=conflito", status_code=303)
+
+    db.add(ReservaArmario(
+        armario_id=armario.id,
+        associado_id=associado.id,
+        semestre=semestre.strip(),
+        inicio_em=inicio,
+        fim_em=fim,
+        status="ativa",
+    ))
+    db.commit()
+    return RedirectResponse(url="/armarios?reserva=ok", status_code=303)
+
+
+@app.post("/armarios/reservas/{reserva_id}/cancelar")
+def cancelar_reserva_armario(
+    reserva_id: int,
+    db: Session = Depends(get_db),
+    usuario=Depends(get_usuario_opcional),
+):
+    reserva = db.query(ReservaArmario).filter(ReservaArmario.id == reserva_id).first()
+    if reserva and reserva.status == "ativa":
+        reserva.status = "cancelada"
+        db.commit()
+    return RedirectResponse(url="/armarios?reserva=cancelada", status_code=303)
