@@ -46,11 +46,22 @@ def nova_venda(
 
     return {"msg": "Venda registrada"}
 
+
+
+
 @router.get("/historico")
 def historico(
+    pagina: int = 1,
+    por_pagina: int = 10,
     db: Session = Depends(get_db)
 ):
+    skip = (pagina - 1) * por_pagina
 
-    vendas = db.query(Venda).all()
+    vendas = (
+        db.query(Venda)
+        .offset(skip)
+        .limit(por_pagina)
+        .all()
+    )
 
     return vendas
