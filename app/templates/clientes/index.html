@@ -8,6 +8,7 @@
     <title>Clientes - AAPM</title>
     <link rel="stylesheet" href="/static/css/clientes.css">
     <link rel="stylesheet" href="/static/css/listagem.css">
+    <link rel="stylesheet" href="/static/css/confirmacao.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
@@ -118,7 +119,10 @@
                             <a href="/clientes/{{ cliente.id }}/editar" title="Editar cliente">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
-                            <form action="/clientes/{{ cliente.id }}/toggle-ativo" method="post" data-confirm="Alterar o status deste cliente?">
+                            <form action="/clientes/{{ cliente.id }}/toggle-ativo" method="post" data-confirmacao
+                                data-titulo="{{ 'Desativar cliente?' if cliente.ativo else 'Reativar cliente?' }}"
+                                data-mensagem="{{ cliente.nome }} {{ 'não poderá mais ser selecionado em novas vendas.' if cliente.ativo else 'voltará a ficar disponível para novas vendas.' }}"
+                                data-confirmar="{{ 'Desativar cliente' if cliente.ativo else 'Reativar cliente' }}">
                                 <button type="submit" title="Alterar status">
                                     {% if cliente.ativo %}
                                     <i class="fa-solid fa-ban"></i>
@@ -139,10 +143,19 @@
         </div>
     </main>
 
+    <div class="modal-confirmacao-acao" id="modal-confirmacao-acao" aria-hidden="true">
+        <div class="confirmacao-acao-card" role="dialog" aria-modal="true" aria-labelledby="confirmacao-acao-titulo">
+            <div class="confirmacao-acao-icon"><i class="fa-solid fa-user-gear"></i></div>
+            <h2 id="confirmacao-acao-titulo">Confirmar ação</h2><p id="confirmacao-acao-texto"></p>
+            <form method="post" id="form-confirmacao-acao" class="confirmacao-acao-botoes"><button type="button" class="confirmacao-acao-cancelar" id="confirmacao-acao-cancelar">Voltar</button><button type="button" class="confirmacao-acao-confirmar" id="confirmacao-acao-confirmar">Confirmar</button></form>
+        </div>
+    </div>
+
     <footer class="main-footer">
         <p>2026 AAPM - SENAI. Todos os direitos reservados.</p>
     </footer>
     <script src="/static/javascript/listagem.js?v=3"></script>
+    <script src="/static/javascript/confirmacao.js?v=1"></script>
 </body>
 
 </html>

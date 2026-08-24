@@ -254,9 +254,11 @@ th {
 }
 
 .actions {
-    display: flex;
-    gap: 14px;
-    align-items: center;
+    /* Mantém o comportamento de célula de tabela e evita a coluna "subir". */
+    display: table-cell;
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .actions a,
@@ -266,6 +268,18 @@ th {
     border: 0;
     cursor: pointer;
     font-size: 17px;
+}
+
+.actions a,
+.actions form {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+}
+
+.actions a {
+    margin-right: 14px;
 }
 
 .actions form {
