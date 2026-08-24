@@ -1,20 +1,22 @@
 """criar reservas de armarios
 
-Revision ID: d2e3f4a5b6c7
-Revises: a7b8c9d0e1f2
+Revision ID: c3d4e5f6a7b8
+Revises: b9c0d1e2f3a4
 Create Date: 2026-08-24
 """
 
 from alembic import op
 import sqlalchemy as sa
 
-revision = "d2e3f4a5b6c7"
-down_revision = "a7b8c9d0e1f2"
+revision = "c3d4e5f6a7b8"
+down_revision = "b9c0d1e2f3a4"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
+    if "reservas_armarios" in sa.inspect(op.get_bind()).get_table_names():
+        return
     op.create_table(
         "reservas_armarios",
         sa.Column("id", sa.Integer(), primary_key=True),
@@ -32,4 +34,5 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table("reservas_armarios")
+    if "reservas_armarios" in sa.inspect(op.get_bind()).get_table_names():
+        op.drop_table("reservas_armarios")
