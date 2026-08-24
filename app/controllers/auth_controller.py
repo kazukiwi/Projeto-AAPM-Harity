@@ -1,23 +1,23 @@
-from email.message import EmailMessage
-from html import escape
 import os
 import smtplib
 import ssl
+from email.message import EmailMessage
+from html import escape
 
-from fastapi import APIRouter, Depends, Request, Form
+from fastapi import APIRouter, Depends, Request, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from jose import JWTError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.usuario import Usuario
 from app.auth import (
-    JWTError,
+    hash_senha,
+    verificar_senha,
     criar_token,
     criar_token_redefinicao_senha,
-    hash_senha,
     validar_token_redefinicao_senha,
-    verificar_senha,
 )
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
@@ -26,53 +26,75 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 def enviar_email_redefinicao(destinatario: str, link: str):
-    """Envia o link de redefinição usando as variáveis SMTP do .env."""
+    """Envia o link usando as configurações SMTP definidas no ambiente."""
+    host = os.getenv("SMTP_HOST")
+    porta = int(os.getenv("SMTP_PORT", "587"))
     remetente = os.getenv("SMTP_FROM") or os.getenv("SMTP_USER")
-    if not all([os.getenv("SMTP_HOST"), remetente]):
-        raise RuntimeError("Configuração de e-mail incompleta")
+    usuario = os.getenv("SMTP_USER")
+    senha = os.getenv("SMTP_PASSWORD")
+    usar_ssl = os.getenv("SMTP_USE_SSL", "false").lower() == "true"
+
+    if not host or not remetente:
+        raise RuntimeError("SMTP não configurado")
 
     mensagem = EmailMessage()
     mensagem["Subject"] = "Redefinição de senha - AAPM"
     mensagem["From"] = remetente
     mensagem["To"] = destinatario
     mensagem.set_content(
-        "Recebemos uma solicitação para redefinir sua senha. "
-        f"Acesse o link abaixo em até 30 minutos:\n\n{link}\n\n"
-        "Se você não fez esta solicitação, ignore este e-mail."
+        "Recebemos uma solicitação para redefinir sua senha no sistema AAPM.\n\n"
+        f"Acesse o link abaixo em até 30 minutos:\n{link}\n\n"
+        "Se você não solicitou essa alteração, ignore este e-mail."
     )
     link_seguro = escape(link, quote=True)
     mensagem.add_alternative(
         f"""\
 <!DOCTYPE html>
 <html lang="pt-BR">
-<body style="margin:0; padding:0; background:#c7c4e8; font-family:Arial, Helvetica, sans-serif; color:#15152f;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="padding:32px 16px;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @media only screen and (max-width: 600px) {{
+      .email-card {{ width: 100% !important; border-radius: 0 !important; }}
+      .email-content {{ padding: 34px 24px !important; }}
+      .email-title {{ font-size: 28px !important; }}
+    }}
+  </style>
+</head>
+<body style="margin:0; padding:0; background:#eef0fb; font-family:Arial, Helvetica, sans-serif; color:#17205f;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#eef0fb; padding:40px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px; background:#ffffff; border-radius:24px; overflow:hidden; box-shadow:0 12px 32px rgba(9,20,92,.22);">
+        <table class="email-card" role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px; max-width:100%; overflow:hidden; background:#ffffff; border-radius:24px; box-shadow:0 10px 30px rgba(9,20,92,0.16);">
           <tr>
-            <td style="padding:32px 42px; background:linear-gradient(135deg, #09145c, #1c1c64); color:#ffffff;">
-              <div style="font-size:36px; line-height:1; font-weight:800; letter-spacing:1px;">AAPM</div>
-              <div style="margin-top:10px; font-size:15px; opacity:.82;">Sistema de gestão</div>
+            <td style="padding:30px 42px; background:#09145c; text-align:center;">
+              <p style="margin:0; color:#ffffff; font-family:Georgia, 'Times New Roman', serif; font-size:42px; font-weight:700; letter-spacing:2px;">AAPM</p>
+              <p style="margin:7px 0 0; color:#d9ddff; font-size:13px; letter-spacing:1px; text-transform:uppercase;">Sistema de Gestão</p>
             </td>
           </tr>
           <tr>
-            <td style="padding:42px;">
-              <h1 style="margin:0 0 18px; color:#09145c; font-size:28px; line-height:1.25;">Redefina sua senha</h1>
-              <p style="margin:0 0 14px; font-size:16px; line-height:1.65;">Recebemos uma solicitação para criar uma nova senha para sua conta.</p>
-              <p style="margin:0 0 30px; font-size:16px; line-height:1.65;">Para continuar, clique no botão abaixo. Este link é válido por <strong>30 minutos</strong>.</p>
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+            <td class="email-content" style="padding:42px;">
+              <div style="width:54px; height:54px; margin:0 auto 22px; border-radius:50%; background:#e7e9ff; text-align:center; line-height:54px; font-size:26px;">🔐</div>
+              <h1 class="email-title" style="margin:0 0 16px; color:#09145c; font-size:32px; line-height:1.2; text-align:center;">Redefinição de senha</h1>
+              <p style="margin:0 0 18px; color:#4b5275; font-size:16px; line-height:1.65; text-align:center;">Recebemos uma solicitação para criar uma nova senha para sua conta AAPM.</p>
+              <p style="margin:0 0 30px; color:#4b5275; font-size:16px; line-height:1.65; text-align:center;">Clique no botão abaixo para continuar. O link é válido por <strong style="color:#09145c;">30 minutos</strong>.</p>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
                 <tr>
-                  <td align="center" bgcolor="#09145c" style="border-radius:12px;">
-                    <a href="{link_seguro}" style="display:inline-block; padding:16px 26px; color:#ffffff; text-decoration:none; font-size:16px; font-weight:700; border-radius:12px;">Criar nova senha</a>
+                  <td style="border-radius:12px; background:#09145c;">
+                    <a href="{link_seguro}" style="display:inline-block; padding:16px 28px; color:#ffffff; font-size:16px; font-weight:700; text-decoration:none;">Redefinir minha senha</a>
                   </td>
                 </tr>
               </table>
-              <p style="margin:32px 0 0; padding-top:24px; border-top:1px solid #e6e5f3; color:#5d5c78; font-size:13px; line-height:1.6;">Se você não solicitou esta alteração, ignore este e-mail. Sua senha atual continuará a mesma.</p>
+              <div style="margin:34px 0 0; padding:17px; border-radius:12px; background:#f4f5ff;">
+                <p style="margin:0; color:#596080; font-size:13px; line-height:1.55; text-align:center;">Se você não solicitou a redefinição, não é necessário fazer nada. Sua senha continuará segura.</p>
+              </div>
             </td>
           </tr>
           <tr>
-            <td style="padding:20px 42px; background:#f3f2fb; color:#5d5c78; font-size:12px; text-align:center;">AAPM — SENAI</td>
+            <td style="padding:22px 30px; background:#f7f8ff; border-top:1px solid #e5e7f6;">
+              <p style="margin:0; color:#737995; font-size:12px; line-height:1.5; text-align:center;">Este é um e-mail automático. Por favor, não responda.</p>
+            </td>
           </tr>
         </table>
       </td>
@@ -84,24 +106,122 @@ def enviar_email_redefinicao(destinatario: str, link: str):
         subtype="html",
     )
 
-    host = os.environ["SMTP_HOST"]
-    porta = int(os.getenv("SMTP_PORT", "587"))
-    usuario = os.getenv("SMTP_USER")
-    senha = os.getenv("SMTP_PASSWORD")
-    usar_ssl = os.getenv("SMTP_USE_SSL", "false").lower() == "true"
+    contexto_ssl = ssl.create_default_context()
     if usar_ssl:
-        conexao = smtplib.SMTP_SSL(
-            host, porta, timeout=30, context=ssl.create_default_context()
-        )
+        conexao = smtplib.SMTP_SSL(host, porta, timeout=25, context=contexto_ssl)
     else:
-        conexao = smtplib.SMTP(host, porta, timeout=30)
+        conexao = smtplib.SMTP(host, porta, timeout=25)
 
     with conexao as servidor:
-        if not usar_ssl:
-            servidor.starttls(context=ssl.create_default_context())
+        if not usar_ssl and os.getenv("SMTP_USE_TLS", "true").lower() == "true":
+            servidor.starttls(context=contexto_ssl)
         if usuario and senha:
             servidor.login(usuario, senha)
         servidor.send_message(mensagem)
+
+
+@router.get("/esqueci-senha", name="tela_esqueci_senha")
+def tela_esqueci_senha(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "auth/esqueci_senha.html",
+        {"request": request},
+    )
+
+
+@router.post("/esqueci-senha")
+def solicitar_redefinicao_senha(
+    request: Request,
+    email: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    usuario = db.query(Usuario).filter(Usuario.email == email.strip().lower()).first()
+
+    # A resposta é a mesma para e-mails cadastrados ou não, evitando enumeração de contas.
+    if usuario and usuario.ativo:
+        token = criar_token_redefinicao_senha(usuario.email)
+        link = str(request.url_for("tela_redefinir_senha", token=token))
+        try:
+            enviar_email_redefinicao(usuario.email, link)
+        except (OSError, smtplib.SMTPException, RuntimeError):
+            return templates.TemplateResponse(
+                request,
+                "auth/esqueci_senha.html",
+                {
+                    "request": request,
+                    "erro": "Não foi possível enviar o e-mail agora. Tente novamente mais tarde.",
+                    "email": email,
+                },
+                status_code=503,
+            )
+
+    return templates.TemplateResponse(
+        request,
+        "auth/esqueci_senha.html",
+        {"request": request, "sucesso": True},
+    )
+
+
+@router.get("/redefinir-senha/{token}", name="tela_redefinir_senha")
+def tela_redefinir_senha(request: Request, token: str):
+    try:
+        validar_token_redefinicao_senha(token)
+    except JWTError:
+        return templates.TemplateResponse(
+            request,
+            "auth/redefinir_senha.html",
+            {"request": request, "token_invalido": True},
+            status_code=400,
+        )
+    return templates.TemplateResponse(
+        request,
+        "auth/redefinir_senha.html",
+        {"request": request, "token": token},
+    )
+
+
+@router.post("/redefinir-senha/{token}")
+def redefinir_senha(
+    request: Request,
+    token: str,
+    senha: str = Form(...),
+    confirmar_senha: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    try:
+        email = validar_token_redefinicao_senha(token)
+    except JWTError:
+        return templates.TemplateResponse(
+            request,
+            "auth/redefinir_senha.html",
+            {"request": request, "token_invalido": True},
+            status_code=400,
+        )
+
+    if len(senha) < 8 or senha != confirmar_senha:
+        return templates.TemplateResponse(
+            request,
+            "auth/redefinir_senha.html",
+            {
+                "request": request,
+                "token": token,
+                "erro": "As senhas devem coincidir e ter pelo menos 8 caracteres.",
+            },
+            status_code=400,
+        )
+
+    usuario = db.query(Usuario).filter(Usuario.email == email).first()
+    if not usuario or not usuario.ativo:
+        return templates.TemplateResponse(
+            request,
+            "auth/redefinir_senha.html",
+            {"request": request, "token_invalido": True},
+            status_code=400,
+        )
+
+    usuario.senha_hash = hash_senha(senha)
+    db.commit()
+    return RedirectResponse(url="/?senha_redefinida=1", status_code=303)
 
 #Rota de cadastro
 @router.get("/login")
@@ -160,82 +280,3 @@ def logout_usuario():
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie(key="access_token")
     return response
-
-
-@router.get("/esqueci-senha")
-def tela_esqueci_senha(request: Request):
-    return templates.TemplateResponse(request, "auth/esqueci_senha.html", {"request": request})
-
-
-@router.post("/esqueci-senha")
-def solicitar_redefinicao_senha(
-    request: Request,
-    email: str = Form(...),
-    db: Session = Depends(get_db),
-):
-    usuario = db.query(Usuario).filter(Usuario.email == email.strip().lower()).first()
-    mensagem = "Se o e-mail estiver cadastrado, enviaremos um link para redefinir sua senha."
-
-    if usuario and usuario.ativo:
-        token = criar_token_redefinicao_senha(usuario.email)
-        link = str(request.url_for("tela_redefinir_senha")) + f"?token={token}"
-        try:
-            enviar_email_redefinicao(usuario.email, link)
-        except (OSError, smtplib.SMTPException, RuntimeError) as erro:
-            print(f"Erro ao enviar e-mail de redefinição: {erro}")
-
-    return templates.TemplateResponse(
-        request, "auth/esqueci_senha.html", {"request": request, "mensagem": mensagem}
-    )
-
-
-@router.get("/redefinir-senha", name="tela_redefinir_senha")
-def tela_redefinir_senha(request: Request, token: str):
-    try:
-        validar_token_redefinicao_senha(token)
-    except JWTError:
-        return templates.TemplateResponse(
-            request,
-            "auth/redefinir_senha.html",
-            {"request": request, "erro": "Este link é inválido ou expirou."},
-            status_code=400,
-        )
-    return templates.TemplateResponse(request, "auth/redefinir_senha.html", {"request": request, "token": token})
-
-
-@router.post("/redefinir-senha")
-def redefinir_senha(
-    request: Request,
-    token: str = Form(...),
-    senha: str = Form(...),
-    confirmar_senha: str = Form(...),
-    db: Session = Depends(get_db),
-):
-    if len(senha) < 8 or senha != confirmar_senha:
-        return templates.TemplateResponse(
-            request,
-            "auth/redefinir_senha.html",
-            {"request": request, "token": token, "erro": "Use ao menos 8 caracteres e confirme a mesma senha."},
-            status_code=400,
-        )
-    try:
-        email = validar_token_redefinicao_senha(token)
-    except JWTError:
-        return templates.TemplateResponse(
-            request,
-            "auth/redefinir_senha.html",
-            {"request": request, "erro": "Este link é inválido ou expirou."},
-            status_code=400,
-        )
-
-    usuario = db.query(Usuario).filter(Usuario.email == email).first()
-    if not usuario:
-        return templates.TemplateResponse(
-            request,
-            "auth/redefinir_senha.html",
-            {"request": request, "erro": "Este link é inválido ou expirou."},
-            status_code=400,
-        )
-    usuario.senha_hash = hash_senha(senha)
-    db.commit()
-    return RedirectResponse(url="/?mensagem=senha_redefinida", status_code=303)

@@ -78,9 +78,19 @@
 
                         </div>
 
+                        {% if erro %}
+                        <p class="login-feedback login-feedback--error">{{ erro }}</p>
+                        {% endif %}
+
+                        {% if request.query_params.get('senha_redefinida') %}
+                        <p class="login-feedback login-feedback--success">Senha redefinida com sucesso. Faça seu login.</p>
+                        {% endif %}
+
                         <button type="submit">
                             Login
                         </button>
+
+                        <a class="forgot-password-link" href="/auth/esqueci-senha">Esqueci minha senha</a>
                     </form>
                     <p class="password-action">
                         <a href="/auth/esqueci-senha">Esqueci minha senha <span aria-hidden="true">→</span></a>
