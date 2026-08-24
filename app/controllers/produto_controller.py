@@ -32,7 +32,9 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)  # cria a pasta se não existir
 def listar_produtos(
     request: Request,
     busca: str = "",
-    categoria_id: int = 0,       # 0 = todas as categorias
+    categoria_id: int = 0,
+    pagina: int = 1,
+    por_pagina: int = 3,
     db: Session = Depends(get_db),
     usuario = Depends(get_usuario_logado)
 ):
@@ -54,8 +56,8 @@ def listar_produtos(
 
     offset = (pagina - 1) * por_pagina
 
-
-    produtos    = query.order_by(Produto.nome).all()
+    produtos = query.offset(offset).limit(por_pagina).all()
+   
 
 
     categorias  = db.query(Categoria).filter(Categoria.ativo == True).all()
@@ -70,14 +72,13 @@ def listar_produtos(
             "categorias":   categorias,
             "busca":        busca,
             "categoria_id": categoria_id,
+
             "pagina":       pagina,
             "por_pagina":   por_pagina,
             "total_paginas": total_paginas,
             "total_produtos": total_produtos
         }
     )
-
-
 # ============================================================
 # CADASTRO
 # ============================================================
