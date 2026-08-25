@@ -42,13 +42,17 @@ document.addEventListener("DOMContentLoaded", () => {
         boasVindas.classList.add("feedback-bem-vindo");
         document.body.style.overflow = "hidden";
         const fechar = () => {
-            boasVindas.remove();
-            document.body.style.overflow = "";
+            if (!boasVindas.isConnected || boasVindas.classList.contains("feedback-bem-vindo-saindo")) return;
+            boasVindas.classList.add("feedback-bem-vindo-saindo");
+            window.setTimeout(() => {
+                boasVindas.remove();
+                document.body.style.overflow = "";
+            }, 250);
         };
-        boasVindas.querySelector(".feedback-bem-vindo-fechar")?.addEventListener("click", fechar);
         boasVindas.addEventListener("click", (evento) => {
             if (evento.target === boasVindas) fechar();
         });
+        window.setTimeout(fechar, 1500);
         document.addEventListener("keydown", function escape(evento) {
             if (evento.key !== "Escape") return;
             fechar();
