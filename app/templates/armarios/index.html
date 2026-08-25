@@ -177,23 +177,6 @@
             </div>
         </section>
 
-        {% set armarios_desativados = armarios | selectattr("status", "equalto", "desativado") | list %}
-        {% if armarios_desativados %}
-        <section class="armarios-desativados" aria-labelledby="titulo-armarios-desativados">
-            <div>
-                <h2 id="titulo-armarios-desativados">Armários desativados</h2>
-                <p>Ative um armário para torná-lo disponível novamente.</p>
-            </div>
-            <div class="lista-armarios-desativados">
-                {% for armario in armarios_desativados %}
-                <form action="/armarios/{{ armario.id }}/ativar" method="post">
-                    <span>Armário {{ armario.numero|int }}</span>
-                    <button type="submit" class="btn-ativar-armario"><i class="fa-solid fa-power-off"></i> Ativar</button>
-                </form>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
         </div>
     </main>
 
@@ -245,6 +228,7 @@
 
                 <div class="modal-actions">
                     <button type="button" class="btn-desativar" id="btn-desativar-armario"><i class="fa-solid fa-power-off"></i> Desativar</button>
+                    <button type="button" class="btn-ativar-armario" id="btn-ativar-armario" hidden><i class="fa-solid fa-power-off"></i> Ativar armário</button>
                     <button type="button" class="btn-secundario" id="btn-cancelar">Cancelar</button>
                     <button type="submit" class="btn-primario">Salvar</button>
                 </div>
