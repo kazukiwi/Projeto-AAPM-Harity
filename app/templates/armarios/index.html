@@ -58,8 +58,10 @@
             {% if request.query_params.get("reserva") == "cancelada" %}<div class="alerta-sucesso">Reserva cancelada e mantida no histórico.</div>{% endif %}
             {% if request.query_params.get("armario") == "ok" %}<div class="alerta-sucesso">Armário cadastrado com sucesso.</div>{% endif %}
             {% if request.query_params.get("armario") == "desativado" %}<div class="alerta-sucesso">Armário desativado. O histórico de reservas foi preservado.</div>{% endif %}
+            {% if request.query_params.get("armario") == "ativado" %}<div class="alerta-sucesso">Armário ativado e disponível para uso.</div>{% endif %}
             {% if request.query_params.get("erro") == "ocupado" %}<div class="alerta-erro">Cancele a reserva ou libere o armário antes de desativá-lo.</div>{% endif %}
             {% if request.query_params.get("erro") == "conflito" %}<div class="alerta-erro">Já existe uma reserva ativa para este armário no período informado.</div>{% endif %}
+            {% if request.query_params.get("erro") == "indisponivel" %}<div class="alerta-erro">Este armário não está disponível para reserva.</div>{% endif %}
             {% if request.query_params.get("erro") == "periodo" %}<div class="alerta-erro">A data final deve ser igual ou posterior à data inicial.</div>{% endif %}
             {% if request.query_params.get("erro") in ["reservadados", "numero"] %}<div class="alerta-erro">Revise os dados informados. O número do armário deve ser único.</div>{% endif %}
         </div>
@@ -67,7 +69,7 @@
         <section class="armarios-panel" data-armarios-panel="reserva" hidden>
             <div class="panel-heading"><h2>Reservar armário</h2><p>Consulte a disponibilidade e vincule um associado a um período.</p></div>
             <form action="/armarios/reservas" method="post" class="reserva-form" data-feedback-form>
-                <label>Armário<select name="armario_id" required><option value="">Selecione</option>{% for armario in armarios %}<option value="{{ armario.id }}">Armário {{ armario.numero }}</option>{% endfor %}</select></label>
+                <label>Armário<select name="armario_id" required><option value="">Selecione</option>{% for armario in armarios if armario.status == "disponivel" %}<option value="{{ armario.id }}">Armário {{ armario.numero }}</option>{% endfor %}</select></label>
                 <label>Associado<select name="associado_id" required><option value="">Selecione</option>{% for associado in associados %}<option value="{{ associado.id }}">{{ associado.nome }}{% if associado.matricula %} — {{ associado.matricula }}{% endif %}</option>{% endfor %}</select></label>
                 <label>Semestre<input name="semestre" required placeholder="Ex.: 2026.2" pattern="[0-9]{4}\.[12]"></label>
                 <label>Início<input type="date" name="inicio_em" required></label>
@@ -141,6 +143,7 @@
             <span class="legenda-item"><i class="dot dot-disponivel"></i> Disponivel</span>
             <span class="legenda-item"><i class="dot dot-ocupado"></i> Ocupado</span>
             <span class="legenda-item"><i class="dot dot-manutencao"></i> Manutencao</span>
+            <span class="legenda-item"><i class="dot dot-desativado"></i> Desativado</span>
         </section>
 
         <section class="grid-shell">
@@ -163,6 +166,8 @@
                     <i class="fa-solid fa-wrench"></i>
                     {% elif armario.status == "ocupado" %}
                     <i class="fa-regular fa-user"></i>
+                    {% elif armario.status == "desativado" %}
+                    <i class="fa-solid fa-lock"></i>
                     {% else %}
                     <i class="fa-solid fa-lock-open"></i>
                     {% endif %}
@@ -171,6 +176,24 @@
                 {% endfor %}
             </div>
         </section>
+
+        {% set armarios_desativados = armarios | selectattr("status", "equalto", "desativado") | list %}
+        {% if armarios_desativados %}
+        <section class="armarios-desativados" aria-labelledby="titulo-armarios-desativados">
+            <div>
+                <h2 id="titulo-armarios-desativados">Armários desativados</h2>
+                <p>Ative um armário para torná-lo disponível novamente.</p>
+            </div>
+            <div class="lista-armarios-desativados">
+                {% for armario in armarios_desativados %}
+                <form action="/armarios/{{ armario.id }}/ativar" method="post">
+                    <span>Armário {{ armario.numero|int }}</span>
+                    <button type="submit" class="btn-ativar-armario"><i class="fa-solid fa-power-off"></i> Ativar</button>
+                </form>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
         </div>
     </main>
 
