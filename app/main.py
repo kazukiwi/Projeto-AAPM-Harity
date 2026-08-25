@@ -458,6 +458,32 @@ def desativar_armario(
     return RedirectResponse(url="/armarios?armario=desativado", status_code=303)
 
 
+@app.post("/armarios/{armario_id}/ativar")
+def ativar_armario(
+    armario_id: int,
+    db: Session = Depends(get_db),
+    usuario=Depends(get_usuario_opcional),
+):
+    armario = db.query(Armario).filter(Armario.id == armario_id).first()
+    if not armario:
+        return RedirectResponse(url="/armarios?erro=armario", status_code=303)
+
+    # Apenas um armário desativado pode ser reativado por esta ação.
+    if armario.status != "desativado":
+        return RedirectResponse(url="/armarios?erro=status", status_code=303)
+
+    armario.status = "disponivel"
+    armario.associado_id = None
+    armario.associado_nome = ""
+    armario.associado_email = ""
+    armario.associado_telefone = ""
+    armario.associado_matricula = ""
+    armario.atribuido_em = ""
+    armario.observacoes = ""
+    db.commit()
+    return RedirectResponse(url="/armarios?armario=ativado", status_code=303)
+
+
 @app.post("/armarios/reservas")
 def criar_reserva_armario(
     armario_id: int = Form(...),
@@ -480,6 +506,9 @@ def criar_reserva_armario(
     ).first()
     if not armario or not associado:
         return RedirectResponse(url="/armarios?erro=reservadados", status_code=303)
+
+    if armario.status != "disponivel":
+        return RedirectResponse(url="/armarios?erro=indisponivel", status_code=303)
 
     inicio = datetime.combine(inicio_em, datetime.min.time())
     fim = datetime.combine(fim_em, datetime.max.time())
