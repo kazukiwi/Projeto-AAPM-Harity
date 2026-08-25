@@ -204,6 +204,7 @@ body {
 .dot-disponivel { background: #00c853; }
 .dot-ocupado { background: #3b73f6; }
 .dot-manutencao { background: #ff6d00; }
+.dot-desativado { background: #64748b; }
 
 .grid-shell {
     padding: 20px;
@@ -267,6 +268,15 @@ body {
 .status-disponivel { background: #00c853; }
 .status-ocupado { background: #3b73f6; }
 .status-manutencao { background: #ff6d00; }
+.status-desativado { background: #64748b; }
+
+.armarios-desativados { display: grid; gap: 14px; margin: 0 20px 20px; padding: 18px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; }
+.armarios-desativados h2 { font-size: 18px; color: #1e293b; }
+.armarios-desativados p { margin-top: 4px; color: #64748b; font-size: 14px; }
+.lista-armarios-desativados { display: flex; flex-wrap: wrap; gap: 10px; }
+.lista-armarios-desativados form { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #d9dee7; border-radius: 6px; background: #fff; font-weight: 700; color: #334155; }
+.btn-ativar-armario { border: 1px solid #86efac; border-radius: 6px; padding: 7px 10px; background: #f0fdf4; color: #166534; font-weight: 700; cursor: pointer; }
+.btn-ativar-armario:hover { background: #dcfce7; }
 
 .modal-overlay {
     position: fixed;
