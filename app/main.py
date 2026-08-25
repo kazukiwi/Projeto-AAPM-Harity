@@ -17,6 +17,7 @@ from app.models.produtos import Produto
 from app.models.cliente import Cliente
 from app.models.armario import Armario
 from app.models.reserva_armario import ReservaArmario
+from app.models.venda import Venda
 
 from app.controllers import (
     auth_controller,
@@ -155,7 +156,10 @@ def home(
     total_produtos = len(produtos_ativos)
     produtos_alerta = [p for p in produtos_ativos if p.estoque_atual <= 5]
     estoque_baixo = len(produtos_alerta)
-    valor_total = sum(p.estoque_atual * p.preco for p in produtos_ativos)
+    valor_total = (
+        db.query(func.coalesce(func.sum(Venda.total_liquido), 0.0))
+        .scalar()
+    )
 
     contagem_cat = {}
     for p in produtos_ativos:
