@@ -65,6 +65,7 @@ def listar_produtos(
     request: Request,
     busca: str = "",
     categoria_id: int = 0,
+    estoque_baixo: bool = False,
     pagina: int = 1,
     por_pagina: int = 10,
     db: Session = Depends(get_db),
@@ -77,6 +78,9 @@ def listar_produtos(
 
     if categoria_id:
         query = query.filter(Produto.categoria_id == categoria_id)
+
+    if estoque_baixo:
+        query = query.filter(Produto.estoque_atual <= 5)
 
     total_produtos = query.count()
 
@@ -100,6 +104,7 @@ def listar_produtos(
             "categorias":   categorias,
             "busca":        busca,
             "categoria_id": categoria_id,
+            "estoque_baixo": estoque_baixo,
 
             "total_produtos": total_produtos
         }
