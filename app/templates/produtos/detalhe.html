@@ -61,6 +61,20 @@
                         <span class="info-label">Estoque Atual</span>
                         <span class="info-value" style="font-size: 1.1rem;">{{ produto.estoque_atual }} un.</span>
                     </div>
+
+                    {% if produto.possui_variacoes_tamanho and produto.estoques_tamanho %}
+                    <div class="info-row">
+                        <span class="info-label">Tamanhos disponíveis</span>
+                        <div class="tamanhos-lista" aria-label="Estoque por tamanho">
+                            {% for estoque in produto.estoques_tamanho %}
+                            <span class="tamanho-item">
+                                <strong>{{ estoque.tamanho.nome }}</strong>
+                                <span>{{ estoque.estoque_atual }} un.</span>
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
 
                 {% if admin or usuario.role == 'admin' %}

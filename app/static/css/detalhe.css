@@ -140,6 +140,28 @@ body {
     color: #10b981;
 }
 
+/* Estoque dos produtos com variaÃ§Ãµes de tamanho */
+.tamanhos-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tamanho-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: #f8fafc;
+    font-size: 14px;
+}
+
+.tamanho-item span {
+    color: var(--text-muted);
+}
+
 /* Badge de Categoria */
 .category-badge {
     background-color: #eff6ff;
