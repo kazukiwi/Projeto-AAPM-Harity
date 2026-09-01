@@ -1,5 +1,4 @@
 # controllers/produto_controller.py — CRUD produtos AAPM SENAI
-import math
 import os
 import shutil
 import uuid
@@ -79,17 +78,13 @@ def listar_produtos(
     if categoria_id:
         query = query.filter(Produto.categoria_id == categoria_id)
 
-        query = query.order_by(Produto.nome)
     total_produtos = query.count()
 
-    pagina = max(pagina, 1)
-    por_pagina = max(por_pagina, 1)
-
-    total_paginas = math.ceil(total_produtos / por_pagina) if total_produtos else 1
-
-    offset = (pagina - 1) * por_pagina
-
-    produtos = query.offset(offset).limit(por_pagina).all()
+    # A paginação desta tela é feita no navegador (listagem.js). Portanto,
+    # todos os produtos filtrados precisam ser enviados para que as páginas
+    # seguintes também possam ser exibidas. A ordenação estável evita que um
+    # produto mude de posição entre carregamentos.
+    produtos = query.order_by(Produto.nome).all()
    
 
 
@@ -106,9 +101,6 @@ def listar_produtos(
             "busca":        busca,
             "categoria_id": categoria_id,
 
-            "pagina":       pagina,
-            "por_pagina":   por_pagina,
-            "total_paginas": total_paginas,
             "total_produtos": total_produtos
         }
     )

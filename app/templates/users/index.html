@@ -172,7 +172,7 @@
                 </thead>
                 <tbody>
                     {% for u in usuarios %}
-                    <tr>
+                    <tr data-role="{{ u.role | lower }}">
                         <td class="preco-texto">{{ u.nome }}</td>
                         <td>{{ u.email }}</td>
                         <td>
@@ -219,8 +219,7 @@
         </div>
     </footer>
 
-    <script src="/static/javascript/users.js"></script>
-    <script src="/static/javascript/listagem.js?v=3"></script>
+    <script src="/static/javascript/listagem.js?v=4"></script>
     <script>
         // Renderiza os ícones do Lucide do seu projeto
         lucide.createIcons();

@@ -13,7 +13,7 @@ function iniciarListagens() {
     const controles = document.createElement("div");
     controles.className = "paginacao";
     tabela.closest(".tabela-container, .table-shell, .card-historico")?.append(controles);
-    const normalizar = valor => (valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const normalizar = valor => (valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     const renderizar = () => {
       const termo = normalizar(busca?.value);
       let visiveis = linhas.filter(linha => {
@@ -27,7 +27,7 @@ function iniciarListagens() {
         if (baixo && baixo.checked && Number(linha.cells[3]?.textContent.trim()) > 5) return false;
         const perfil = document.getElementById("selectPerfil");
         const ativos = document.getElementById("checkAtivos");
-        if (perfil?.value && normalizar(linha.cells[2]?.textContent) !== normalizar(perfil.value)) return false;
+        if (perfil?.value && normalizar(linha.dataset.role || linha.cells[2]?.textContent) !== normalizar(perfil.value)) return false;
         if (ativos?.checked && normalizar(linha.cells[3]?.textContent).includes("inativo")) return false;
         const somenteAssociados = document.querySelector('input[name="apenas_associados"]');
         if (somenteAssociados?.checked && !normalizar(linha.cells[3]?.textContent).includes("10%")) return false;

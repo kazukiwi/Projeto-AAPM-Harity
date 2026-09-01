@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Request, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from jose import JWTError
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -114,7 +115,10 @@ def enviar_email_redefinicao(destinatario: str, link: str):
 
     with conexao as servidor:
         if not usar_ssl and os.getenv("SMTP_USE_TLS", "true").lower() == "true":
+            # Alguns provedores exigem o EHLO antes da negociação STARTTLS.
+            servidor.ehlo()
             servidor.starttls(context=contexto_ssl)
+            servidor.ehlo()
         if usuario and senha:
             servidor.login(usuario, senha)
         servidor.send_message(mensagem)
@@ -135,7 +139,12 @@ def solicitar_redefinicao_senha(
     email: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    usuario = db.query(Usuario).filter(Usuario.email == email.strip().lower()).first()
+    email_normalizado = email.strip().lower()
+    usuario = (
+        db.query(Usuario)
+        .filter(func.lower(Usuario.email) == email_normalizado)
+        .first()
+    )
 
     # A resposta é a mesma para e-mails cadastrados ou não, evitando enumeração de contas.
     if usuario and usuario.ativo:
@@ -266,7 +275,7 @@ def login_usuario(
     token = criar_token(token_data)
 
     #Redirecionar para a tela inicial com o token no cookie
-    response = RedirectResponse(url="/", status_code=302)
+    response = RedirectResponse(url="/?login=ok", status_code=303)
     response.set_cookie(
         key="access_token", 
         value=token, 

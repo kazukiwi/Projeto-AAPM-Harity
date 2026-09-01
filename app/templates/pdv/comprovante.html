@@ -7,6 +7,7 @@
     <link rel="icon" href="/static/img/image.ico" type="image/x-icon">
     <title>Comprovante de Venda #{{ venda.id }}</title>
     <link rel="stylesheet" href="/static/css/vendas.css">
+    <link rel="stylesheet" href="/static/css/feedback.css?v=1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         @media print {
@@ -19,6 +20,9 @@
 </head>
 
 <body>
+    {% if request.query_params.get('sucesso') == 'ok' %}
+    <div class="feedback-aria-live" role="status">Venda finalizada com sucesso.</div>
+    {% endif %}
 
     {% if false %}<header class="no-print">
         <nav class="navbar">
