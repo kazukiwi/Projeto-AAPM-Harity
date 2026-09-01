@@ -1,3 +1,28 @@
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("Dashboard carregado com dados reais do banco de dados.");
+    const prefereMovimentoReduzido = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    document.querySelectorAll(".card-link").forEach((card) => {
+        card.addEventListener("click", (evento) => {
+            // Mantém intactos os comportamentos esperados de abrir em outra aba.
+            if (
+                evento.defaultPrevented ||
+                evento.button !== 0 ||
+                evento.metaKey ||
+                evento.ctrlKey ||
+                evento.shiftKey ||
+                evento.altKey ||
+                prefereMovimentoReduzido.matches
+            ) {
+                return;
+            }
+
+            evento.preventDefault();
+            card.classList.add("is-navigating");
+            document.body.classList.add("dashboard-navigating");
+
+            window.setTimeout(() => {
+                window.location.assign(card.href);
+            }, 280);
+        });
+    });
 });

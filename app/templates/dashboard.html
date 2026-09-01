@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard AAPM</title>
 
-    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css?v=3">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <link rel="icon" href="../static/img/image.ico" type="image/x-icon">
@@ -74,72 +74,72 @@
 
         <h2>Estoque</h2>
         <div class="cards">
-            <div class="card azul">
+            <a class="card card-link azul" href="/produtos" aria-label="Ver produtos">
                 <div>
                     <span>Total de Produtos</span>
                     <h3 id="total-produtos">{{ total_produtos | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-box"></i>
-            </div>
+            </a>
 
-            <div class="card vermelho">
+            <a class="card card-link vermelho" href="/produtos" aria-label="Ver produtos com estoque baixo">
                 <div>
                     <span>Estoque Baixo</span>
                     <h3 id="estoque-baixo">{{ estoque_baixo | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-chart-line"></i>
-            </div>
+            </a>
 
-            <div class="card verde">
+            <a class="card card-link verde" href="/pdv/historico" aria-label="Ver histórico de vendas">
                 <div>
                     <span>Valor Total</span>
                     <h3 id="valor-total">R$ {{ "%.2f"|format(valor_total | default(0.0)) }}</h3>
                 </div>
                 <i class="fa-solid fa-dollar-sign"></i>
-            </div>
+            </a>
 
-            <div class="card roxo">
+            <a class="card card-link roxo" href="/categorias" aria-label="Ver categorias">
                 <div>
                     <span>Categorias</span>
                     <h3 id="total-categorias">{{ total_categorias | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-table-cells"></i>
-            </div>
+            </a>
         </div>
 
         <h2>Armários e Associados</h2>
         <div class="cards">
-            <div class="card azul">
+            <a class="card card-link azul" href="/armarios" aria-label="Ver armários ocupados">
                 <div>
                     <span>Armários Ocupados</span>
                     <h3 id="armarios-ocupados">{{ armarios_ocupados | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-lock"></i>
-            </div>
+            </a>
 
-            <div class="card verde">
+            <a class="card card-link verde" href="/armarios" aria-label="Ver armários disponíveis">
                 <div>
                     <span>Armários Disponíveis</span>
                     <h3 id="armarios-disponiveis">{{ armarios_disponiveis | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-lock-open"></i>
-            </div>
+            </a>
 
-            <div class="card vermelho">
+            <a class="card card-link vermelho" href="/armarios" aria-label="Ver armários em manutenção">
                 <div>
                     <span>Armários em Manutenção</span>
                     <h3 id="armarios-manutencao">{{ armarios_manutencao | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-wrench"></i>
-            </div>
+            </a>
 
-            <div class="card roxo">
+            <a class="card card-link roxo" href="/clientes" aria-label="Ver associados">
                 <div>
                     <span>Total de Associados</span>
                     <h3 id="total-associados">{{ total_associados | default(0) }}</h3>
                 </div>
                 <i class="fa-solid fa-users"></i>
-            </div>
+            </a>
         </div>
 
         <div class="bottom">
@@ -191,6 +191,8 @@
             <p>&copy; 2026 AAPM - SENAI. Todos os direitos reservados.</p>
         </div>
     </footer>
+
+    <script src="/static/javascript/dashboard.js?v=3"></script>
 
 </body>
 
