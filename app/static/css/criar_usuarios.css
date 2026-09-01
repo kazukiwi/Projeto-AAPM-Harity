@@ -318,45 +318,6 @@ body {
 /* =========================
    AÇÕES (ESTILO EM PÍLULAS COMPLETAS)
 ========================= */
-.btn-acao {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 16px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    font-family: inherit;
-}
-
-/* Botão Editar / Ativar / Salvar (Visual Azul Claro) */
-.btn-acao.ver, 
-.btn-acao.btn-ativar { 
-    background-color: #eff6ff; 
-    color: #2563eb;            
-    border: 1px solid #bfdbfe; 
-}
-
-.btn-acao.ver:hover,
-.btn-acao.btn-ativar:hover { 
-    background-color: #dbeafe; 
-    transform: translateY(-1px); 
-}
-
-/* Botão Desativar / Cancelar (Visual Vermelho Claro) */
-.btn-acao.excluir { 
-    background-color: #fef2f2; 
-    color: #dc2626;            
-    border: 1px solid #fecaca; 
-}
-
-.btn-acao.excluir:hover { 
-    background-color: #fee2e2; 
-    transform: translateY(-1px); 
-}
 
 /* =========================
    RODAPÉ

@@ -87,6 +87,13 @@ def suporte(request: Request):
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 401:
+        return templates.TemplateResponse(
+            name="auth/nao_autenticado.html",
+            request=request,
+            status_code=401,
+            context={"request": request},
+        )
     if exc.status_code == 404:
         return templates.TemplateResponse(
             name="404.html",

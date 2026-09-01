@@ -46,9 +46,6 @@
                 <h1>{% if editando %}Editar Cliente{% else %}Novo Cliente{% endif %}</h1>
                 <p>Marque o cliente como associado para liberar 10% de desconto no PDV.</p>
             </div>
-            <a href="/clientes" class="btn-secondary">
-                <i class="fa-solid fa-arrow-left"></i> Voltar
-            </a>
         </div>
 
         {% if erro %}
@@ -82,6 +79,9 @@
             <button type="submit" class="btn-primary wide">
                 <i class="fa-solid fa-floppy-disk"></i> Salvar Cliente
             </button>
+            <a href="/clientes" class="btn-secondary">
+                Cancelar
+            </a>
         </form>
     </main>
 
