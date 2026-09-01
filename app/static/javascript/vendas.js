@@ -1,185 +1,101 @@
 let carrinho = [];
 
-document.addEventListener('DOMContentLoaded', function () {
-    const selectProd = document.getElementById('select-prod');
-    const selectCliente = document.getElementById('select-cliente');
+document.addEventListener('DOMContentLoaded', () => {
+    const produto = document.getElementById('select-prod');
+    const tamanho = document.getElementById('pdv-tamanho');
+    const cor = document.getElementById('pdv-cor');
     const grupoTamanho = document.getElementById('grupo-tamanho');
-    const selectTamanho = document.getElementById('pdv-tamanho');
-    const formAddItem = document.getElementById('form-add-item-pdv');
+    const grupoCor = document.getElementById('grupo-cor');
+    const quantidade = document.getElementById('pdv-qtd');
+    const estoque = document.getElementById('pdv-estoque');
+    const dados = document.getElementById('variacoes-produtos');
+    const variacoes = JSON.parse(dados ? dados.textContent : '{}');
 
-    function atualizarEstoqueDoTamanho() {
-        if (!selectProd || !selectTamanho || !selectProd.value || !selectTamanho.value) return;
-        const option = selectProd.options[selectProd.selectedIndex];
-        const estoque = parseInt(option.getAttribute(`data-tamanho-${selectTamanho.value}`) || '0');
-        document.getElementById('pdv-estoque').value = `${estoque} un`;
-        document.getElementById('pdv-qtd').max = estoque;
-    }
+    const opcoes = () => variacoes[produto.value] || [];
+    const atualizarSaldo = () => {
+        const variacao = opcoes().find(item => String(item.tamanho_id) === tamanho.value && item.cor === cor.value);
+        const saldo = variacao ? variacao.estoque_atual : 0;
+        estoque.value = `${saldo} un`;
+        quantidade.max = saldo;
+    };
+    const preencherCores = () => {
+        cor.innerHTML = '<option value="" disabled selected>Selecione a cor...</option>';
+        [...new Set(opcoes().filter(item => String(item.tamanho_id) === tamanho.value && item.estoque_atual > 0).map(item => item.cor))]
+            .forEach(nome => cor.add(new Option(nome, nome)));
+        cor.disabled = cor.options.length === 1;
+        atualizarSaldo();
+    };
 
-    // 1. Monitora a mudança do produto para atualizar campos e exibir tamanho se for camiseta
-    if (selectProd) {
-        selectProd.addEventListener('change', function () {
-            const selectedOption = this.options[this.selectedIndex];
-            const possuiVariacoes = selectedOption.getAttribute('data-possui-variacoes') === 'true';
-            const preco = selectedOption.getAttribute('data-preco');
-            const estoque = selectedOption.getAttribute('data-estoque');
+    produto?.addEventListener('change', () => {
+        const selecionado = produto.options[produto.selectedIndex];
+        const temVariacoes = selecionado.dataset.possuiVariacoes === 'true';
+        document.getElementById('pdv-preco').value = `R$ ${Number(selecionado.dataset.preco || 0).toFixed(2).replace('.', ',')}`;
+        quantidade.value = 1;
+        grupoTamanho.style.display = temVariacoes ? 'block' : 'none';
+        grupoCor.style.display = temVariacoes ? 'block' : 'none';
+        tamanho.required = temVariacoes;
+        cor.required = temVariacoes;
+        tamanho.value = '';
+        cor.innerHTML = '<option value="" disabled selected>Selecione a cor...</option>';
+        if (temVariacoes) {
+            [...tamanho.options].forEach(opcao => {
+                if (opcao.value) opcao.disabled = !opcoes().some(item => String(item.tamanho_id) === opcao.value && item.estoque_atual > 0);
+            });
+        } else {
+            estoque.value = `${selecionado.dataset.estoque} un`;
+            quantidade.max = selecionado.dataset.estoque;
+        }
+    });
+    tamanho?.addEventListener('change', preencherCores);
+    cor?.addEventListener('change', atualizarSaldo);
 
-            if (preco) {
-                document.getElementById('pdv-preco').value = `R$ ${parseFloat(preco).toFixed(2).replace('.', ',')}`;
-            }
-            if (estoque) {
-                document.getElementById('pdv-estoque').value = `${estoque} un`;
-                document.getElementById('pdv-qtd').max = estoque;
-            }
-            document.getElementById('pdv-qtd').value = 1;
-
-            if (grupoTamanho && selectTamanho && possuiVariacoes) {
-                grupoTamanho.style.display = 'block';
-                selectTamanho.required = true;
-                selectTamanho.value = '';
-                Array.from(selectTamanho.options).forEach(opcao => {
-                    if (!opcao.value) return;
-                    const saldo = parseInt(selectedOption.getAttribute(`data-tamanho-${opcao.value}`) || '0');
-                    opcao.disabled = saldo <= 0;
-                    opcao.textContent = `${opcao.value} (${saldo} un)`;
-                });
-            } else if (grupoTamanho && selectTamanho) {
-                grupoTamanho.style.display = 'none';
-                selectTamanho.required = false;
-                selectTamanho.value = '';
-            }
+    document.getElementById('form-add-item-pdv')?.addEventListener('submit', evento => {
+        evento.preventDefault();
+        if (!produto.value) return;
+        const selecionado = produto.options[produto.selectedIndex];
+        const temVariacoes = selecionado.dataset.possuiVariacoes === 'true';
+        if (temVariacoes && (!tamanho.value || !cor.value)) return;
+        const qtd = Number(quantidade.value);
+        const saldo = temVariacoes
+            ? opcoes().find(item => String(item.tamanho_id) === tamanho.value && item.cor === cor.value)?.estoque_atual
+            : Number(selecionado.dataset.estoque);
+        if (!qtd || qtd > saldo) return alert('Quantidade excede o estoque disponível.');
+        const tamanhoId = temVariacoes ? tamanho.value : null;
+        const nomeCor = temVariacoes ? cor.value : null;
+        const existente = carrinho.find(item => item.produto_id === Number(produto.value) && item.tamanho_id === tamanhoId && item.cor === nomeCor);
+        if (existente) existente.quantidade += qtd;
+        else carrinho.push({
+            produto_id: Number(produto.value), nome: selecionado.dataset.nome, preco: Number(selecionado.dataset.preco),
+            quantidade: qtd, tamanho_id: tamanhoId, tamanho: temVariacoes ? tamanho.options[tamanho.selectedIndex].text : null, cor: nomeCor
         });
-    }
-
-    // 2. Controla a inserção do item no carrinho local
-    if (selectTamanho) {
-        selectTamanho.addEventListener('change', atualizarEstoqueDoTamanho);
-    }
-
-    if (formAddItem) {
-        formAddItem.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            if (!selectProd || !selectProd.value) return;
-
-            const option = selectProd.options[selectProd.selectedIndex];
-            if (!selectProd.value) return;
-
-            const pId = parseInt(selectProd.value);
-            const nome = option.getAttribute('data-nome');
-            const preco = parseFloat(option.getAttribute('data-preco'));
-            const qtd = parseInt(document.getElementById('pdv-qtd').value);
-            const tamanhoId = grupoTamanho && grupoTamanho.style.display === 'block'
-                ? selectTamanho.value
-                : null;
-            const tamanho = tamanhoId ? selectTamanho.options[selectTamanho.selectedIndex].textContent.split(' (')[0] : null;
-
-            if (grupoTamanho && grupoTamanho.style.display === 'block' && !tamanhoId) {
-                selectTamanho.reportValidity();
-                return;
-            }
-
-            // Evita duplicados idênticos (mesmo ID e mesmo Tamanho)
-            const estoqueMax = tamanhoId
-                ? parseInt(option.getAttribute(`data-tamanho-${tamanhoId}`) || '0')
-                : parseInt(option.getAttribute('data-estoque'));
-            const itemExistente = carrinho.find(item => item.produto_id === pId && item.tamanho_id === tamanhoId);
-
-            if (itemExistente) {
-                if (itemExistente.quantidade + qtd > estoqueMax) {
-                    alert("A quantidade total excede o estoque disponível!");
-                    return;
-                }
-                itemExistente.quantidade += qtd;
-            } else {
-                if (qtd > estoqueMax) {
-                    alert("A quantidade inserida excede o estoque disponível!");
-                    return;
-                }
-                carrinho.push({
-                    produto_id: pId,
-                    nome: nome,
-                    preco: preco,
-                    quantidade: qtd,
-                    tamanho: tamanho,
-                    tamanho_id: tamanhoId
-                });
-            }
-
-            atualizarTabelaCarrinho();
-
-            // Reseta os campos do formulário para o próximo item
-            selectProd.value = "";
-            document.getElementById('pdv-estoque').value = "--";
-            document.getElementById('pdv-preco').value = "R$ 0,00";
-            document.getElementById('pdv-qtd').value = 1;
-            if (grupoTamanho && selectTamanho) {
-                grupoTamanho.style.display = 'none';
-                selectTamanho.required = false;
-                selectTamanho.value = '';
-            }
-        });
-    }
-
-    if (selectCliente) {
-        selectCliente.addEventListener('change', function () {
-            atualizarTabelaCarrinho();
-        });
-    }
+        atualizarTabelaCarrinho();
+        produto.value = '';
+        grupoTamanho.style.display = 'none'; grupoCor.style.display = 'none';
+        estoque.value = '--'; document.getElementById('pdv-preco').value = 'R$ 0,00'; quantidade.value = 1;
+    });
+    document.getElementById('select-cliente')?.addEventListener('change', atualizarTabelaCarrinho);
 });
 
-// 3. Atualiza a exibição da tabela do carrinho e do input serializado
 function atualizarTabelaCarrinho() {
     const corpo = document.getElementById('corpo-carrinho-pdv');
-    const totalBrutoTxt = document.getElementById('pdv-total-bruto');
-    const totalTxt = document.getElementById('pdv-total-geral');
-    const descontoTxt = document.getElementById('pdv-desconto');
-    const linhaDesconto = document.getElementById('pdv-linha-desconto');
-    const btnFinalizar = document.getElementById('btn-salvar-venda-banco');
-    const hiddenInput = document.getElementById('carrinho_json_input');
-    const selectCliente = document.getElementById('select-cliente');
-
     if (!corpo) return;
-    corpo.innerHTML = "";
-    let totalGeral = 0;
-
-    carrinho.forEach((item, idx) => {
+    let total = 0;
+    corpo.innerHTML = carrinho.map((item, indice) => {
         const subtotal = item.preco * item.quantidade;
-        totalGeral += subtotal;
-
-        corpo.innerHTML += `
-            <tr>
-                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>${item.nome}${item.tamanho ? ` (Tam: ${item.tamanho})` : ''}</strong></td>
-                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${item.quantidade}x</td>
-                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: center;">
-                    <button type="button" onclick="removerDoCarrinho(${idx})" style="color: #dc2626; background: none; border: none; cursor: pointer;">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-
-    const clienteSelecionado = selectCliente ? selectCliente.options[selectCliente.selectedIndex] : null;
-    const associado = clienteSelecionado && clienteSelecionado.getAttribute('data-associado') === 'true';
-    const descontoPadrao = selectCliente ? parseFloat(selectCliente.getAttribute('data-desconto-associado') || '10') : 10;
-    const descontoPercentual = associado ? descontoPadrao : 0;
-    const descontoValor = totalGeral * (descontoPercentual / 100);
-    const totalFinal = totalGeral - descontoValor;
-
-    if (totalBrutoTxt) totalBrutoTxt.textContent = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
-    if (descontoTxt) descontoTxt.textContent = `- R$ ${descontoValor.toFixed(2).replace('.', ',')}`;
-    if (linhaDesconto) linhaDesconto.style.display = associado && totalGeral > 0 ? "flex" : "none";
-    if (totalTxt) totalTxt.textContent = `R$ ${totalFinal.toFixed(2).replace('.', ',')}`;
-    if (hiddenInput) hiddenInput.value = JSON.stringify(carrinho);
-
-    if (btnFinalizar) {
-        btnFinalizar.disabled = carrinho.length === 0;
-    }
+        total += subtotal;
+        const variacao = item.tamanho ? ` (Tam: ${item.tamanho} | Cor: ${item.cor})` : '';
+        return `<tr><td><strong>${item.nome}${variacao}</strong></td><td>${item.quantidade}x</td><td>R$ ${subtotal.toFixed(2).replace('.', ',')}</td><td><button type="button" onclick="removerDoCarrinho(${indice})">Remover</button></td></tr>`;
+    }).join('');
+    const cliente = document.getElementById('select-cliente');
+    const associado = cliente?.options[cliente.selectedIndex]?.dataset.associado === 'true';
+    const percentual = associado ? Number(cliente.dataset.descontoAssociado || 10) : 0;
+    const desconto = total * percentual / 100;
+    document.getElementById('pdv-total-bruto').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+    document.getElementById('pdv-desconto').textContent = `- R$ ${desconto.toFixed(2).replace('.', ',')}`;
+    document.getElementById('pdv-linha-desconto').style.display = associado && total ? 'flex' : 'none';
+    document.getElementById('pdv-total-geral').textContent = `R$ ${(total - desconto).toFixed(2).replace('.', ',')}`;
+    document.getElementById('carrinho_json_input').value = JSON.stringify(carrinho);
+    document.getElementById('btn-salvar-venda-banco').disabled = !carrinho.length;
 }
 
-// 4. Função global para deletar itens de dentro do carrinho
-window.removerDoCarrinho = function (idx) {
-    carrinho.splice(idx, 1);
-    atualizarTabelaCarrinho();
-};
+window.removerDoCarrinho = indice => { carrinho.splice(indice, 1); atualizarTabelaCarrinho(); };

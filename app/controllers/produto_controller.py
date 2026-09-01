@@ -2,6 +2,7 @@
 import os
 import shutil
 import uuid
+import json
 from pathlib import Path
 from fastapi import APIRouter, Depends, Request, Form, UploadFile, File, status
 from fastapi.responses import RedirectResponse
@@ -11,7 +12,7 @@ from sqlalchemy import func
 from app.models.movimentacao import Movimentacao
 
 from app.database import get_db
-from app.models.produtos import Produto, EstoqueTamanho, Tamanho, ordenar_tamanhos
+from app.models.produtos import Produto, EstoqueTamanho, EstoqueVariacao, Tamanho, ordenar_tamanhos
 from app.models.categoria import Categoria
 from app.auth import get_usuario_logado, get_admin
 
@@ -54,6 +55,42 @@ async def _obter_estoques_tamanho(request: Request, db: Session) -> dict[int, in
             raise ValueError("estoque inválido")
         estoques[tamanho.id] = quantidade
     return estoques
+
+
+async def _obter_variacoes(request: Request, db: Session) -> list[dict]:
+    """Lê e valida as combinações de tamanho, cor e estoque enviadas pelo formulário."""
+    form = await request.form()
+    try:
+        variacoes = json.loads(form.get("variacoes_json", "[]"))
+    except (TypeError, json.JSONDecodeError):
+        raise ValueError("variações inválidas")
+
+    if not isinstance(variacoes, list):
+        raise ValueError("variações inválidas")
+
+    tamanho_ids_validos = {t.id for t in db.query(Tamanho).filter(Tamanho.ativo == True).all()}
+    combinacoes = set()
+    resultado = []
+    for variacao in variacoes:
+        try:
+            tamanho_id = int(variacao.get("tamanho_id"))
+            cor = str(variacao.get("cor", "")).strip()
+            estoque = int(variacao.get("estoque_atual"))
+        except (AttributeError, TypeError, ValueError):
+            raise ValueError("variações inválidas")
+        chave = (tamanho_id, cor.casefold())
+        if tamanho_id not in tamanho_ids_validos or not cor or len(cor) > 50 or estoque < 0 or chave in combinacoes:
+            raise ValueError("variações inválidas")
+        combinacoes.add(chave)
+        resultado.append({"tamanho_id": tamanho_id, "cor": cor, "estoque_atual": estoque})
+    return resultado
+
+
+def _salvar_variacoes(produto: Produto, variacoes: list[dict]) -> None:
+    produto.estoques_variacoes.clear()
+    produto.estoques_tamanho.clear()
+    produto.estoques_variacoes.extend(EstoqueVariacao(**variacao) for variacao in variacoes)
+    produto.estoque_atual = sum(variacao["estoque_atual"] for variacao in variacoes)
 
 
 # ============================================================
@@ -172,10 +209,10 @@ async def criar_produto(
 
     # O preço é armazenado em reais, na mesma unidade usada pelo PDV e pelas vendas.
     try:
-        estoques_tamanho = await _obter_estoques_tamanho(request, db)
+        variacoes = await _obter_variacoes(request, db)
     except ValueError:
         return RedirectResponse(url="/produtos/novo?erro=estoque", status_code=302)
-    if possui_variacoes_tamanho and sum(estoques_tamanho.values()) == 0:
+    if possui_variacoes_tamanho and sum(variacao["estoque_atual"] for variacao in variacoes) == 0:
         return templates.TemplateResponse(
             request,
             "produtos/form.html",
@@ -188,7 +225,7 @@ async def criar_produto(
                 "erro": "Informe a quantidade de pelo menos um tamanho.",
                 "valores": {
                     "nome": nome, "preco": preco, "estoque_atual": estoque_atual,
-                    "estoques_tamanho": {str(k): v for k, v in estoques_tamanho.items()},
+                    "variacoes": variacoes,
                     "categoria_id": categoria_id,
                     "possui_variacoes_tamanho": possui_variacoes_tamanho,
                 },
@@ -202,13 +239,13 @@ async def criar_produto(
     produto = Produto(
         nome          = nome,
         preco         = preco,
-        estoque_atual = sum(estoques_tamanho.values()) if possui_variacoes_tamanho else estoque_atual,
+        estoque_atual = sum(variacao["estoque_atual"] for variacao in variacoes) if possui_variacoes_tamanho else estoque_atual,
         possui_variacoes_tamanho = possui_variacoes_tamanho,
         categoria_id  = categoria_id or None,  # 0 vira NULL no banco
         imagem_path   = imagem_path,
     )
     if possui_variacoes_tamanho:
-        _salvar_estoques_tamanho(produto, possui_variacoes_tamanho, estoques_tamanho)
+        _salvar_variacoes(produto, variacoes)
 
     db.add(produto)
     db.commit()
@@ -310,10 +347,10 @@ async def editar_produto(
 
     # Mantém o preço em reais ao atualizar o cadastro.
     try:
-        estoques_tamanho = await _obter_estoques_tamanho(request, db)
+        variacoes = await _obter_variacoes(request, db)
     except ValueError:
         return RedirectResponse(url=f"/produtos/{produto_id}/editar?erro=estoque", status_code=302)
-    if possui_variacoes_tamanho and sum(estoques_tamanho.values()) == 0:
+    if possui_variacoes_tamanho and sum(variacao["estoque_atual"] for variacao in variacoes) == 0:
         return templates.TemplateResponse(
             request,
             "produtos/form.html",
@@ -340,7 +377,11 @@ async def editar_produto(
     editando.estoque_atual = estoque_atual
     editando.possui_variacoes_tamanho = possui_variacoes_tamanho
     editando.categoria_id  = categoria_id or None
-    _salvar_estoques_tamanho(editando, possui_variacoes_tamanho, estoques_tamanho)
+    if possui_variacoes_tamanho:
+        _salvar_variacoes(editando, variacoes)
+    else:
+        editando.estoques_variacoes.clear()
+        editando.estoques_tamanho.clear()
 
     db.commit()
 

@@ -62,13 +62,13 @@
                         <span class="info-value" style="font-size: 1.1rem;">{{ produto.estoque_atual }} un.</span>
                     </div>
 
-                    {% if produto.possui_variacoes_tamanho and produto.estoques_tamanho %}
+                    {% if produto.possui_variacoes_tamanho and produto.estoques_variacoes %}
                     <div class="info-row">
                         <span class="info-label">Tamanhos disponíveis</span>
                         <div class="tamanhos-lista" aria-label="Estoque por tamanho">
-                            {% for estoque in produto.estoques_tamanho %}
+                            {% for estoque in produto.estoques_variacoes %}
                             <span class="tamanho-item">
-                                <strong>{{ estoque.tamanho.nome }}</strong>
+                                <strong>{{ estoque.tamanho.nome }} / {{ estoque.cor }}</strong>
                                 <span>{{ estoque.estoque_atual }} un.</span>
                             </span>
                             {% endfor %}
