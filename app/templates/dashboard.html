@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard AAPM</title>
 
-    <link rel="stylesheet" href="/static/css/dashboard.css?v=3">
+    <link rel="stylesheet" href="/static/css/dashboard.css?v=4">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <link rel="icon" href="../static/img/image.ico" type="image/x-icon">
@@ -143,45 +143,38 @@
         </div>
 
         <div class="bottom">
-            <div class="panel">
-                <div class="panel-header">
-                    <h2>Alertas de Estoque Baixo</h2>
-                </div>
-                <div id="lista-alertas">
-                    {% if produtos_alerta %}
-                        <div class="lista-customizada">
-                            {% for prod in produtos_alerta %}
-                                <div class="item-lista" style="display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f3f4f6; align-items: center;">
-                                    <span><strong>{{ prod.nome }}</strong></span>
-                                    <span style="background-color: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold;">{{ prod.estoque_atual }} un.</span>
-                                </div>
+            <section class="produtos-categoria-area" aria-labelledby="titulo-produtos-categoria">
+                <h2 id="titulo-produtos-categoria">Produtos por Categoria</h2>
+                <div class="panel produtos-categoria-panel">
+                    <div id="lista-categorias">
+                        {% if produtos_por_categoria %}
+                            <div class="seletor-categoria">
+                                <label for="categoria-produtos">Selecione uma categoria</label>
+                                <select id="categoria-produtos" name="categoria-produtos">
+                                    {% for categoria in produtos_por_categoria %}
+                                        <option value="categoria-{{ loop.index }}">{{ categoria }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% for categoria, produtos in produtos_por_categoria.items() %}
+                                <section id="categoria-{{ loop.index }}" class="vitrine-categoria"{% if not loop.first %} hidden{% endif %} aria-label="Produtos da categoria {{ categoria }}">
+                                    <div class="vitrine-produtos" aria-label="Produtos da categoria {{ categoria }}">
+                                        {% for produto in produtos %}
+                                            <a class="produto-vitrine" href="/produtos/{{ produto.id }}" aria-label="Ver {{ produto.nome }}">
+                                                <img src="{{ produto.imagem_url }}" alt="{{ produto.nome }}" loading="lazy">
+                                                <span class="produto-vitrine-nome">{{ produto.nome }}</span>
+                                                <strong class="produto-vitrine-preco">R$ {{ '%.2f'|format(produto.preco or 0)|replace('.', ',') }}</strong>
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </section>
                             {% endfor %}
-                        </div>
-                    {% else %}
-                        <div style="color: #6b7280; padding: 15px;">Nenhum alerta de estoque baixo.</div>
-                    {% endif %}
+                        {% else %}
+                            <div style="color: #6b7280; padding: 15px;">Nenhum produto cadastrado.</div>
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <h2>Produtos por Categoria</h2>
-                </div>
-                <div id="lista-categorias">
-                    {% if contagem_por_categoria %}
-                        <div class="lista-customizada">
-                            {% for cat, qtd in contagem_por_categoria.items() %}
-                                <div class="item-lista" style="display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f3f4f6; align-items: center;">
-                                    <span style="font-weight: 500; color: #374151;">{{ cat }}</span>
-                                    <span style="background-color: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold;">{{ qtd }} {{ 'produto' if qtd == 1 else 'produtos' }}</span>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div style="color: #6b7280; padding: 15px;">Nenhuma categoria cadastrada.</div>
-                    {% endif %}
-                </div>
-            </div>
+            </section>
         </div>
 
     </div>
@@ -192,7 +185,7 @@
         </div>
     </footer>
 
-    <script src="/static/javascript/dashboard.js?v=3"></script>
+    <script src="/static/javascript/dashboard.js?v=4"></script>
 
 </body>
 
