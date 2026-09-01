@@ -41,6 +41,16 @@
         </nav>
     </header>
 
+    {% if request.query_params.get('login') == 'ok' %}
+    <div id="feedback-bem-vindo" class="feedback-bem-vindo" aria-hidden="false">
+        <div class="feedback-bem-vindo-card" role="status" aria-live="polite">
+            <div class="feedback-bem-vindo-icone"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></div>
+            <h2>Seja Bem-Vindo ao Sistema, {{ usuario.nome or 'Usuário' }}!</h2>
+            <p>Seu acesso foi realizado com sucesso.</p>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="dashboard">
 
         <div class="header">
