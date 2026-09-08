@@ -73,21 +73,21 @@
         <form method="GET" action="/produtos/" class="filtros-container" id="form-filtros">
             <div class="busca-wrapper">
                 <i class="fa-solid fa-magnifying-glass icone-busca"></i>
-                <input type="text" id="input-busca" placeholder="Buscar produtos pelo nome...">
+                <input type="text" id="input-busca" name="busca" value="{{ busca }}" placeholder="Buscar produtos pelo nome...">
             </div>
 
             <div class="select-wrapper">
                 <i class="fa-solid fa-filter icone-filtro"></i>
-                <select id="select-categoria">
+                <select id="select-categoria" name="categoria_id">
                     <option value="">Todas as categorias</option>
                     {% for cat in categorias %}
-                    <option value="{{ cat.id }}">{{ cat.nome }}</option>
+                    <option value="{{ cat.id }}" {% if categoria_id == cat.id %}selected{% endif %}>{{ cat.nome }}</option>
                     {% endfor %}
                 </select>
             </div>
 
             <label class="checkbox-wrapper">
-                <input type="checkbox" id="check-estoque-baixo" {% if estoque_baixo %}checked{% endif %}>
+                <input type="checkbox" id="check-estoque-baixo" name="estoque_baixo" value="1" {% if estoque_baixo %}checked{% endif %}>
                 <span>Apenas estoque baixo</span>
             </label>
         </form>
@@ -121,13 +121,25 @@
                             </a>
                         </td>
                         <td>{{ produto.categoria.nome if produto.categoria else 'Sem categoria' }}</td>
-                        <td>{{ produto.estoque_atual }}</td>
+                        <td>
+                            <strong>{{ produto.estoque_atual }} un.</strong>
+                            {% if produto.variacoes_com_estoque_baixo %}
+                            <div class="variacoes-estoque-baixo" aria-label="Variações com estoque baixo">
+                                {% for variacao in produto.variacoes_com_estoque_baixo %}
+                                <span>{{ variacao.tamanho.nome if variacao.tamanho else 'Tam.' }} · {{ variacao.cor }}: {{ variacao.estoque_atual }} un.</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </td>
                         <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
                         <td>
-                            {% if produto.estoque_atual <= 5 %} <span style="color: red; font-weight: bold;">Estoque
-                                Baixo</span>
+                            {% if produto.estoque_baixo %}
+                                <span class="badge-status baixo-estoque"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Estoque baixo</span>
+                                {% if produto.variacoes_com_estoque_baixo %}
+                                <small class="descricao-estoque-baixo">{{ produto.variacoes_com_estoque_baixo|length }} variaç{{ 'ão' if produto.variacoes_com_estoque_baixo|length == 1 else 'ões' }} em alerta</small>
+                                {% endif %}
                                 {% else %}
-                                <span style="color: green;">Ativo</span>
+                                <span class="badge-status ativo"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Ativo</span>
                                 {% endif %}
                         </td>
                         <td style="text-align: center;">
@@ -251,6 +263,16 @@
 
 
     <script src="/static/javascript/listagem.js?v=3"></script>
+    <script>
+        // Submete o formulário de filtros ao alterar categoria ou estoque baixo
+        (function () {
+            const form = document.getElementById('form-filtros');
+            const selectCategoria = document.getElementById('select-categoria');
+            const checkEstoqueBaixo = document.getElementById('check-estoque-baixo');
+            if (selectCategoria) selectCategoria.addEventListener('change', () => form.submit());
+            if (checkEstoqueBaixo) checkEstoqueBaixo.addEventListener('change', () => form.submit());
+        })();
+    </script>
     <script src="/static/javascript/confirmacao.js?v=1"></script>
 </body>
 

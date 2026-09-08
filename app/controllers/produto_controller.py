@@ -7,12 +7,12 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, Request, Form, UploadFile, File, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import func
 from app.models.movimentacao import Movimentacao
 
 from app.database import get_db
-from app.models.produtos import Produto, EstoqueTamanho, EstoqueVariacao, Tamanho, ordenar_tamanhos
+from app.models.produtos import Produto, EstoqueTamanho, EstoqueVariacao, Tamanho, condicao_estoque_baixo, ordenar_tamanhos
 from app.models.categoria import Categoria
 from app.auth import get_usuario_logado, get_admin
 
@@ -117,7 +117,7 @@ def listar_produtos(
         query = query.filter(Produto.categoria_id == categoria_id)
 
     if estoque_baixo:
-        query = query.filter(Produto.estoque_atual <= 5)
+        query = query.filter(condicao_estoque_baixo())
 
     total_produtos = query.count()
 
@@ -125,7 +125,13 @@ def listar_produtos(
     # todos os produtos filtrados precisam ser enviados para que as páginas
     # seguintes também possam ser exibidas. A ordenação estável evita que um
     # produto mude de posição entre carregamentos.
-    produtos = query.order_by(Produto.nome).all()
+    produtos = (
+        query.options(
+            selectinload(Produto.estoques_variacoes).selectinload(EstoqueVariacao.tamanho)
+        )
+        .order_by(Produto.nome)
+        .all()
+    )
    
 
 
