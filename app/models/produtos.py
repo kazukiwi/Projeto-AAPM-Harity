@@ -7,6 +7,7 @@ from app.database import Base
 
 STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
 IMAGEM_PADRAO_URL = "/static/img/produto_padrao.png"
+LIMITE_ESTOQUE_BAIXO = 5
 
 
 def ordenar_tamanhos(tamanhos):
@@ -53,6 +54,24 @@ class Produto(Base):
     def estoque_do_tamanho(self, tamanho_id):
         registro = next((e for e in self.estoques_tamanho if e.tamanho_id == tamanho_id), None)
         return registro.estoque_atual if registro else 0
+
+    @property
+    def variacoes_com_estoque_baixo(self):
+        """Variações cujo saldo individual atingiu o limite de alerta."""
+        if not self.possui_variacoes_tamanho:
+            return []
+        return [
+            variacao
+            for variacao in self.estoques_variacoes
+            if variacao.estoque_atual <= LIMITE_ESTOQUE_BAIXO
+        ]
+
+    @property
+    def estoque_baixo(self):
+        """Indica estoque baixo no total ou em ao menos uma variação."""
+        if self.possui_variacoes_tamanho and self.estoques_variacoes:
+            return bool(self.variacoes_com_estoque_baixo)
+        return self.estoque_atual <= LIMITE_ESTOQUE_BAIXO
 
     @property
     def imagem_url(self):
@@ -128,3 +147,10 @@ class EstoqueVariacao(Base):
 
     produto = relationship("Produto", back_populates="estoques_variacoes")
     tamanho = relationship("Tamanho")
+
+
+def condicao_estoque_baixo(limite: int = LIMITE_ESTOQUE_BAIXO):
+    """Condição SQL para localizar produtos com total ou variação em nível baixo."""
+    return (Produto.estoque_atual <= limite) | Produto.estoques_variacoes.any(
+        EstoqueVariacao.estoque_atual <= limite
+    )
