@@ -63,7 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const tamanhoId = temVariacoes ? tamanho.value : null;
         const nomeCor = temVariacoes ? cor.value : null;
         const existente = carrinho.find(item => item.produto_id === Number(produto.value) && item.tamanho_id === tamanhoId && item.cor === nomeCor);
-        if (existente) existente.quantidade += qtd;
+        if (existente) {
+            if (existente.quantidade + qtd > saldo) {
+                alert('Quantidade excede o estoque disponível.');
+                return;
+            }
+            existente.quantidade += qtd;
+        }
         else carrinho.push({
             produto_id: Number(produto.value), nome: selecionado.dataset.nome, preco: Number(selecionado.dataset.preco),
             quantidade: qtd, tamanho_id: tamanhoId, tamanho: temVariacoes ? tamanho.options[tamanho.selectedIndex].text : null, cor: nomeCor

@@ -163,7 +163,7 @@ def finalizar_venda(
     except (json.JSONDecodeError, ValueError):
         return RedirectResponse(url="/pdv?erro=json", status_code=302)
 
-    if not itens:
+    if not isinstance(itens, list) or not itens:
         return RedirectResponse(url="/pdv?erro=vazio", status_code=302)
 
     # Busca o cliente e verifica se é associado
@@ -182,16 +182,29 @@ def finalizar_venda(
     # ── Valida estoque e calcula totais ──────────────────────
     total_bruto = 0.0
     itens_validados = []
+    quantidades_por_produto = {}
+    quantidades_por_variacao = {}
 
     for item in itens:
+        if not isinstance(item, dict):
+            return RedirectResponse(url="/pdv?erro=json", status_code=302)
+
+        try:
+            produto_id = int(item.get("produto_id"))
+        except (TypeError, ValueError):
+            return RedirectResponse(url="/pdv?erro=produto_inexistente", status_code=302)
+
+        if produto_id <= 0:
+            return RedirectResponse(url="/pdv?erro=produto_inexistente", status_code=302)
+
         produto = db.query(Produto).filter(
-            Produto.id == item["produto_id"],
+            Produto.id == produto_id,
             Produto.ativo == True
         ).with_for_update().first()
 
         if not produto:
             return RedirectResponse(
-                url=f"/pdv?erro=produto_inexistente&id={item['produto_id']}",
+                url=f"/pdv?erro=produto_inexistente&id={produto_id}",
                 status_code=302
             )
 
@@ -202,6 +215,14 @@ def finalizar_venda(
 
         if qtd <= 0:
             return RedirectResponse(url="/pdv?erro=quantidade", status_code=302)
+
+        quantidade_total_produto = quantidades_por_produto.get(produto.id, 0) + qtd
+        if quantidade_total_produto > produto.estoque_atual:
+            return RedirectResponse(
+                url=f"/pdv?erro=estoque&produto={produto.nome}",
+                status_code=302
+            )
+        quantidades_por_produto[produto.id] = quantidade_total_produto
 
         try:
             tamanho_id = obter_tamanho_id_item(item)
@@ -221,21 +242,21 @@ def finalizar_venda(
                 EstoqueVariacao.cor == cor,
             ).with_for_update().first()
             if estoque_variacao:
-                if estoque_variacao.estoque_atual < qtd:
+                chave_variacao = (produto.id, tamanho_id, cor)
+                quantidade_total_variacao = quantidades_por_variacao.get(chave_variacao, 0) + qtd
+                if quantidade_total_variacao > estoque_variacao.estoque_atual:
                     return RedirectResponse(url=f"/pdv?erro=estoque_variacao&produto={produto.nome}", status_code=302)
+                quantidades_por_variacao[chave_variacao] = quantidade_total_variacao
             else:
                 estoque_tamanho = db.query(EstoqueTamanho).filter(
                     EstoqueTamanho.produto_id == produto.id,
                     EstoqueTamanho.tamanho_id == tamanho_id,
                 ).with_for_update().first()
-                if not estoque_tamanho or estoque_tamanho.estoque_atual < qtd:
+                chave_variacao = (produto.id, tamanho_id, None)
+                quantidade_total_variacao = quantidades_por_variacao.get(chave_variacao, 0) + qtd
+                if not estoque_tamanho or quantidade_total_variacao > estoque_tamanho.estoque_atual:
                     return RedirectResponse(url=f"/pdv?erro=estoque_variacao&produto={produto.nome}", status_code=302)
-
-        if produto.estoque_atual < qtd:
-            return RedirectResponse(
-                url=f"/pdv?erro=estoque&produto={produto.nome}",
-                status_code=302
-            )
+                quantidades_por_variacao[chave_variacao] = quantidade_total_variacao
 
         subtotal    = produto.preco * qtd
         total_bruto += subtotal
