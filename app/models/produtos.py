@@ -41,6 +41,9 @@ class Produto(Base):
     estoques_tamanho = relationship(
         "EstoqueTamanho", back_populates="produto", cascade="all, delete-orphan"
     )
+    estoques_variacoes = relationship(
+        "EstoqueVariacao", back_populates="produto", cascade="all, delete-orphan"
+    )
 
     @property
     def eh_camiseta(self):
@@ -107,3 +110,21 @@ class EstoqueTamanho(Base):
 
     produto = relationship("Produto", back_populates="estoques_tamanho")
     tamanho = relationship("Tamanho", back_populates="estoques")
+
+
+class EstoqueVariacao(Base):
+    """Saldo de uma combinação específica de tamanho e cor."""
+
+    __tablename__ = "estoques_variacoes"
+    __table_args__ = (
+        UniqueConstraint("produto_id", "tamanho_id", "cor", name="uq_estoque_variacao_produto_tamanho_cor"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    produto_id = Column(Integer, ForeignKey("produtos.id", ondelete="CASCADE"), nullable=False)
+    tamanho_id = Column(Integer, ForeignKey("tamanhos.id", ondelete="RESTRICT"), nullable=False)
+    cor = Column(String(50), nullable=False)
+    estoque_atual = Column(Integer, nullable=False, default=0)
+
+    produto = relationship("Produto", back_populates="estoques_variacoes")
+    tamanho = relationship("Tamanho")

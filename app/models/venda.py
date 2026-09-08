@@ -99,6 +99,7 @@ class ItemVenda(Base):
     # Tamanho escolhido no momento da venda (quando o produto for uma camiseta).
     # Fica no item para preservar o histórico independentemente do cadastro atual.
     tamanho        = Column(String(10), nullable=True)
+    cor            = Column(String(50), nullable=True)
     quantidade     = Column(Integer, nullable=False)
     preco_unitario = Column(Float, nullable=False)   # preço no momento da venda
 

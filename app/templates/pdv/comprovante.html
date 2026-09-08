@@ -91,7 +91,7 @@
                 <tbody>
                     {% for item in venda.itens %}
                     <tr>
-                        <td style="padding:6px 0;">{{ item.produto_nome }}{% if item.tamanho %} (Tam: {{ item.tamanho }}){% endif %} <br> <small style="color:#666;">1 un x R$ {{ "%.2f"|format(item.preco_unitario) }}</small></td>
+                        <td style="padding:6px 0;">{{ item.produto_nome }}{% if item.tamanho %} (Tam: {{ item.tamanho }}{% if item.cor %} / Cor: {{ item.cor }}{% endif %}){% endif %} <br> <small style="color:#666;">1 un x R$ {{ "%.2f"|format(item.preco_unitario) }}</small></td>
                         <td style="padding:6px 0; text-align:center;">{{ item.quantidade }}</td>
                         <td style="padding:6px 0; text-align:right;">R$ {{ "%.2f"|format(item.quantidade * item.preco_unitario) }}</td>
                     </tr>

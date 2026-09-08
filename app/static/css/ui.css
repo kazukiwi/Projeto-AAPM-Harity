@@ -1,0 +1,98 @@
+/* Padrões visuais compartilhados pelas telas autenticadas. */
+:root {
+    --page-padding-block: 40px;
+    --page-padding-inline: 60px;
+    --control-height: 44px;
+    --control-radius: 8px;
+    --control-border: #cbd5e1;
+    --focus-ring: rgba(9, 20, 92, .18);
+}
+
+/* Cada página usa o mesmo respiro lateral e vertical, sem alterar modais. */
+.dashboard,
+.produtos-container-main,
+.clientes-container,
+.vendas-container-main,
+.main-content {
+    padding: var(--page-padding-block) var(--page-padding-inline) !important;
+}
+
+.armarios-page {
+    width: min(calc(100% - (var(--page-padding-inline) + var(--page-padding-inline))), 1180px) !important;
+    padding: var(--page-padding-block) 0 !important;
+}
+
+/* Controles com dimensão, borda, foco e transição consistentes. */
+button,
+.btn-primary,
+.btn-secondary,
+.btn-create,
+.btn-novo-produto,
+.btn-nova-venda,
+.btn-finalizar-dia,
+.btn-submit,
+.btn-cancel,
+.btn-acao,
+.btn-edit,
+.btn-toggle,
+.btn-primario,
+.btn-secundario,
+.btn-add-carrinho-pdv,
+.btn-salvar-venda-final,
+.btn-voltar-historico {
+    min-height: var(--control-height);
+    border-radius: var(--control-radius);
+    transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+    min-height: var(--control-height);
+    border-color: var(--control-border);
+    border-radius: var(--control-radius);
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #09145c;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+button:not(:disabled):hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-create:hover,
+.btn-novo-produto:hover,
+.btn-nova-venda:hover,
+.btn-finalizar-dia:hover,
+.btn-submit:hover,
+.btn-cancel:hover,
+.btn-acao:hover,
+.btn-edit:hover,
+.btn-toggle:hover,
+.btn-primario:hover,
+.btn-secundario:hover,
+.btn-voltar-historico:hover {
+    transform: translateY(-1px);
+}
+
+.btn-nova-venda,
+.btn-voltar-historico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+@media (max-width: 900px) {
+    :root { --page-padding-inline: 24px; }
+}
+
+@media (max-width: 640px) {
+    :root { --page-padding-block: 22px; --page-padding-inline: 16px; }
+}

@@ -92,6 +92,103 @@ body {
     width: 100%;
 }
 
+.variacoes-card {
+    gap: 12px;
+    padding: 18px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid var(--primary);
+    border-radius: 10px;
+}
+
+.variacoes-card p,
+.variacoes-card small,
+.variacoes-header small,
+#ajuda-estoque {
+    color: var(--text-muted);
+    font-size: .85rem;
+}
+
+.variacoes-card p { margin: 3px 0 0; }
+
+.opcao-variacao {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+.opcao-variacao input { margin-top: 3px; accent-color: var(--primary); }
+.opcao-variacao span { display: grid; gap: 3px; }
+
+.variacoes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.variacoes-header > div { display: grid; gap: 3px; }
+.variacoes-header a { color: var(--primary); font-size: .85rem; font-weight: 600; }
+
+.cabecalho-variacoes,
+.linha-variacao {
+    display: grid;
+    grid-template-columns: 1fr 1fr .7fr 42px;
+    gap: 10px;
+    align-items: center;
+}
+
+.cabecalho-variacoes {
+    padding: 12px 0 6px;
+    color: var(--text-muted);
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.linha-variacao { padding: 6px 0; }
+
+.linha-variacao input,
+.linha-variacao select {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    font: inherit;
+}
+
+.linha-variacao button {
+    width: 36px;
+    height: 36px;
+    color: #b91c1c;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #fecaca;
+    border-radius: 7px;
+}
+
+.btn-add-variacao {
+    align-self: flex-start;
+    margin-top: 10px;
+    padding: 9px 13px;
+    color: var(--primary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    background: #fff;
+    border: 1px dashed var(--primary);
+    border-radius: 7px;
+}
+
 .form-group label {
     font-size: 14px;
     font-weight: 600;
@@ -179,4 +276,7 @@ body {
 @media (max-width: 600px) {
     .form-grid { grid-template-columns: 1fr; }
     .form-group.full-width { grid-column: span 1; }
+    .cabecalho-variacoes { display: none; }
+    .linha-variacao { grid-template-columns: 1fr 1fr; padding: 10px; background: #f8fafc; border-radius: 8px; }
+    .linha-variacao button { grid-column: span 2; width: 100%; }
 }

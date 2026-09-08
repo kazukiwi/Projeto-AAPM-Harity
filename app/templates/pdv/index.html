@@ -93,6 +93,10 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="form-group" id="grupo-cor" style="display: none; margin-bottom: 15px;">
+                        <label for="pdv-cor" style="display:block; font-weight:bold; margin-bottom:5px;">Cor</label>
+                        <select id="pdv-cor" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; background-color: white;"><option value="" disabled selected>Selecione a cor...</option></select>
+                    </div>
 
                     <div class="form-row-split" style="display:flex; gap:15px; margin-bottom: 15px;">
                         <div class="form-group flex-1" style="flex:1;">
@@ -171,7 +175,9 @@
         </div>
     </footer>
 
-    <script>
+    <script id="variacoes-produtos" type="application/json">{ {% for produto in produtos %}"{{ produto.id }}":[{% for variacao in produto.estoques_variacoes %}{"tamanho_id":{{ variacao.tamanho_id }},"cor":{{ variacao.cor|tojson }},"estoque_atual":{{ variacao.estoque_atual }}}{% if not loop.last %},{% endif %}{% endfor %}]{% if not loop.last %},{% endif %}{% endfor %} }</script>
+    <script src="/static/javascript/vendas.js?v=20260901"></script>
+    <script type="application/x-disabled">
         let carrinho = [];
 
         // Atualiza campos de preço e estoque ao mudar o produto selecionado

@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.database import Session as SessionLocal, get_db
 from app.models.venda import FechamentoDiario, Venda, ItemVenda
-from app.models.produtos import Produto, EstoqueTamanho, Tamanho, ordenar_tamanhos
+from app.models.produtos import Produto, EstoqueTamanho, EstoqueVariacao, Tamanho, ordenar_tamanhos
 from app.models.cliente import Cliente
 from app.auth import get_usuario_logado
 
@@ -90,6 +90,16 @@ def obter_tamanho_id_item(item: dict) -> int | None:
     if tamanho_id <= 0:
         raise ValueError("tamanho inválido")
     return tamanho_id
+
+
+def obter_cor_item(item: dict) -> str | None:
+    cor = item.get("cor")
+    if cor in (None, ""):
+        return None
+    cor = str(cor).strip()
+    if not cor or len(cor) > 50:
+        raise ValueError("cor inválida")
+    return cor
 
 
 @router.get("/")
@@ -195,20 +205,31 @@ def finalizar_venda(
 
         try:
             tamanho_id = obter_tamanho_id_item(item)
+            cor = obter_cor_item(item)
         except ValueError:
-            return RedirectResponse(url="/pdv?erro=tamanho", status_code=302)
+            return RedirectResponse(url="/pdv?erro=variacao", status_code=302)
 
-        if produto.eh_camiseta and not tamanho_id:
-            return RedirectResponse(url="/pdv?erro=tamanho", status_code=302)
+        if produto.eh_camiseta and (not tamanho_id or not cor):
+            return RedirectResponse(url="/pdv?erro=variacao", status_code=302)
 
         estoque_tamanho = None
+        estoque_variacao = None
         if produto.eh_camiseta:
-            estoque_tamanho = db.query(EstoqueTamanho).filter(
-                EstoqueTamanho.produto_id == produto.id,
-                EstoqueTamanho.tamanho_id == tamanho_id,
+            estoque_variacao = db.query(EstoqueVariacao).filter(
+                EstoqueVariacao.produto_id == produto.id,
+                EstoqueVariacao.tamanho_id == tamanho_id,
+                EstoqueVariacao.cor == cor,
             ).with_for_update().first()
-            if not estoque_tamanho or estoque_tamanho.estoque_atual < qtd:
-                return RedirectResponse(url=f"/pdv?erro=estoque_tamanho&produto={produto.nome}", status_code=302)
+            if estoque_variacao:
+                if estoque_variacao.estoque_atual < qtd:
+                    return RedirectResponse(url=f"/pdv?erro=estoque_variacao&produto={produto.nome}", status_code=302)
+            else:
+                estoque_tamanho = db.query(EstoqueTamanho).filter(
+                    EstoqueTamanho.produto_id == produto.id,
+                    EstoqueTamanho.tamanho_id == tamanho_id,
+                ).with_for_update().first()
+                if not estoque_tamanho or estoque_tamanho.estoque_atual < qtd:
+                    return RedirectResponse(url=f"/pdv?erro=estoque_variacao&produto={produto.nome}", status_code=302)
 
         if produto.estoque_atual < qtd:
             return RedirectResponse(
@@ -224,8 +245,10 @@ def finalizar_venda(
             "quantidade":    qtd,
             "preco":         produto.preco,
             "produto_nome":  produto.nome,
-            "tamanho":       estoque_tamanho.tamanho.nome if estoque_tamanho else None,
+            "tamanho":       estoque_variacao.tamanho.nome if estoque_variacao else (estoque_tamanho.tamanho.nome if estoque_tamanho else None),
+            "cor":           estoque_variacao.cor if estoque_variacao else ("Padrão" if estoque_tamanho else None),
             "estoque_tamanho": estoque_tamanho,
+            "estoque_variacao": estoque_variacao,
         })
 
     # ── Calcula desconto e total final
@@ -250,6 +273,7 @@ def finalizar_venda(
             produto_id     = item["produto"].id,
             produto_nome   = item["produto_nome"],
             tamanho        = item["tamanho"],
+            cor            = item["cor"],
             quantidade     = item["quantidade"],
             preco_unitario = item["preco"],
         ))
@@ -257,6 +281,8 @@ def finalizar_venda(
         item["produto"].estoque_atual -= item["quantidade"]
         if item["estoque_tamanho"]:
             item["estoque_tamanho"].estoque_atual -= item["quantidade"]
+        if item["estoque_variacao"]:
+            item["estoque_variacao"].estoque_atual -= item["quantidade"]
 
     db.commit()
 

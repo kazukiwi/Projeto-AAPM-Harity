@@ -87,6 +87,13 @@ def suporte(request: Request):
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 401:
+        return templates.TemplateResponse(
+            name="auth/nao_autenticado.html",
+            request=request,
+            status_code=401,
+            context={"request": request},
+        )
     if exc.status_code == 404:
         return templates.TemplateResponse(
             name="404.html",
@@ -162,6 +169,7 @@ def home(
     )
 
     contagem_cat = {}
+    produtos_por_categoria = {}
     for p in produtos_ativos:
         if p.categoria and hasattr(p.categoria, 'nome'):
             name_cat = p.categoria.nome
@@ -170,6 +178,12 @@ def home(
         else:
             name_cat = "Gerais"
         contagem_cat[name_cat] = contagem_cat.get(name_cat, 0) + 1
+        produtos_por_categoria.setdefault(name_cat, []).append(p)
+
+    produtos_por_categoria = {
+        categoria: sorted(produtos, key=lambda produto: produto.nome.lower())
+        for categoria, produtos in sorted(produtos_por_categoria.items(), key=lambda item: item[0].lower())
+    }
     
     total_categorias = len(contagem_cat)
 
@@ -197,8 +211,7 @@ def home(
             "estoque_baixo": estoque_baixo,
             "valor_total": valor_total,
             "total_categorias": total_categorias,
-            "produtos_alerta": produtos_alerta,
-            "contagem_por_categoria": contagem_cat,
+            "produtos_por_categoria": produtos_por_categoria,
             "lista_armarios": db.query(Armario).order_by(Armario.id).all(),
             "armarios_ocupados": ocupados,
             "armarios_disponiveis": disponiveis,
