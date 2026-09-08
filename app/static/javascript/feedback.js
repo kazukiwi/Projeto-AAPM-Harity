@@ -8,5 +8,5 @@ document.addEventListener('DOMContentLoaded', () => {
     window.setTimeout(() => {
         boasVindas.classList.add('feedback-bem-vindo-saindo');
         window.setTimeout(() => boasVindas.remove(), 350);
-    }, 2200);
+    }, 4500);
 });

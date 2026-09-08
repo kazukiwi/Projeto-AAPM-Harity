@@ -286,6 +286,14 @@ def login_usuario(
 
 @router.get("/logout")
 def logout_usuario():
-    response = RedirectResponse(url="/", status_code=302)
-    response.delete_cookie(key="access_token")
+    response = RedirectResponse(url="/?logout=1", status_code=303)
+    # Os atributos devem coincidir com os usados na criação do cookie para
+    # que todos os navegadores removam a sessão corretamente.
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        httponly=True,
+        samesite="lax",
+    )
+    response.headers["Cache-Control"] = "no-store"
     return response

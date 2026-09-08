@@ -18,8 +18,9 @@
             <li><a href="/usuarios" class="{{ 'active' if caminho.startswith('/usuarios') else '' }}">Usuários</a></li>
             <li><a href="/categorias" class="{{ 'active' if caminho.startswith('/categorias') else '' }}">Categorias</a></li>
             {% endif %}
-            <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
+            <li><a href="/auth/logout" data-logout-confirm class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
         </ul>
     </nav>
 </header>
+<script src="/static/javascript/confirmar_saida.js" defer></script>
 <script src="/static/javascript/feedback.js?v=1"></script>
