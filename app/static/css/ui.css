@@ -13,13 +13,12 @@
 .produtos-container-main,
 .clientes-container,
 .vendas-container-main,
-.main-content {
-    padding: var(--page-padding-block) var(--page-padding-inline) !important;
-}
-
+.main-content,
 .armarios-page {
-    width: min(calc(100% - (var(--page-padding-inline) + var(--page-padding-inline))), 1180px) !important;
-    padding: var(--page-padding-block) 0 !important;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--page-padding-block) var(--page-padding-inline) !important;
 }
 
 /* Controles com dimensão, borda, foco e transição consistentes. */
