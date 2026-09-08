@@ -87,6 +87,9 @@
                         {% if request.query_params.get('senha_redefinida') %}
                         <p class="login-feedback login-feedback--success">Senha redefinida com sucesso. Faça seu login.</p>
                         {% endif %}
+                        {% if request.query_params.get('logout') %}
+                        <p class="login-feedback login-feedback--success">Você saiu da conta com sucesso.</p>
+                        {% endif %}
 
                         <button type="submit">
                             Login

@@ -17,6 +17,7 @@
             .no-print { display: none !important; }
         }
     </style>
+    <script src="/static/javascript/confirmar_saida.js" defer></script>
 </head>
 
 <body>
@@ -47,7 +48,7 @@
                     </i> Categorias
                 </a></li>
                 {% endif %}
-                <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
+                <li><a href="/auth/logout" data-logout-confirm class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
             </ul>
         </nav>
     </header>{% endif %}
