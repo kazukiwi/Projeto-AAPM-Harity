@@ -53,8 +53,8 @@
                     </div>
 
                     <div class="info-row">
-                        <span class="info-label">Preço Unitário</span>
-                        <span class="info-value price-highlight">R$ {{ "%.2f"|format(produto.preco) }}</span>
+                        <span class="info-label">{{ 'Maior preço' if produto.possui_variacoes_tamanho else 'Preço unitário' }}</span>
+                        <span class="info-value price-highlight">R$ {{ "%.2f"|format(produto.preco_exibicao) }}</span>
                     </div>
 
                     <div class="info-row">
@@ -69,7 +69,7 @@
                             {% for estoque in produto.estoques_variacoes %}
                             <span class="tamanho-item">
                                 <strong>{{ estoque.tamanho.nome }} / {{ estoque.cor }}</strong>
-                                <span>{{ estoque.estoque_atual }} un.</span>
+                                <span>{{ estoque.estoque_atual }} un. · R$ {{ "%.2f"|format(estoque.preco) }}</span>
                             </span>
                             {% endfor %}
                         </div>

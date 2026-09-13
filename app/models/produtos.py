@@ -51,6 +51,13 @@ class Produto(Base):
         """Compatibilidade com o fluxo antigo de vendas."""
         return self.possui_variacoes_tamanho
 
+    @property
+    def preco_exibicao(self):
+        """Preço mostrado nas listagens; para variações, informa o maior valor possível."""
+        if self.possui_variacoes_tamanho and self.estoques_variacoes:
+            return max(variacao.preco for variacao in self.estoques_variacoes)
+        return self.preco or 0.0
+
     def estoque_do_tamanho(self, tamanho_id):
         registro = next((e for e in self.estoques_tamanho if e.tamanho_id == tamanho_id), None)
         return registro.estoque_atual if registro else 0
@@ -144,6 +151,7 @@ class EstoqueVariacao(Base):
     tamanho_id = Column(Integer, ForeignKey("tamanhos.id", ondelete="RESTRICT"), nullable=False)
     cor = Column(String(50), nullable=False)
     estoque_atual = Column(Integer, nullable=False, default=0)
+    preco = Column(Float, nullable=False, default=0.0)
 
     produto = relationship("Produto", back_populates="estoques_variacoes")
     tamanho = relationship("Tamanho")

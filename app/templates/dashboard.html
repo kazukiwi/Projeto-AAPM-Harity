@@ -158,7 +158,7 @@
                                             <a class="produto-vitrine" href="/produtos/{{ produto.id }}" aria-label="Ver {{ produto.nome }}">
                                                 <img src="{{ produto.imagem_url }}" alt="{{ produto.nome }}" loading="lazy">
                                                 <span class="produto-vitrine-nome">{{ produto.nome }}</span>
-                                                <strong class="produto-vitrine-preco">R$ {{ '%.2f'|format(produto.preco or 0)|replace('.', ',') }}</strong>
+                                                <strong class="produto-vitrine-preco">R$ {{ '%.2f'|format(produto.preco_exibicao)|replace('.', ',') }}</strong>
                                             </a>
                                         {% endfor %}
                                     </div>

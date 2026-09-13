@@ -77,7 +77,7 @@
                             <option value="" disabled selected>Escolha um produto...</option>
                             {% for produto in produtos %}
                                 {% if produto.ativo and (produto.estoque_atual > 0) %}
-                                <option value="{{ produto.id }}" data-nome="{{ produto.nome }}" data-preco="{{ produto.preco }}" data-estoque="{{ produto.estoque_atual }}" data-possui-variacoes="{{ 'true' if produto.possui_variacoes_tamanho else 'false' }}"{% for estoque in produto.estoques_tamanho %} data-tamanho-{{ estoque.tamanho_id }}="{{ estoque.estoque_atual }}"{% endfor %}>
+                                <option value="{{ produto.id }}" data-nome="{{ produto.nome }}" data-preco="{{ produto.preco_exibicao }}" data-estoque="{{ produto.estoque_atual }}" data-possui-variacoes="{{ 'true' if produto.possui_variacoes_tamanho else 'false' }}"{% for estoque in produto.estoques_tamanho %} data-tamanho-{{ estoque.tamanho_id }}="{{ estoque.estoque_atual }}"{% endfor %}>
                                     {{ produto.nome }}
                                 </option>
                                 {% endif %}
@@ -176,8 +176,8 @@
         </div>
     </footer>
 
-    <script id="variacoes-produtos" type="application/json">{ {% for produto in produtos %}"{{ produto.id }}":[{% for variacao in produto.estoques_variacoes %}{"tamanho_id":{{ variacao.tamanho_id }},"cor":{{ variacao.cor|tojson }},"estoque_atual":{{ variacao.estoque_atual }}}{% if not loop.last %},{% endif %}{% endfor %}]{% if not loop.last %},{% endif %}{% endfor %} }</script>
-    <script src="/static/javascript/vendas.js?v=20260913"></script>
+    <script id="variacoes-produtos" type="application/json">{ {% for produto in produtos %}"{{ produto.id }}":[{% for variacao in produto.estoques_variacoes %}{"tamanho_id":{{ variacao.tamanho_id }},"cor":{{ variacao.cor|tojson }},"estoque_atual":{{ variacao.estoque_atual }},"preco":{{ variacao.preco }}}{% if not loop.last %},{% endif %}{% endfor %}]{% if not loop.last %},{% endif %}{% endfor %} }</script>
+    <script src="/static/javascript/vendas.js?v=preco-variacao-1"></script>
     <script type="application/x-disabled">
         let carrinho = [];
 

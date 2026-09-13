@@ -12,11 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const variacoes = JSON.parse(dados ? dados.textContent : '{}');
 
     const opcoes = () => variacoes[produto.value] || [];
+    const formatarPreco = preco => `R$ ${Number(preco || 0).toFixed(2).replace('.', ',')}`;
     const atualizarSaldo = () => {
         const variacao = opcoes().find(item => String(item.tamanho_id) === tamanho.value && item.cor === cor.value);
         const saldo = variacao ? variacao.estoque_atual : 0;
         estoque.value = `${saldo} un`;
         quantidade.max = saldo;
+        document.getElementById('pdv-preco').value = formatarPreco(variacao?.preco);
     };
     const preencherCores = () => {
         cor.innerHTML = '<option value="" disabled selected>Selecione a cor...</option>';
@@ -29,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     produto?.addEventListener('change', () => {
         const selecionado = produto.options[produto.selectedIndex];
         const temVariacoes = selecionado.dataset.possuiVariacoes === 'true';
-        document.getElementById('pdv-preco').value = `R$ ${Number(selecionado.dataset.preco || 0).toFixed(2).replace('.', ',')}`;
+        document.getElementById('pdv-preco').value = formatarPreco(selecionado.dataset.preco);
         quantidade.value = 1;
         grupoTamanho.style.display = temVariacoes ? 'block' : 'none';
         grupoCor.style.display = temVariacoes ? 'block' : 'none';
@@ -72,7 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
             existente.quantidade += qtd;
         }
         else carrinho.push({
-            produto_id: Number(produto.value), nome: selecionado.dataset.nome, preco: Number(selecionado.dataset.preco),
+            produto_id: Number(produto.value), nome: selecionado.dataset.nome,
+            preco: temVariacoes
+                ? Number(opcoes().find(item => String(item.tamanho_id) === tamanhoId && item.cor === nomeCor).preco)
+                : Number(selecionado.dataset.preco),
             quantidade: qtd, tamanho_id: tamanhoId, tamanho: temVariacoes ? tamanho.options[tamanho.selectedIndex].text : null, cor: nomeCor
         });
         atualizarTabelaCarrinho();

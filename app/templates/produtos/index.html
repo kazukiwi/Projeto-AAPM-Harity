@@ -138,7 +138,7 @@
                             </div>
                             {% endif %}
                         </td>
-                        <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
+                        <td>R$ {{ "%.2f"|format(produto.preco_exibicao) }}</td>
                         <td>
                             {% if produto.estoque_baixo %}
                                 <span class="badge-status baixo-estoque"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Estoque baixo</span>
@@ -184,17 +184,18 @@
                                     <div>
                                         <h3>{{ produto.nome }}</h3>
                                         <p>{{ produto.categoria.nome if produto.categoria else 'Sem categoria' }}</p>
-                                        <div class="variacoes-preview-metricas"><span><strong>Estoque total:</strong> {{ produto.estoque_atual }} un.</span><span><strong>Preço:</strong> R$ {{ "%.2f"|format(produto.preco) }}</span></div>
+                                        <div class="variacoes-preview-metricas"><span><strong>Estoque total:</strong> {{ produto.estoque_atual }} un.</span><span><strong>Maior preço:</strong> R$ {{ "%.2f"|format(produto.preco_exibicao) }}</span></div>
                                     </div>
                                 </div>
                                 <div class="variacoes-preview-lista">
                                     <h4>Variações</h4>
-                                    <div class="variacoes-preview-cabecalho"><span>Variação</span><span>Estoque</span><span>Status</span></div>
+                                    <div class="variacoes-preview-cabecalho"><span>Variação</span><span>Estoque</span><span>Preço</span><span>Status</span></div>
                                     <div class="variacoes-preview-itens">
                                         {% for variacao in produto.estoques_variacoes %}
                                         <div class="variacao-preview-item">
                                             <span>{{ variacao.tamanho.nome if variacao.tamanho else 'Tam.' }} / {{ variacao.cor }}</span>
                                             <span>{{ variacao.estoque_atual }} un.</span>
+                                            <span>R$ {{ "%.2f"|format(variacao.preco) }}</span>
                                             {% if variacao in produto.variacoes_com_estoque_baixo %}
                                             <span class="badge-status baixo-estoque"><i class="fa-solid fa-circle" aria-hidden="true"></i> Estoque baixo</span>
                                             {% else %}

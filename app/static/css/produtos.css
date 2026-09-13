@@ -301,7 +301,7 @@ body {
 .variacoes-preview-cabecalho,
 .variacao-preview-item {
     display: grid;
-    grid-template-columns: minmax(140px, 1fr) 90px 145px;
+    grid-template-columns: minmax(140px, 1fr) 90px 90px 145px;
     align-items: center;
     gap: 12px;
 }

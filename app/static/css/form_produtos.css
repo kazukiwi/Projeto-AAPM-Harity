@@ -139,7 +139,7 @@ body {
 .cabecalho-variacoes,
 .linha-variacao {
     display: grid;
-    grid-template-columns: 1fr 1fr .7fr 42px;
+    grid-template-columns: 1fr 1fr .7fr .8fr 42px;
     gap: 10px;
     align-items: center;
 }

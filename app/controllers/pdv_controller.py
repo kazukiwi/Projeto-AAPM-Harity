@@ -258,13 +258,14 @@ def finalizar_venda(
                     return RedirectResponse(url=f"/pdv?erro=estoque_variacao&produto={produto.nome}", status_code=302)
                 quantidades_por_variacao[chave_variacao] = quantidade_total_variacao
 
-        subtotal    = produto.preco * qtd
+        preco_unitario = estoque_variacao.preco if estoque_variacao else produto.preco
+        subtotal    = preco_unitario * qtd
         total_bruto += subtotal
 
         itens_validados.append({
             "produto":       produto,
             "quantidade":    qtd,
-            "preco":         produto.preco,
+            "preco":         preco_unitario,
             "produto_nome":  produto.nome,
             "tamanho":       estoque_variacao.tamanho.nome if estoque_variacao else (estoque_tamanho.tamanho.nome if estoque_tamanho else None),
             "cor":           estoque_variacao.cor if estoque_variacao else ("Padrão" if estoque_tamanho else None),
