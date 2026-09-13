@@ -49,8 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
     tamanho?.addEventListener('change', preencherCores);
     cor?.addEventListener('change', atualizarSaldo);
 
-    document.getElementById('form-add-item-pdv')?.addEventListener('submit', evento => {
-        evento.preventDefault();
+    const adicionarAoCarrinho = evento => {
+        evento?.preventDefault();
+        if (!document.getElementById('form-add-item-pdv').reportValidity()) return;
         if (!produto.value) return;
         const selecionado = produto.options[produto.selectedIndex];
         const temVariacoes = selecionado.dataset.possuiVariacoes === 'true';
@@ -72,6 +73,30 @@ document.addEventListener('DOMContentLoaded', () => {
         produto.value = '';
         grupoTamanho.style.display = 'none'; grupoCor.style.display = 'none';
         estoque.value = '--'; document.getElementById('pdv-preco').value = 'R$ 0,00'; quantidade.value = 1;
+    };
+    document.getElementById('btn-adicionar-carrinho')?.addEventListener('click', adicionarAoCarrinho);
+    document.getElementById('form-add-item-pdv')?.addEventListener('submit', adicionarAoCarrinho);
+
+    document.getElementById('form-finalizar-real')?.addEventListener('submit', evento => {
+        if (!carrinho.length) {
+            evento.preventDefault();
+            return;
+        }
+
+        evento.preventDefault();
+        const formulario = evento.currentTarget;
+        const botao = document.getElementById('btn-salvar-venda-banco');
+        if (formulario.dataset.enviando === 'true') return;
+
+        formulario.dataset.enviando = 'true';
+        botao.disabled = true;
+        botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Realizando venda...';
+
+        const card = document.createElement('div');
+        card.className = 'pdv-processando-venda';
+        card.innerHTML = '<div class="pdv-processando-venda-card" role="status" aria-live="polite"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><h2>Realizando venda...</h2><p>Registrando os itens e atualizando o estoque.</p></div>';
+        document.body.appendChild(card);
+        window.setTimeout(() => formulario.submit(), 150);
     });
     document.getElementById('select-cliente')?.addEventListener('change', atualizarTabelaCarrinho);
 });

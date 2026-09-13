@@ -242,7 +242,7 @@
                             <label for="pdv-preco">Preço Unitário</label>
                             <input type="text" id="pdv-preco" readonly placeholder="R$ 0,00" class="input-readonly field-destaque">
                         </div>
-                        <button type="submit" class="btn-add-carrinho-pdv">
+                        <button type="button" id="btn-adicionar-carrinho" class="btn-add-carrinho-pdv">
                             <i class="fa-solid fa-plus"></i> Adicionar Item
                         </button>
                     </form>
@@ -299,7 +299,7 @@
     </footer>
 
     <script id="variacoes-produtos" type="application/json">{ {% for produto in produtos %}"{{ produto.id }}":[{% for variacao in produto.estoques_variacoes %}{"tamanho_id":{{ variacao.tamanho_id }},"cor":{{ variacao.cor|tojson }},"estoque_atual":{{ variacao.estoque_atual }}}{% if not loop.last %},{% endif %}{% endfor %}]{% if not loop.last %},{% endif %}{% endfor %} }</script>
-    <script src="{{ url_for('static', path='javascript/vendas.js') }}?v=20260901"></script>
+    <script src="{{ url_for('static', path='javascript/vendas.js') }}?v=20260913"></script>
     <script src="/static/javascript/finalizar_dia.js?v=1"></script>
     <script src="/static/javascript/listagem.js?v=3"></script>
 </body>

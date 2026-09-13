@@ -21,7 +21,13 @@
 
 <body>
     {% if request.query_params.get('sucesso') == 'ok' %}
-    <div class="feedback-aria-live" role="status">Venda finalizada com sucesso.</div>
+    <div id="feedback-bem-vindo" aria-hidden="false">
+        <div class="feedback-bem-vindo-card feedback-venda-realizada" role="dialog" aria-modal="true" aria-labelledby="feedback-venda-realizada-titulo">
+            <div class="feedback-bem-vindo-icone"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></div>
+            <h2 id="feedback-venda-realizada-titulo">Venda realizada com sucesso!</h2>
+            <p>A venda #{{ venda.id }} foi registrada e o estoque foi atualizado.</p>
+        </div>
+    </div>
     {% endif %}
 
     {% if false %}<header class="no-print">
