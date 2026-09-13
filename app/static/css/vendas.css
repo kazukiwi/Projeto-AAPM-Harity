@@ -517,7 +517,7 @@ body {
 .btn-salvar-venda-final { 
     width: 100%; 
     padding: 12px; 
-    background-color: #16a34a; 
+    background-color: #006425; 
     color: white; 
     border: none; 
     border-radius: 6px; 
@@ -528,7 +528,7 @@ body {
 }
 
 .btn-salvar-venda-final:hover:not(:disabled) { 
-    background-color: #15803d; 
+    background-color: #0d632d; 
 }
 
 .btn-salvar-venda-final:disabled { 

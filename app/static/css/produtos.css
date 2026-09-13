@@ -253,6 +253,32 @@ body {
     color: #dc2626; 
 }
 
+.variacoes-estoque-baixo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.variacoes-estoque-baixo span {
+    padding: 4px 8px;
+    border: 1px solid #fecaca;
+    border-radius: 999px;
+    background: #fff1f2;
+    color: #b91c1c;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.descricao-estoque-baixo {
+    display: block;
+    margin-top: 6px;
+    color: #b91c1c;
+    font-size: 12px;
+    font-weight: 700;
+}
+
 /* Botões de Ações na Tabela */
 .btn-acao-link {
     color: #1e1b4b;

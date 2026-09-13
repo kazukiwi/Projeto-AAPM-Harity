@@ -13,7 +13,7 @@ from sqlalchemy import func
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.database import get_db
-from app.models.produtos import Produto
+from app.models.produtos import Produto, condicao_estoque_baixo
 from app.models.cliente import Cliente
 from app.models.armario import Armario
 from app.models.reserva_armario import ReservaArmario
@@ -161,8 +161,11 @@ def home(
     produtos_ativos = db.query(Produto).filter(Produto.ativo == True).all()
 
     total_produtos = len(produtos_ativos)
-    produtos_alerta = [p for p in produtos_ativos if p.estoque_atual <= 5]
-    estoque_baixo = len(produtos_alerta)
+    estoque_baixo = (
+        db.query(Produto)
+        .filter(Produto.ativo == True, condicao_estoque_baixo())
+        .count()
+    )
     valor_total = (
         db.query(func.coalesce(func.sum(Venda.total_liquido), 0.0))
         .scalar()

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/static/css/listagem.css">
     <link rel="stylesheet" href="/static/css/confirmacao.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="/static/javascript/confirmar_saida.js" defer></script>
 </head>
 
 <body>
@@ -36,7 +37,7 @@
                    </i> Categorias
                 </a></li>
                 {% endif %}
-                <li><a href="/auth/logout" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
+                <li><a href="/auth/logout" data-logout-confirm class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
             </ul>
         </nav>
     </header>{% endif %}
