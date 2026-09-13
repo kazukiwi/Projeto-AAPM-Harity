@@ -222,6 +222,133 @@ body {
     background-color: #f3f4f6; /* Fundo cinza claro caso a imagem seja transparente */
 }
 
+/* Prévia expansível para produtos com controle de variações. */
+.btn-visualizar-variacoes {
+    display: none;
+    margin-top: 7px;
+    padding: 4px 8px;
+    border: 1px solid #c7d2fe;
+    border-radius: 999px;
+    color: #3730a3;
+    background: #eef2ff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.produto-com-variacoes:hover .btn-visualizar-variacoes,
+.produto-com-variacoes.is-preview-open .btn-visualizar-variacoes {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.variacoes-preview-row > td {
+    padding: 0;
+    border: 0;
+}
+
+.variacoes-preview-panel {
+    display: grid;
+    grid-template-columns: minmax(210px, .7fr) minmax(360px, 1.3fr);
+    gap: 18px;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 16px;
+    opacity: 0;
+    background: #f8fafc;
+    border-top: 0 solid #dbeafe;
+    transition: max-height .28s ease, padding .28s ease, opacity .2s ease, border-width .28s ease;
+}
+
+.produto-com-variacoes:hover + .variacoes-preview-row .variacoes-preview-panel,
+.produto-com-variacoes.is-preview-open + .variacoes-preview-row .variacoes-preview-panel,
+.produto-com-variacoes:has(+ .variacoes-preview-row:hover) + .variacoes-preview-row .variacoes-preview-panel {
+    max-height: 270px;
+    padding: 14px 16px;
+    opacity: 1;
+    border-top-width: 1px;
+}
+
+.variacoes-preview-resumo {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.variacoes-preview-imagem {
+    flex: 0 0 68px;
+    width: 68px;
+    height: 68px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    object-fit: cover;
+    background: #fff;
+}
+
+.variacoes-preview-resumo h3,
+.variacoes-preview-lista h4 {
+    margin: 0;
+    color: #0f172a;
+}
+
+.variacoes-preview-resumo h3 { font-size: 16px; }
+.variacoes-preview-resumo p { margin: 3px 0 10px; color: #64748b; font-size: 13px; }
+.variacoes-preview-metricas { display: grid; gap: 5px; color: #475569; font-size: 12px; }
+.variacoes-preview-lista h4 { margin-bottom: 7px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+
+.variacoes-preview-cabecalho,
+.variacao-preview-item {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) 90px 145px;
+    align-items: center;
+    gap: 12px;
+}
+
+.variacoes-preview-cabecalho {
+    padding: 8px 12px;
+    color: #64748b;
+    background: #eef2ff;
+    border-radius: 8px 8px 0 0;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.variacoes-preview-itens {
+    max-height: 160px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-top: 0;
+    border-radius: 0 0 8px 8px;
+    background: #fff;
+}
+
+.variacao-preview-item {
+    min-height: 36px;
+    padding: 6px 10px;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+}
+
+.variacao-preview-item:last-child { border-bottom: 0; }
+.variacao-preview-item .badge-status { justify-self: start; white-space: nowrap; }
+.variacao-preview-item .badge-status i { font-size: 8px; margin-right: 4px; }
+
+@media (hover: none) {
+    .btn-visualizar-variacoes { display: inline-flex; align-items: center; gap: 5px; }
+}
+
+@media (max-width: 760px) {
+    .variacoes-preview-panel { grid-template-columns: 1fr; gap: 18px; }
+    .produto-com-variacoes:hover + .variacoes-preview-row .variacoes-preview-panel,
+    .produto-com-variacoes.is-preview-open + .variacoes-preview-row .variacoes-preview-panel,
+    .produto-com-variacoes:has(+ .variacoes-preview-row:hover) + .variacoes-preview-row .variacoes-preview-panel { max-height: 410px; }
+}
+
 /* ============================================================
    BADGES DE CATEGORIA E STATUS
    ============================================================ */

@@ -3,7 +3,11 @@ function iniciarListagens() {
   document.querySelectorAll("[data-listagem]").forEach((tabela) => {
     const corpo = tabela.tBodies[0];
     if (!corpo) return;
-    const linhas = Array.from(corpo.rows).filter(linha => !linha.querySelector("[colspan]"));
+    const linhas = Array.from(corpo.rows).filter(linha => !linha.querySelector("[colspan]") && !linha.matches("[data-variacoes-preview]"));
+    const previews = new Map(linhas.map(linha => [
+      linha,
+      linha.nextElementSibling?.matches("[data-variacoes-preview]") ? linha.nextElementSibling : null,
+    ]));
     const porPagina = Number(tabela.dataset.porPagina || 8);
     const busca = document.querySelector(tabela.dataset.busca || "");
     const ordem = document.querySelector(tabela.dataset.ordem || "");
@@ -42,12 +46,24 @@ function iniciarListagens() {
         });
         // sort() altera apenas o array. Ao reposicionar as linhas no tbody,
         // a ordem escolhida passa a ser refletida visualmente na tabela.
-        visiveis.forEach(linha => corpo.appendChild(linha));
+        visiveis.forEach(linha => {
+          corpo.appendChild(linha);
+          const preview = previews.get(linha);
+          if (preview) corpo.appendChild(preview);
+        });
       }
       const totalPaginas = Math.max(1, Math.ceil(visiveis.length / porPagina));
       pagina = Math.min(pagina, totalPaginas);
-      linhas.forEach(linha => { linha.hidden = true; });
-      visiveis.slice((pagina - 1) * porPagina, pagina * porPagina).forEach(linha => { linha.hidden = false; });
+      linhas.forEach(linha => {
+        linha.hidden = true;
+        const preview = previews.get(linha);
+        if (preview) preview.hidden = true;
+      });
+      visiveis.slice((pagina - 1) * porPagina, pagina * porPagina).forEach(linha => {
+        linha.hidden = false;
+        const preview = previews.get(linha);
+        if (preview) preview.hidden = false;
+      });
       controles.innerHTML = `<span>${visiveis.length} registro(s)</span><div><button type="button" ${pagina === 1 ? "disabled" : ""} data-pagina="anterior">Anterior</button><span>Página ${pagina} de ${totalPaginas}</span><button type="button" ${pagina === totalPaginas ? "disabled" : ""} data-pagina="proxima">Próxima</button></div>`;
       controles.querySelectorAll("button").forEach(botao => botao.onclick = () => { pagina += botao.dataset.pagina === "anterior" ? -1 : 1; renderizar(); });
     };

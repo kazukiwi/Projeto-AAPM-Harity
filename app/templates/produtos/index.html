@@ -7,7 +7,7 @@
     <link rel="icon" href="/static/img/image.ico" type="image/x-icon">
     <title>Produtos - AAPM</title>
 
-    <link class="cdn" rel="stylesheet" href="/static/css/produtos.css">
+    <link class="cdn" rel="stylesheet" href="/static/css/produtos.css?v=2">
     <link rel="stylesheet" href="/static/css/listagem.css">
     <link rel="stylesheet" href="/static/css/confirmacao.css">
     <link class="cdn" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -109,7 +109,8 @@
                 </thead>
                 <tbody id="corpo-tabela">
                     {% for produto in produtos %}
-                    <tr>
+                    {% set possui_preview_variacoes = produto.possui_variacoes_tamanho and produto.estoques_variacoes %}
+                    <tr{% if possui_preview_variacoes %} class="produto-com-variacoes" data-produto-variacoes{% endif %}>
                         <td>
                             <img src="{{ produto.imagem_url }}" alt="{{ produto.nome }}" class="produto-thumb"
                                 loading="lazy" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"
@@ -120,6 +121,11 @@
                                 style="color: #1e1b4b; text-decoration: none; font-weight: bold;">
                                 {{ produto.nome }}
                             </a>
+                            {% if possui_preview_variacoes %}
+                            <button type="button" class="btn-visualizar-variacoes" aria-expanded="false" aria-controls="variacoes-produto-{{ produto.id }}">
+                                <i class="fa-solid fa-layer-group" aria-hidden="true"></i> Ver variações
+                            </button>
+                            {% endif %}
                         </td>
                         <td>{{ produto.categoria.nome if produto.categoria else 'Sem categoria' }}</td>
                         <td>
@@ -169,6 +175,39 @@
                             </div>
                         </td>
                     </tr>
+                    {% if possui_preview_variacoes %}
+                    <tr class="variacoes-preview-row" data-variacoes-preview aria-hidden="true">
+                        <td colspan="7">
+                            <section class="variacoes-preview-panel" id="variacoes-produto-{{ produto.id }}" aria-label="Variações de {{ produto.nome }}">
+                                <div class="variacoes-preview-resumo">
+                                    <img src="{{ produto.imagem_url }}" alt="{{ produto.nome }}" class="variacoes-preview-imagem" loading="lazy" onerror="this.onerror=null; this.src='/static/img/produto_padrao.png';">
+                                    <div>
+                                        <h3>{{ produto.nome }}</h3>
+                                        <p>{{ produto.categoria.nome if produto.categoria else 'Sem categoria' }}</p>
+                                        <div class="variacoes-preview-metricas"><span><strong>Estoque total:</strong> {{ produto.estoque_atual }} un.</span><span><strong>Preço:</strong> R$ {{ "%.2f"|format(produto.preco) }}</span></div>
+                                    </div>
+                                </div>
+                                <div class="variacoes-preview-lista">
+                                    <h4>Variações</h4>
+                                    <div class="variacoes-preview-cabecalho"><span>Variação</span><span>Estoque</span><span>Status</span></div>
+                                    <div class="variacoes-preview-itens">
+                                        {% for variacao in produto.estoques_variacoes %}
+                                        <div class="variacao-preview-item">
+                                            <span>{{ variacao.tamanho.nome if variacao.tamanho else 'Tam.' }} / {{ variacao.cor }}</span>
+                                            <span>{{ variacao.estoque_atual }} un.</span>
+                                            {% if variacao in produto.variacoes_com_estoque_baixo %}
+                                            <span class="badge-status baixo-estoque"><i class="fa-solid fa-circle" aria-hidden="true"></i> Estoque baixo</span>
+                                            {% else %}
+                                            <span class="badge-status ativo"><i class="fa-solid fa-circle" aria-hidden="true"></i> Disponível</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </section>
+                        </td>
+                    </tr>
+                    {% endif %}
                     {% else %}
                     <tr>
                         <td colspan="7" style="text-align: center; color: #666; padding: 20px;">Nenhum produto
@@ -263,7 +302,8 @@
     </footer>
 
 
-    <script src="/static/javascript/listagem.js?v=4"></script>
+    <script src="/static/javascript/listagem.js?v=5"></script>
+    <script src="/static/javascript/produto_variacoes_preview.js?v=1"></script>
     <script>
         // Submete o formulário de filtros ao alterar categoria ou estoque baixo
         (function () {
