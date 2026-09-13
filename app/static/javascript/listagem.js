@@ -20,7 +20,7 @@ function iniciarListagens() {
         if (!normalizar(linha.textContent).includes(termo)) return false;
         const categoria = document.getElementById("select-categoria");
         const baixo = document.getElementById("check-estoque-baixo");
-        if (categoria?.value) {
+        if (categoria?.value && categoria.value !== "0") {
           const nomeCategoria = normalizar(categoria.options[categoria.selectedIndex]?.textContent);
           if (normalizar(linha.cells[2]?.textContent) !== nomeCategoria) return false;
         }

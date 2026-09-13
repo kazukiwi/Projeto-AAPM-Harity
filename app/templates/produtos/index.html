@@ -80,7 +80,7 @@
             <div class="select-wrapper">
                 <i class="fa-solid fa-filter icone-filtro"></i>
                 <select id="select-categoria" name="categoria_id">
-                    <option value="">Todas as categorias</option>
+                    <option value="0">Todas as categorias</option>
                     {% for cat in categorias %}
                     <option value="{{ cat.id }}" {% if categoria_id == cat.id %}selected{% endif %}>{{ cat.nome }}</option>
                     {% endfor %}
@@ -263,7 +263,7 @@
     </footer>
 
 
-    <script src="/static/javascript/listagem.js?v=3"></script>
+    <script src="/static/javascript/listagem.js?v=4"></script>
     <script>
         // Submete o formulário de filtros ao alterar categoria ou estoque baixo
         (function () {

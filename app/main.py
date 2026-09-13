@@ -1,9 +1,11 @@
 import asyncio
+import logging
 from pathlib import Path
 
 from datetime import date, datetime
 
 from fastapi import FastAPI, Request, Depends, Form
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
@@ -56,6 +58,7 @@ async def iniciar_rotina_fechamento_diario():
 APP_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=APP_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=APP_DIR / "templates")
+logger = logging.getLogger(__name__)
 
 
 @app.get("/termos-de-uso")
@@ -102,6 +105,37 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
             context={"request": request}
         )
     return await default_http_exception_handler(request, exc)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Evita expor uma resposta técnica quando um filtro ou formulário é inválido."""
+    return templates.TemplateResponse(
+        name="erro_generico.html",
+        request=request,
+        status_code=422,
+        context={
+            "request": request,
+            "mensagem": "Não foi possível aplicar estes filtros. Tente novamente.",
+            "voltar_para": "/produtos/",
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def unexpected_exception_handler(request: Request, exc: Exception):
+    """Mostra uma tela clara ao usuário e preserva o detalhe técnico no log."""
+    logger.exception("Erro não tratado em %s", request.url.path, exc_info=exc)
+    return templates.TemplateResponse(
+        name="erro_generico.html",
+        request=request,
+        status_code=500,
+        context={
+            "request": request,
+            "mensagem": "Ocorreu um erro inesperado ao carregar esta página.",
+            "voltar_para": "/",
+        },
+    )
 
 # 3º: INCLUIR OS ROUTERS dos controllers
 app.include_router(auth_controller.router)
