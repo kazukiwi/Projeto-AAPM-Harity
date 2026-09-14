@@ -10,16 +10,16 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from fastapi.exception_handlers import http_exception_handler as default_http_exception_handler
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import func
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.database import get_db
-from app.models.produtos import Produto, condicao_estoque_baixo
+from app.models.produtos import Produto, EstoqueVariacao, condicao_estoque_baixo
 from app.models.cliente import Cliente
 from app.models.armario import Armario
 from app.models.reserva_armario import ReservaArmario
-from app.models.venda import Venda
+from app.models.venda import ItemVenda, Venda
 
 from app.controllers import (
     auth_controller,
@@ -192,7 +192,15 @@ def home(
     if usuario is None:
         return templates.TemplateResponse(name="index.html", request=request)
 
-    produtos_ativos = db.query(Produto).filter(Produto.ativo == True).all()
+    produtos_ativos = (
+        db.query(Produto)
+        .options(
+            selectinload(Produto.categoria),
+            selectinload(Produto.estoques_variacoes).selectinload(EstoqueVariacao.tamanho),
+        )
+        .filter(Produto.ativo == True)
+        .all()
+    )
 
     total_produtos = len(produtos_ativos)
     estoque_baixo = (
@@ -224,6 +232,30 @@ def home(
     
     total_categorias = len(contagem_cat)
 
+    # Pódio do dashboard: o ranking usa o histórico de itens vendidos, para que
+    # preço e quantidade continuem corretos mesmo se o cadastro mudar depois.
+    ranking_dashboard = {}
+    for item in db.query(ItemVenda).options(joinedload(ItemVenda.produto)).all():
+        chave = item.produto_id or f"nome:{item.produto_nome}"
+        produto = item.produto
+        dados = ranking_dashboard.setdefault(chave, {
+            "id": item.produto_id,
+            "nome": item.produto_nome or (produto.nome if produto else "Produto removido"),
+            "imagem_url": produto.imagem_url if produto else "/static/img/produto_padrao.png",
+            "vendas": 0,
+            "receita": 0.0,
+        })
+        quantidade = int(item.quantidade or 0)
+        dados["vendas"] += quantidade
+        dados["receita"] += quantidade * float(item.preco_unitario or 0)
+
+    total_unidades_vendidas = sum(produto["vendas"] for produto in ranking_dashboard.values())
+    mais_vendidos_dashboard = sorted(
+        ranking_dashboard.values(), key=lambda produto: (-produto["vendas"], -produto["receita"], produto["nome"])
+    )[:3]
+    for produto in mais_vendidos_dashboard:
+        produto["porcentagem"] = round((produto["vendas"] / total_unidades_vendidas) * 100, 1) if total_unidades_vendidas else 0.0
+
     # Contagem dinâmica para os cards superiores da Home
     garantir_armarios_iniciais(db)
     ocupados = db.query(Armario).filter(Armario.status == "ocupado").count()
@@ -249,6 +281,7 @@ def home(
             "valor_total": valor_total,
             "total_categorias": total_categorias,
             "produtos_por_categoria": produtos_por_categoria,
+            "mais_vendidos_dashboard": mais_vendidos_dashboard,
             "lista_armarios": db.query(Armario).order_by(Armario.id).all(),
             "armarios_ocupados": ocupados,
             "armarios_disponiveis": disponiveis,
